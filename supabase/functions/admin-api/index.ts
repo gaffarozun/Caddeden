@@ -1,0 +1,536 @@
+// Powered by OnSpace.AI
+// Super Admin API: ALL admin privileges are verified server-side here.
+// The client can never grant itself admin rights; role is checked against the DB.
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { corsHeaders } from '../_shared/cors.ts';
+
+function json(data: unknown, status = 200): Response {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+// The one and only email address permitted to hold admin rights. Changing this
+// value is the only way to transfer ownership of the admin panel.
+const AUTHORIZED_ADMIN_EMAIL = 'caddeden.app@gmail.com';
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const url = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const admin = createClient(url, serviceKey);
+
+    // Identify caller from JWT
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '').trim();
+    if (!token) return json({ error: 'Yetkisiz: oturum bulunamadı.' }, 401);
+
+    const { data: userData, error: userErr } = await admin.auth.getUser(token);
+    const caller = userData?.user;
+    if (userErr || !caller) return json({ error: 'Yetkisiz: geçersiz oturum.' }, 401);
+
+    const body = await req.json().catch(() => ({}));
+    const action = String(body.action ?? '');
+    const log = (a: string, d: unknown) =>
+      admin.from('admin_logs').insert({ admin_id: caller.id, action: a, detail: d });
+
+    // ---- Bootstrap: assign first admin with one-time secure code ----
+    if (action === 'bootstrap') {
+      if (String(caller.email ?? '').trim().toLowerCase() !== AUTHORIZED_ADMIN_EMAIL) {
+        return json({ error: 'Bu hesap yönetici olarak yetkilendirilmemiş.' }, 403);
+      }
+      const code = String(body.code ?? '').trim();
+      const { data: cfg } = await admin
+        .from('app_config')
+        .select('value')
+        .eq('key', 'admin_bootstrap_code')
+        .single();
+      if (!cfg?.value || code !== cfg.value) {
+        return json({ error: 'Geçersiz kurulum kodu.' }, 403);
+      }
+      const { count: adminCount } = await admin
+        .from('user_profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'admin');
+      const { data: me } = await admin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', caller.id)
+        .single();
+      if ((adminCount ?? 0) > 0 && me?.role !== 'admin') {
+        return json({ error: 'Yönetici hesabı zaten atanmış.' }, 403);
+      }
+      const { error: upErr } = await admin
+        .from('user_profiles')
+        .update({ role: 'admin' })
+        .eq('id', caller.id);
+      if (upErr) return json({ error: upErr.message }, 400);
+      await log('bootstrap_admin', { email: caller.email });
+      return json({ ok: true, role: 'admin' });
+    }
+
+    // ---- Claim admin via a pre-authorized, email-verified address ----
+    // The authorized email lives server-side in app_config. A caller becomes
+    // admin only when their VERIFIED JWT email matches it. This never touches
+    // or disables any existing admin account, and preserves all data.
+    if (action === 'admin_claim_status' || action === 'claim_admin') {
+      // Authorization is locked server-side to a single owner email.
+      const authorizedEmail = AUTHORIZED_ADMIN_EMAIL;
+      const callerEmail = String(caller.email ?? '').trim().toLowerCase();
+      const emailConfirmed = !!(caller.email_confirmed_at ?? (caller as { confirmed_at?: string }).confirmed_at);
+      const { data: meRow } = await admin
+        .from('user_profiles')
+        .select('role')
+        .eq('id', caller.id)
+        .single();
+      const alreadyAdmin = meRow?.role === 'admin';
+      const authorized = !!authorizedEmail && callerEmail === authorizedEmail;
+      const maskEmail = (e: string) => {
+        const [u, d] = e.split('@');
+        return d ? `${u.slice(0, 3)}***@${d}` : null;
+      };
+
+      if (action === 'admin_claim_status') {
+        return json({
+          authorized,
+          emailConfirmed,
+          alreadyAdmin,
+          configured: !!authorizedEmail,
+          authorizedHint: authorizedEmail ? maskEmail(authorizedEmail) : null,
+        });
+      }
+
+      // action === 'claim_admin'
+      if (alreadyAdmin) return json({ ok: true, role: 'admin' });
+      if (!authorizedEmail) return json({ error: 'Yetkili yönetici e-postası henüz tanımlanmamış.' }, 403);
+      if (!authorized) return json({ error: 'Bu e-posta yönetici olarak yetkilendirilmemiş.' }, 403);
+      if (!emailConfirmed) return json({ error: 'Önce e-posta adresini doğrula, sonra tekrar dene.' }, 403);
+      const { error: upErr } = await admin.from('user_profiles').update({ role: 'admin' }).eq('id', caller.id);
+      if (upErr) return json({ error: upErr.message }, 400);
+      await log('claim_admin', { email: caller.email });
+      return json({ ok: true, role: 'admin' });
+    }
+
+    // ---- All other actions require admin role (verified server-side) ----
+    const { data: profile } = await admin
+      .from('user_profiles')
+      .select('role')
+      .eq('id', caller.id)
+      .single();
+    if (!profile || profile.role !== 'admin') {
+      return json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, 403);
+    }
+    // Hard lock: only the single authorized owner account may use admin actions.
+    // Any other account that still holds an admin role is revoked on the spot.
+    if (String(caller.email ?? '').trim().toLowerCase() !== AUTHORIZED_ADMIN_EMAIL) {
+      await admin.from('user_profiles').update({ role: 'user' }).eq('id', caller.id);
+      await log('revoke_unauthorized_admin', { email: caller.email });
+      return json({ error: 'Yönetici yetkisi yalnızca yetkili hesaba aittir.' }, 403);
+    }
+
+    switch (action) {
+      case 'overview': {
+        const [usersC, bizC, pendBizC, adsActiveC, adsPendC, compOpenC, alertsC, pendContentC, pendCampaignC, pendNotifC] =
+          await Promise.all([
+            admin.from('user_profiles').select('*', { count: 'exact', head: true }),
+            admin.from('businesses').select('*', { count: 'exact', head: true }),
+            admin.from('businesses').select('*', { count: 'exact', head: true }).eq('approval_status', 'pending'),
+            admin.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+            admin.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            admin.from('complaints').select('*', { count: 'exact', head: true }).eq('status', 'open'),
+            admin.from('admin_alerts').select('*', { count: 'exact', head: true }).eq('is_read', false),
+            admin.from('business_posts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            admin.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            admin.from('notification_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          ]);
+        const { data: paid } = await admin.from('payments').select('amount').eq('status', 'paid');
+        const revenue = (paid ?? []).reduce((s, p) => s + Number(p.amount || 0), 0);
+        return json({
+          users: usersC.count ?? 0,
+          businesses: bizC.count ?? 0,
+          pendingBusinesses: pendBizC.count ?? 0,
+          activeAds: adsActiveC.count ?? 0,
+          pendingAds: adsPendC.count ?? 0,
+          openComplaints: compOpenC.count ?? 0,
+          unreadAlerts: alertsC.count ?? 0,
+          pendingContent: pendContentC.count ?? 0,
+          pendingCampaigns: pendCampaignC.count ?? 0,
+          pendingNotificationRequests: pendNotifC.count ?? 0,
+          revenue,
+        });
+      }
+
+      case 'list_businesses': {
+        let q = admin.from('businesses').select('*').order('created_at', { ascending: false });
+        if (body.status) q = q.eq('approval_status', body.status);
+        const { data, error } = await q;
+        if (error) return json({ error: error.message }, 400);
+        return json({ businesses: data });
+      }
+
+      case 'update_business_status': {
+        const patch: Record<string, unknown> = { approval_status: body.approval_status };
+        if (body.approval_status === 'approved') patch.is_published = true;
+        if (body.approval_status === 'rejected') {
+          patch.is_published = false;
+          patch.rejection_reason = body.rejection_reason ?? null;
+        }
+        const { error } = await admin.from('businesses').update(patch).eq('id', body.businessId);
+        if (error) return json({ error: error.message }, 400);
+        await log('update_business_status', { businessId: body.businessId, status: body.approval_status });
+        return json({ ok: true });
+      }
+
+      case 'set_business_published': {
+        const { error } = await admin
+          .from('businesses')
+          .update({ is_published: !!body.is_published })
+          .eq('id', body.businessId);
+        if (error) return json({ error: error.message }, 400);
+        await log('set_business_published', { businessId: body.businessId, is_published: !!body.is_published });
+        return json({ ok: true });
+      }
+
+      case 'set_business_featured': {
+        const { error } = await admin
+          .from('businesses')
+          .update({ featured: !!body.featured })
+          .eq('id', body.businessId);
+        if (error) return json({ error: error.message }, 400);
+        await log('set_business_featured', { businessId: body.businessId, featured: !!body.featured });
+        return json({ ok: true });
+      }
+
+      case 'list_ads': {
+        let q = admin
+          .from('ads')
+          .select('*, businesses(name, category)')
+          .order('created_at', { ascending: false });
+        if (body.status) q = q.eq('status', body.status);
+        const { data, error } = await q;
+        if (error) return json({ error: error.message }, 400);
+        return json({ ads: data });
+      }
+
+      case 'update_ad': {
+        const patch: Record<string, unknown> = {};
+        for (const k of ['status', 'price', 'payment_status', 'start_date', 'end_date', 'rejection_reason']) {
+          if (k in body) patch[k] = body[k];
+        }
+        const { error } = await admin.from('ads').update(patch).eq('id', body.adId);
+        if (error) return json({ error: error.message }, 400);
+        // Manual payment tracking only (no real gateway). Record a paid entry once.
+        if (body.payment_status === 'paid') {
+          const { data: ad } = await admin
+            .from('ads')
+            .select('business_id, price')
+            .eq('id', body.adId)
+            .single();
+          const { count: existing } = await admin
+            .from('payments')
+            .select('*', { count: 'exact', head: true })
+            .eq('ad_id', body.adId)
+            .eq('status', 'paid');
+          if (ad && (existing ?? 0) === 0) {
+            await admin.from('payments').insert({
+              business_id: ad.business_id,
+              ad_id: body.adId,
+              amount: ad.price,
+              status: 'paid',
+              method: 'manual',
+              note: 'Yönetici manuel kaydı (otomatik tahsilat yok)',
+            });
+          }
+        }
+        await log('update_ad', { adId: body.adId, patch });
+        return json({ ok: true });
+      }
+
+      case 'list_ad_packages': {
+        const { data, error } = await admin.from('ad_packages').select('*').order('price');
+        if (error) return json({ error: error.message }, 400);
+        return json({ packages: data });
+      }
+
+      case 'upsert_ad_package': {
+        const p = body.package ?? {};
+        let upErr;
+        if (p.id) {
+          const { id, ...rest } = p;
+          ({ error: upErr } = await admin.from('ad_packages').update(rest).eq('id', id));
+        } else {
+          ({ error: upErr } = await admin.from('ad_packages').insert(p));
+        }
+        if (upErr) return json({ error: upErr.message }, 400);
+        await log('upsert_ad_package', { package: p });
+        return json({ ok: true });
+      }
+
+      case 'send_notification': {
+        const { error } = await admin.from('notifications').insert({
+          sender_id: caller.id,
+          title: body.title,
+          body: body.message,
+          target: body.target ?? 'all',
+          target_category: body.target_category ?? null,
+          type: body.type ?? 'announcement',
+        });
+        if (error) return json({ error: error.message }, 400);
+        await log('send_notification', { title: body.title, target: body.target });
+        return json({ ok: true });
+      }
+
+      case 'list_notifications': {
+        const { data, error } = await admin
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) return json({ error: error.message }, 400);
+        return json({ notifications: data });
+      }
+
+      case 'list_admin_alerts': {
+        const { data, error } = await admin
+          .from('admin_alerts')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) return json({ error: error.message }, 400);
+        return json({ alerts: data });
+      }
+
+      case 'mark_alert_read': {
+        let q = admin.from('admin_alerts').update({ is_read: true });
+        q = body.alertId ? q.eq('id', body.alertId) : q.eq('is_read', false);
+        const { error } = await q;
+        if (error) return json({ error: error.message }, 400);
+        await log('mark_alert_read', { alertId: body.alertId ?? 'all' });
+        return json({ ok: true });
+      }
+
+      case 'list_users': {
+        const { data, error } = await admin
+          .from('user_profiles')
+          .select('id, username, email, role, status, restricted_until')
+          .order('role', { ascending: false });
+        if (error) return json({ error: error.message }, 400);
+        return json({ users: data });
+      }
+
+      case 'restrict_user': {
+        if (body.userId === caller.id) {
+          return json({ error: 'Kendi hesabını kısıtlayamazsın.' }, 400);
+        }
+        const { data: target } = await admin
+          .from('user_profiles')
+          .select('role')
+          .eq('id', body.userId)
+          .single();
+        if (target?.role === 'admin') {
+          return json({ error: 'Yönetici hesabı kısıtlanamaz.' }, 400);
+        }
+        const { error } = await admin
+          .from('user_profiles')
+          .update({ status: body.status, restricted_until: body.restricted_until ?? null })
+          .eq('id', body.userId);
+        if (error) return json({ error: error.message }, 400);
+        await log('restrict_user', { userId: body.userId, status: body.status });
+        return json({ ok: true });
+      }
+
+      case 'list_complaints': {
+        const { data, error } = await admin
+          .from('complaints')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) return json({ error: error.message }, 400);
+        return json({ complaints: data });
+      }
+
+      case 'update_complaint': {
+        const { error } = await admin
+          .from('complaints')
+          .update({ status: body.status })
+          .eq('id', body.complaintId);
+        if (error) return json({ error: error.message }, 400);
+        await log('update_complaint', { complaintId: body.complaintId, status: body.status });
+        return json({ ok: true });
+      }
+
+      case 'revenue': {
+        const { data: payments, error } = await admin
+          .from('payments')
+          .select('*, businesses(name)')
+          .order('created_at', { ascending: false });
+        if (error) return json({ error: error.message }, 400);
+        const sum = (st: string) =>
+          (payments ?? []).filter((p) => p.status === st).reduce((s, p) => s + Number(p.amount || 0), 0);
+        return json({
+          payments,
+          totals: { paid: sum('paid'), pending: sum('pending'), refunded: sum('refunded') },
+        });
+      }
+
+      case 'list_logs': {
+        const { data, error } = await admin
+          .from('admin_logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) return json({ error: error.message }, 400);
+        return json({ logs: data });
+      }
+
+      case 'list_content': {
+        let q = admin
+          .from('business_posts')
+          .select('*, businesses(name, category)')
+          .order('created_at', { ascending: false });
+        if (body.status) q = q.eq('status', body.status);
+        if (body.kind) q = q.eq('kind', body.kind);
+        const { data, error } = await q;
+        if (error) return json({ error: error.message }, 400);
+        return json({ content: data });
+      }
+
+      case 'update_content_status': {
+        const patch: Record<string, unknown> = { status: body.status };
+        patch.rejection_reason = body.status === 'rejected' ? (body.rejection_reason ?? null) : null;
+        if (body.status === 'approved') {
+          const { data: row } = await admin.from('business_posts').select('package_id').eq('id', body.contentId).single();
+          let days = 0;
+          if (row?.package_id) {
+            const { data: pkg } = await admin.from('ad_packages').select('duration_days').eq('id', row.package_id).single();
+            days = Number(pkg?.duration_days ?? 0);
+          }
+          patch.start_date = new Date().toISOString().slice(0, 10);
+          patch.end_date = days > 0 ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : null;
+        }
+        const { error } = await admin.from('business_posts').update(patch).eq('id', body.contentId);
+        if (error) return json({ error: error.message }, 400);
+        await log('update_content_status', { contentId: body.contentId, status: body.status });
+        return json({ ok: true });
+      }
+
+      case 'list_campaigns': {
+        let q = admin
+          .from('campaigns')
+          .select('*, businesses(name, category)')
+          .order('created_at', { ascending: false });
+        if (body.status) q = q.eq('status', body.status);
+        const { data, error } = await q;
+        if (error) return json({ error: error.message }, 400);
+        return json({ campaigns: data });
+      }
+
+      case 'update_campaign_status': {
+        const patch: Record<string, unknown> = { status: body.status };
+        patch.rejection_reason = body.status === 'rejected' ? (body.rejection_reason ?? null) : null;
+        if (body.status === 'approved') {
+          const { data: row } = await admin.from('campaigns').select('package_id').eq('id', body.campaignId).single();
+          let days = 0;
+          if (row?.package_id) {
+            const { data: pkg } = await admin.from('ad_packages').select('duration_days').eq('id', row.package_id).single();
+            days = Number(pkg?.duration_days ?? 0);
+          }
+          patch.start_date = new Date().toISOString().slice(0, 10);
+          patch.end_date = days > 0 ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : null;
+        }
+        const { error } = await admin.from('campaigns').update(patch).eq('id', body.campaignId);
+        if (error) return json({ error: error.message }, 400);
+        await log('update_campaign_status', { campaignId: body.campaignId, status: body.status });
+        return json({ ok: true });
+      }
+
+      case 'set_content_paid': {
+        const paid = body.payment_status === 'paid';
+        const { error } = await admin.from('business_posts').update({ payment_status: body.payment_status }).eq('id', body.contentId);
+        if (error) return json({ error: error.message }, 400);
+        if (paid) {
+          const ref = `content:${body.contentId}`;
+          const { data: row } = await admin.from('business_posts').select('business_id, price').eq('id', body.contentId).single();
+          const { count } = await admin.from('payments').select('*', { count: 'exact', head: true }).eq('note', ref);
+          if (row && (count ?? 0) === 0) {
+            await admin.from('payments').insert({ business_id: row.business_id, amount: row.price, status: 'paid', method: 'manual', note: ref });
+          }
+        }
+        await log('set_content_paid', { contentId: body.contentId, payment_status: body.payment_status });
+        return json({ ok: true });
+      }
+
+      case 'set_campaign_paid': {
+        const paid = body.payment_status === 'paid';
+        const { error } = await admin.from('campaigns').update({ payment_status: body.payment_status }).eq('id', body.campaignId);
+        if (error) return json({ error: error.message }, 400);
+        if (paid) {
+          const ref = `campaign:${body.campaignId}`;
+          const { data: row } = await admin.from('campaigns').select('business_id, price').eq('id', body.campaignId).single();
+          const { count } = await admin.from('payments').select('*', { count: 'exact', head: true }).eq('note', ref);
+          if (row && (count ?? 0) === 0) {
+            await admin.from('payments').insert({ business_id: row.business_id, amount: row.price, status: 'paid', method: 'manual', note: ref });
+          }
+        }
+        await log('set_campaign_paid', { campaignId: body.campaignId, payment_status: body.payment_status });
+        return json({ ok: true });
+      }
+
+      case 'list_notification_requests': {
+        let q = admin.from('notification_requests').select('*, businesses(name, category)').order('created_at', { ascending: false });
+        if (body.status) q = q.eq('status', body.status);
+        const { data, error } = await q;
+        if (error) return json({ error: error.message }, 400);
+        return json({ requests: data });
+      }
+
+      case 'update_notification_request': {
+        const patch: Record<string, unknown> = { status: body.status };
+        patch.rejection_reason = body.status === 'rejected' ? (body.rejection_reason ?? null) : null;
+        const { error } = await admin.from('notification_requests').update(patch).eq('id', body.id);
+        if (error) return json({ error: error.message }, 400);
+        if (body.status === 'approved') {
+          const { data: row } = await admin.from('notification_requests').select('*').eq('id', body.id).single();
+          if (row) {
+            await admin.from('notifications').insert({
+              sender_id: caller.id,
+              title: row.title,
+              body: row.body,
+              target: row.target_category ? 'category' : 'all',
+              target_category: row.target_category ?? null,
+              type: 'announcement',
+            });
+          }
+        }
+        await log('update_notification_request', { id: body.id, status: body.status });
+        return json({ ok: true });
+      }
+
+      case 'set_notification_request_paid': {
+        const paid = body.payment_status === 'paid';
+        const { error } = await admin.from('notification_requests').update({ payment_status: body.payment_status }).eq('id', body.id);
+        if (error) return json({ error: error.message }, 400);
+        if (paid) {
+          const ref = `notif:${body.id}`;
+          const { data: row } = await admin.from('notification_requests').select('business_id, price').eq('id', body.id).single();
+          const { count } = await admin.from('payments').select('*', { count: 'exact', head: true }).eq('note', ref);
+          if (row && (count ?? 0) === 0) {
+            await admin.from('payments').insert({ business_id: row.business_id, amount: row.price, status: 'paid', method: 'manual', note: ref });
+          }
+        }
+        await log('set_notification_request_paid', { id: body.id, payment_status: body.payment_status });
+        return json({ ok: true });
+      }
+
+      default:
+        return json({ error: 'Bilinmeyen işlem.' }, 400);
+    }
+  } catch (e) {
+    console.error('admin-api error', e);
+    return json({ error: String((e as Error)?.message ?? e) }, 500);
+  }
+});
