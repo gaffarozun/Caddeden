@@ -1,6 +1,6 @@
 // Powered by OnSpace.AI
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Tabs } from 'expo-router/tabs';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/useTheme';
@@ -21,7 +21,7 @@ export default function TabLayout() {
       android: insets.bottom + 8,
       default: 8,
     }),
-    paddingHorizontal: 8,
+    paddingHorizontal: 16,
     backgroundColor: colors.surface,
     borderTopWidth: 1,
     borderTopColor: colors.border,

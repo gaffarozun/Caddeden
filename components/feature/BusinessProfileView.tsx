@@ -5,8 +5,8 @@ import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useBusinessProfile } from '@/hooks/useBusinessProfile';
-import { businessProfileColors as c, spacing } from '@/constants/theme';
-import { businessStyles as s } from '@/constants/businessProfileStyles';
+import { spacing } from '@/constants/theme';
+import { useBusinessTheme } from '@/hooks/useBusinessTheme';
 import { categoryLabel } from '@/services/categories';
 import { money } from '@/services/businessProfileService';
 import { BusinessAction, BusinessError, BusinessLink } from './BusinessProfileControls';
@@ -14,6 +14,7 @@ import { PhotoViewer } from './PhotoViewer';
 const tabs = [{ id: 'about', label: 'Hakkında' }, { id: 'photos', label: 'Fotoğraflar' }, { id: 'events', label: 'Etkinlikler' }, { id: 'reviews', label: 'Yorumlar' }];
 interface BusinessProfileViewProps { businessId: string }
 export const BusinessProfileView = memo(function BusinessProfileView({ businessId }: BusinessProfileViewProps) {
+  const { colors: c, styles: s, isDark } = useBusinessTheme();
   const m = useBusinessProfile(businessId); const b = m.business;
   if (m.loading && !b) return <SafeAreaView style={s.screen}><View style={s.center}><ActivityIndicator color={c.primary} /></View></SafeAreaView>;
   if (!b) return <SafeAreaView style={s.screen}><View style={s.center}><BusinessError message={m.error} /><BusinessLink icon="arrow-left" label="Geri dön" onPress={() => m.router.back()} /></View></SafeAreaView>;
@@ -22,10 +23,10 @@ export const BusinessProfileView = memo(function BusinessProfileView({ businessI
     ...(m.data?.events ?? []).map(item => ({ id: item.id, image: item.image, title: item.title })),
   ] : [];
   const campaign = m.data?.campaigns[0];
-  return <SafeAreaView style={s.screen} edges={['top', 'bottom']}><StatusBar style="light" /><View style={s.frame}>
+  return <SafeAreaView style={s.screen} edges={['top', 'bottom']}><StatusBar style={isDark ? 'light' : 'dark'} /><View style={s.frame}>
     <FlatList data={rows} keyExtractor={item => item.id} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }} refreshControl={<RefreshControl refreshing={m.refreshing} onRefresh={m.refresh} tintColor={c.primary} />} ItemSeparatorComponent={() => <View style={s.separator} />} renderItem={({ item }) => <View style={s.content}>{item.image ? <Pressable onPress={() => m.setPhotoUri(item.image)} style={({ pressed }) => pressed ? s.pressed : null}><Image source={{ uri: item.image }} style={s.galleryImage} contentFit="cover" transition={200} /></Pressable> : null}{item.title ? <View style={s.card}><Text style={s.text}>{item.title}</Text></View> : null}</View>}
       ListHeaderComponent={<View>
-        <View style={s.hero}>{b.cover ? <Image source={{ uri: b.cover }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : null}<View style={s.coverNav}><Pressable style={({ pressed }) => [s.iconButton, pressed ? s.pressed : null]} accessibilityLabel="Geri dön" onPress={() => m.router.back()}><MaterialCommunityIcons name="chevron-left" size={30} color={c.text} /></Pressable><View style={s.spacer} />{m.customer ? <Pressable style={({ pressed }) => [s.iconButton, pressed ? s.pressed : null]} accessibilityLabel={m.saved ? 'Kaydı kaldır' : 'İşletmeyi kaydet'} onPress={m.toggleSave}><MaterialCommunityIcons name={m.saved ? 'bookmark' : 'bookmark-outline'} size={25} color={m.saved ? c.primary : c.text} /></Pressable> : null}<Pressable style={({ pressed }) => [s.iconButton, pressed ? s.pressed : null]} accessibilityLabel="İşletmeyi paylaş" onPress={() => { void m.share(); }}><MaterialCommunityIcons name="share-variant-outline" size={24} color={c.text} /></Pressable></View></View>
+        <View style={s.hero}>{b.cover ? <Image source={{ uri: b.cover }} style={StyleSheet.absoluteFill} contentFit="cover" transition={200} /> : null}<View style={s.coverNav}><Pressable style={({ pressed }) => [s.iconButton, pressed ? s.pressed : null]} accessibilityLabel="Geri dön" onPress={() => m.router.back()}><MaterialCommunityIcons name="chevron-left" size={30} color={c.white} /></Pressable><View style={s.spacer} />{m.customer ? <Pressable style={({ pressed }) => [s.iconButton, pressed ? s.pressed : null]} accessibilityLabel={m.saved ? 'Kaydı kaldır' : 'İşletmeyi kaydet'} onPress={m.toggleSave}><MaterialCommunityIcons name={m.saved ? 'bookmark' : 'bookmark-outline'} size={25} color={m.saved ? c.brand : c.white} /></Pressable> : null}<Pressable style={({ pressed }) => [s.iconButton, pressed ? s.pressed : null]} accessibilityLabel="İşletmeyi paylaş" onPress={() => { void m.share(); }}><MaterialCommunityIcons name="share-variant-outline" size={24} color={c.white} /></Pressable></View></View>
         <View style={s.body}>
           <View style={s.identity}><View style={s.info}><Text style={s.title}>{b.name}</Text><View style={s.meta}><MaterialCommunityIcons name="star" size={18} color={c.primary} /><Text style={[s.subtle, s.gold, s.bold]}>{Number(b.rating).toFixed(1)}</Text><Text style={s.subtle}>({b.reviewCount}) · {categoryLabel(b.category)} · {b.distanceKm > 0 ? b.distanceKm < 1 ? `${Math.round(b.distanceKm * 1000)} m` : `${b.distanceKm.toFixed(1)} km` : 'Konum'}</Text></View><View style={s.meta}><View style={[s.dot, { backgroundColor: m.status?.open ? c.success : c.danger }]} /><Text style={[s.subtle, { color: m.status?.open ? c.success : c.danger }]}>{m.status?.open ? 'Açık' : 'Kapalı'}</Text><Text style={s.subtle}>{b.hours ? `· ${b.hours}` : ''}</Text></View></View><View style={s.logo}>{b.logo ? <Image source={{ uri: b.logo }} style={s.image} contentFit="cover" transition={200} /> : <MaterialCommunityIcons name="storefront-outline" color={c.primary} size={28} />}</View></View>
           {m.data?.isDemo ? <Text style={s.small}>Demo işletme · Gerçek sipariş ve rezervasyon alınmaz</Text> : null}

@@ -96,7 +96,7 @@ export default function ProfileEditScreen() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Kişisel Bilgiler</Text>
@@ -110,12 +110,12 @@ export default function ProfileEditScreen() {
           <Text style={styles.label}>Cinsiyet</Text>
           <View style={styles.genderRow}>
             <Pressable onPress={() => setGender('female')} style={[styles.genderBtn, gender === 'female' && styles.genderBtnActive]} accessibilityLabel="Kadın">
-              <MaterialCommunityIcons name="gender-female" size={18} color={gender === 'female' ? colors.white : colors.textSubtle} />
-              <Text style={[styles.genderText, gender === 'female' && { color: colors.white }]}>Kadın</Text>
+              <MaterialCommunityIcons name="gender-female" size={18} color={gender === 'female' ? colors.onPrimary : colors.textSubtle} />
+              <Text style={[styles.genderText, gender === 'female' && { color: colors.onPrimary }]}>Kadın</Text>
             </Pressable>
             <Pressable onPress={() => setGender('male')} style={[styles.genderBtn, gender === 'male' && styles.genderBtnActive]} accessibilityLabel="Erkek">
-              <MaterialCommunityIcons name="gender-male" size={18} color={gender === 'male' ? colors.white : colors.textSubtle} />
-              <Text style={[styles.genderText, gender === 'male' && { color: colors.white }]}>Erkek</Text>
+              <MaterialCommunityIcons name="gender-male" size={18} color={gender === 'male' ? colors.onPrimary : colors.textSubtle} />
+              <Text style={[styles.genderText, gender === 'male' && { color: colors.onPrimary }]}>Erkek</Text>
             </Pressable>
           </View>
         </View>

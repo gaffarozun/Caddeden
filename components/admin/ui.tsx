@@ -3,21 +3,23 @@
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Tone = 'success' | 'warning' | 'danger' | 'neutral' | 'info' | 'primary';
 
-const toneMap: Record<Tone, { bg: string; fg: string }> = {
+const createToneMap = (colors: ThemeColors): Record<Tone, { bg: string; fg: string }> => ({
   success: { bg: colors.successSoft, fg: colors.success },
   warning: { bg: colors.warningSoft, fg: colors.warning },
   danger: { bg: colors.dangerSoft, fg: colors.danger },
   neutral: { bg: colors.surfaceTint, fg: colors.textSubtle },
-  info: { bg: '#E7F0FB', fg: colors.info },
+  info: { bg: colors.surfaceTint, fg: colors.info },
   primary: { bg: colors.primarySoft, fg: colors.primaryDark },
-};
+});
 
 export function StatusPill({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
-  const t = toneMap[tone];
+  const { colors, styles } = useThemeStyles(createStyles);
+  const t = createToneMap(colors)[tone];
   return (
     <View style={[styles.pill, { backgroundColor: t.bg }]}>
       <Text style={[styles.pillText, { color: t.fg }]}>{label}</Text>
@@ -36,7 +38,8 @@ export function AdminStat({
   value: string | number;
   tone?: Tone;
 }) {
-  const t = toneMap[tone];
+  const { colors, styles } = useThemeStyles(createStyles);
+  const t = createToneMap(colors)[tone];
   return (
     <View style={styles.stat}>
       <View style={[styles.statIcon, { backgroundColor: t.bg }]}>
@@ -49,6 +52,7 @@ export function AdminStat({
 }
 
 export function AdminCard({ children, style }: { children: React.ReactNode; style?: object }) {
+  const { styles } = useThemeStyles(createStyles);
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
@@ -67,7 +71,8 @@ export function LinkRow({
   badge?: number;
   tone?: Tone;
 }) {
-  const t = toneMap[tone];
+  const { colors, styles } = useThemeStyles(createStyles);
+  const t = createToneMap(colors)[tone];
   return (
     <Pressable style={({ pressed }) => [styles.linkRow, pressed && styles.pressed]} onPress={onPress}>
       <View style={[styles.linkIcon, { backgroundColor: t.bg }]}>
@@ -96,6 +101,7 @@ export function FilterTabs({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.tabs}>
       {options.map((o) => {
@@ -106,7 +112,7 @@ export function FilterTabs({
             onPress={() => onChange(o.id)}
             style={[styles.tab, active && styles.tabActive]}
           >
-            <Text style={[styles.tabText, active && { color: colors.white }]}>{o.label}</Text>
+            <Text style={[styles.tabText, active && { color: colors.onPrimary }]}>{o.label}</Text>
           </Pressable>
         );
       })}
@@ -115,6 +121,7 @@ export function FilterTabs({
 }
 
 export function AdminEmpty({ icon = 'inbox-outline', text }: { icon?: string; text: string }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.empty}>
       <MaterialCommunityIcons name={icon as keyof typeof MaterialCommunityIcons.glyphMap} size={44} color={colors.textFaint} />
@@ -124,6 +131,7 @@ export function AdminEmpty({ icon = 'inbox-outline', text }: { icon?: string; te
 }
 
 export function AdminLoading({ label = 'Yükleniyor...' }: { label?: string }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.loading}>
       <ActivityIndicator color={colors.primary} />
@@ -145,7 +153,8 @@ export function SmallButton({
   tone?: Tone;
   outline?: boolean;
 }) {
-  const t = toneMap[tone];
+  const { colors, styles } = useThemeStyles(createStyles);
+  const t = createToneMap(colors)[tone];
   return (
     <Pressable
       onPress={onPress}
@@ -161,15 +170,15 @@ export function SmallButton({
         <MaterialCommunityIcons
           name={icon as keyof typeof MaterialCommunityIcons.glyphMap}
           size={15}
-          color={outline ? t.fg : colors.white}
+          color={outline ? t.fg : colors.onPrimary}
         />
       ) : null}
-      <Text style={[styles.smallBtnText, { color: outline ? t.fg : colors.white }]}>{label}</Text>
+      <Text style={[styles.smallBtnText, { color: outline ? t.fg : colors.onPrimary }]}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   pill: { paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: radius.pill, alignSelf: 'flex-start' },
   pillText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold },
   stat: {
@@ -215,9 +224,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 6,
   },
-  badgeText: { color: colors.white, fontSize: fontSize.xs, fontWeight: fontWeight.bold },
+  badgeText: { color: colors.onPrimary, fontSize: fontSize.xs, fontWeight: fontWeight.bold },
   tabs: { flexDirection: 'row', backgroundColor: colors.surfaceTint, borderRadius: radius.pill, padding: 4, gap: 4 },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: radius.pill },
+  tab: { flex: 1, minHeight: spacing.xxxl, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.sm, borderRadius: radius.pill },
   tabActive: { backgroundColor: colors.primary },
   tabText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.textSubtle },
   empty: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
@@ -225,6 +234,7 @@ const styles = StyleSheet.create({
   loading: { alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
   loadingText: { fontSize: fontSize.sm, color: colors.textSubtle },
   smallBtn: {
+    minHeight: spacing.xxxl,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,

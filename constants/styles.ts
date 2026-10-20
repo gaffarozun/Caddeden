@@ -1,8 +1,8 @@
 // Powered by OnSpace.AI
 import { StyleSheet } from 'react-native';
-import { colors, spacing, radius, fontSize, fontWeight } from './theme';
+import { colors, spacing, radius, fontSize, fontWeight, ThemeColors } from './theme';
 
-export const commonStyles = StyleSheet.create({
+export const createCommonStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -48,3 +48,6 @@ export const commonStyles = StyleSheet.create({
     padding: spacing.lg,
   },
 });
+
+// Fallback for non-rendering legacy references; UI uses createCommonStyles via useThemeStyles.
+export const commonStyles = createCommonStyles(colors);

@@ -29,7 +29,7 @@ const SHARE_BASE = 'https://caddeden.app/isletme';
 
 export default function ReelsScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const [itemHeight, setItemHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -81,7 +81,7 @@ export default function ReelsScreen() {
 
   return (
     <View style={styles.screen} onLayout={(e) => setItemHeight(e.nativeEvent.layout.height)}>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       {itemHeight > 0 ? (
         reels.length > 0 ? (
           <FlatList
@@ -130,7 +130,7 @@ export default function ReelsScreen() {
 function ReelItem({ reel, height }: { reel: Reel; height: number; active: boolean }) {
   const router = useRouter();
   const { showAlert } = useAlert();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { user, likedReelIds, isSavedReel, toggleLikeReel, toggleSaveReel } = useApp();
   const isBusiness = user.type === 'business';
@@ -176,7 +176,7 @@ function ReelItem({ reel, height }: { reel: Reel; height: number; active: boolea
             <MaterialCommunityIcons
               name={liked ? 'heart' : 'heart-outline'}
               size={32}
-              color={liked ? colors.primary : colors.white}
+              color={liked ? colors.brand : colors.white}
             />
             <Text style={styles.actionText}>{reel.likes + (liked ? 1 : 0)}</Text>
           </Pressable>
@@ -196,7 +196,7 @@ function ReelItem({ reel, height }: { reel: Reel; height: number; active: boolea
             <MaterialCommunityIcons
               name={saved ? 'bookmark' : 'bookmark-outline'}
               size={30}
-              color={saved ? colors.primary : colors.white}
+              color={saved ? colors.brand : colors.white}
             />
             <Text style={styles.actionText}>Kaydet</Text>
           </Pressable>
@@ -230,7 +230,7 @@ function ReelItem({ reel, height }: { reel: Reel; height: number; active: boolea
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
-    screen: { flex: 1, backgroundColor: colors.black },
+    screen: { flex: 1, backgroundColor: colors.background },
     item: { width: '100%', backgroundColor: colors.black, justifyContent: 'flex-end' },
     catBar: {
       position: 'absolute',
@@ -245,13 +245,13 @@ const createStyles = (colors: ThemeColors) =>
       paddingHorizontal: spacing.md,
       paddingVertical: 8,
       borderRadius: radius.pill,
-      backgroundColor: 'rgba(0,0,0,0.4)',
+      backgroundColor: colors.overlayStrong,
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.3)',
     },
-    catPillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    catPillActive: { backgroundColor: colors.primary, borderColor: colors.brand },
     catText: { color: 'rgba(255,255,255,0.85)', fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
-    catTextActive: { color: colors.white },
+    catTextActive: { color: colors.onPrimary },
     empty: { alignItems: 'center', justifyContent: 'center', gap: spacing.md },
     emptyText: { color: 'rgba(255,255,255,0.7)', fontSize: fontSize.md },
     actions: {

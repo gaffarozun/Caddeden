@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Payment {
   id: string;
@@ -25,6 +26,7 @@ interface RevenueData {
 const fmt = (n: number) => Number(n || 0).toLocaleString('tr-TR') + ' ₺';
 
 export default function AdminRevenue() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -95,6 +97,7 @@ export default function AdminRevenue() {
 }
 
 function TotalCard({ label, value, tone, icon }: { label: string; value: string; tone: 'success' | 'warning' | 'danger'; icon: string }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   const map = { success: colors.success, warning: colors.warning, danger: colors.danger };
   return (
     <View style={styles.totalCard}>
@@ -105,10 +108,10 @@ function TotalCard({ label, value, tone, icon }: { label: string; value: string;
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
-  noteCard: { flexDirection: 'row', gap: spacing.sm, backgroundColor: '#E7F0FB', borderRadius: radius.md, padding: spacing.md, alignItems: 'flex-start' },
+  noteCard: { flexDirection: 'row', gap: spacing.sm, backgroundColor: colors.surfaceTint, borderRadius: radius.md, padding: spacing.md, alignItems: 'flex-start' },
   noteText: { flex: 1, fontSize: fontSize.xs, color: colors.info, lineHeight: fontSize.xs * 1.5 },
   totals: { flexDirection: 'row', gap: spacing.sm },
   totalCard: { flex: 1, backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: 4, alignItems: 'flex-start' },

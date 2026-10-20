@@ -5,7 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AdminEmpty, AdminLoading } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface LogRow {
   id: string;
@@ -27,6 +28,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default function AdminLogs() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [items, setItems] = useState<LogRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,7 +76,7 @@ export default function AdminLogs() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.lg, paddingBottom: spacing.xxxl },
   card: { flexDirection: 'row', gap: spacing.md, backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, padding: spacing.md },

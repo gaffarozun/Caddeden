@@ -37,16 +37,16 @@ export function CategoryBar({ selected, onSelect, includeAll = true }: CategoryB
               hitSlop={6}
               style={({ pressed }) => [
                 styles.chip,
-                isSelected ? styles.chipSelected : styles.chipDefault,
+                isSelected ? styles.chipSelected : null,
                 pressed && { opacity: 0.85 },
               ]}
             >
               <MaterialCommunityIcons
                 name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                 size={16}
-                color={isSelected ? colors.white : colors.textSubtle}
+                color={isSelected ? colors.onPrimary : colors.textSubtle}
               />
-              <Text style={[styles.label, { color: isSelected ? colors.white : colors.text }]}>
+              <Text style={[styles.label, { color: isSelected ? colors.onPrimary : colors.text }]}>
                 {item.label}
               </Text>
             </Pressable>
@@ -70,7 +70,10 @@ const createStyles = (colors: ThemeColors) =>
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      height: 38,
+      height: 40,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
       paddingHorizontal: spacing.md,
       borderRadius: radius.pill,
     },
@@ -79,6 +82,6 @@ const createStyles = (colors: ThemeColors) =>
       borderWidth: 1,
       borderColor: colors.border,
     },
-    chipSelected: { backgroundColor: colors.primary },
+    chipSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
     label: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold },
   });

@@ -11,7 +11,8 @@ import { categoryLabel } from '@/services/categories';
 import { WEEKDAYS } from '@/services/businessStatus';
 import { timeAgo } from '@/services/contentService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Req {
   id: string;
@@ -38,6 +39,7 @@ const TABS = [
 ];
 
 export default function AdminNotificationRequests() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [filter, setFilter] = useState('pending');
   const [items, setItems] = useState<Req[]>([]);
@@ -170,6 +172,7 @@ export default function AdminNotificationRequests() {
 }
 
 function MaterialScheduleChip({ icon, text }: { icon: string; text: string }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.schedChip}>
       <MaterialCommunityIcons name={icon as keyof typeof MaterialCommunityIcons.glyphMap} size={14} color={colors.textSubtle} />
@@ -178,7 +181,7 @@ function MaterialScheduleChip({ icon, text }: { icon: string; text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   tabsWrap: { padding: spacing.lg, paddingBottom: spacing.sm },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl },

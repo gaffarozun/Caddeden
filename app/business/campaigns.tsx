@@ -16,7 +16,8 @@ import { AdPackage, MyBusiness, listActivePackagesByTypes, listMyBusinesses } fr
 import { MyCampaign, createCampaign, deleteCampaign, listMyCampaigns } from '@/services/campaignService';
 import { timeAgo } from '@/services/contentService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 const CAMPAIGN_RATIOS = [
   CROP_PRESETS['3:2'],
@@ -27,6 +28,7 @@ const CAMPAIGN_RATIOS = [
 ];
 
 export default function BusinessCampaigns() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
@@ -165,7 +167,7 @@ export default function BusinessCampaigns() {
       : { label: 'Onay bekliyor', tone: 'warning' };
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Yeni Kampanya</Text>
@@ -176,7 +178,7 @@ export default function BusinessCampaigns() {
               const active = bizId === b.id;
               return (
                 <Pressable key={b.id} onPress={() => setBizId(b.id)} style={[styles.chip, active && styles.chipActive]}>
-                  <Text style={[styles.chipText, active && { color: colors.white }]} numberOfLines={1}>{b.name}</Text>
+                  <Text style={[styles.chipText, active && { color: colors.onPrimary }]} numberOfLines={1}>{b.name}</Text>
                 </Pressable>
               );
             })}
@@ -303,7 +305,7 @@ export default function BusinessCampaigns() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },

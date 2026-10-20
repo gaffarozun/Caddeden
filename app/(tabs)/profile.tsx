@@ -9,6 +9,7 @@ import { Avatar, BusinessCard, Button, ContentViewer } from '@/components';
 import { useApp } from '@/hooks/useApp';
 import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
+import { AppearanceSettings } from '@/components/feature/AppearanceSettings';
 import { useAlert } from '@/template';
 import { getSupabaseClient } from '@/template';
 import { fetchBusinessesByIds } from '@/services/businessService';
@@ -30,12 +31,6 @@ interface OwnedBusiness {
   is_published: boolean;
 }
 
-const THEME_OPTIONS = [
-  { id: 'light', label: 'Açık', icon: 'weather-sunny' },
-  { id: 'dark', label: 'Koyu', icon: 'weather-night' },
-  { id: 'system', label: 'Sistem', icon: 'theme-light-dark' },
-] as const;
-
 const SAVED_TABS = [
   { id: 'business', label: 'İşletme', icon: 'storefront-outline' },
   { id: 'post', label: 'Gönderi', icon: 'image-outline' },
@@ -48,7 +43,7 @@ type SavedTab = (typeof SAVED_TABS)[number]['id'];
 export default function ProfileScreen() {
   const router = useRouter();
   const { showAlert } = useAlert();
-  const { colors, mode, setMode } = useTheme();
+  const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { authUser, isAdmin, isBusiness } = useAuth();
   const {
@@ -160,13 +155,13 @@ export default function ProfileScreen() {
         {isAdmin ? (
           <Pressable style={styles.adminBanner} onPress={() => router.push('/admin')}>
             <View style={styles.adminIcon}>
-              <MaterialCommunityIcons name="shield-crown-outline" size={24} color={colors.white} />
+              <MaterialCommunityIcons name="shield-crown-outline" size={24} color={colors.onPrimary} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.adminTitle}>Yönetici Paneli</Text>
               <Text style={styles.adminSub}>İstatistikler, onaylar, reklam ve gelir yönetimi</Text>
             </View>
-            <MaterialCommunityIcons name="chevron-right" size={24} color={colors.white} />
+            <MaterialCommunityIcons name="chevron-right" size={24} color={colors.onPrimary} />
           </Pressable>
         ) : null}
 
@@ -252,11 +247,11 @@ export default function ProfileScreen() {
                     <MaterialCommunityIcons
                       name={t.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                       size={16}
-                      color={active ? colors.white : colors.textSubtle}
+                      color={active ? colors.onPrimary : colors.textSubtle}
                     />
-                    <Text style={[styles.savedTabText, active && { color: colors.white }]} numberOfLines={1}>{t.label}</Text>
+                    <Text style={[styles.savedTabText, active && { color: colors.onPrimary }]} numberOfLines={1}>{t.label}</Text>
                     <View style={[styles.savedTabBadge, active && styles.savedTabBadgeActive]}>
-                      <Text style={[styles.savedTabBadgeText, active && { color: colors.white }]}>{count}</Text>
+                      <Text style={[styles.savedTabBadgeText, active && { color: colors.onPrimary }]}>{count}</Text>
                     </View>
                   </Pressable>
                 );
@@ -325,31 +320,7 @@ export default function ProfileScreen() {
         ) : null}
 
         <Section title="Ayarlar" icon="cog">
-          <View style={styles.themeCard}>
-            <View style={styles.settingLeft}>
-              <MaterialCommunityIcons name="palette-outline" size={20} color={colors.textSubtle} />
-              <Text style={styles.settingText}>Tema</Text>
-            </View>
-            <View style={styles.themeRow}>
-              {THEME_OPTIONS.map((opt) => {
-                const active = mode === opt.id;
-                return (
-                  <Pressable
-                    key={opt.id}
-                    onPress={() => setMode(opt.id)}
-                    style={[styles.themeBtn, active && styles.themeBtnActive]}
-                  >
-                    <MaterialCommunityIcons
-                      name={opt.icon as keyof typeof MaterialCommunityIcons.glyphMap}
-                      size={16}
-                      color={active ? colors.white : colors.textSubtle}
-                    />
-                    <Text style={[styles.themeBtnText, active && { color: colors.white }]}>{opt.label}</Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
+          <AppearanceSettings />
 
           <View style={styles.settingRow}>
             <View style={styles.settingLeft}>
@@ -360,7 +331,7 @@ export default function ProfileScreen() {
               value={notificationsEnabled}
               onValueChange={setNotificationsEnabled}
               trackColor={{ true: colors.primary, false: colors.border }}
-              thumbColor={colors.white}
+              thumbColor={colors.onPrimary}
             />
           </View>
 
@@ -490,7 +461,7 @@ function Pill({ label, tone }: { label: string; tone: 'success' | 'danger' | 'wa
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.background },
-    content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
+    content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg, width: '100%', maxWidth: 960, alignSelf: 'center' },
     headerCard: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -499,23 +470,25 @@ const createStyles = (colors: ThemeColors) =>
       borderRadius: radius.lg,
       padding: spacing.lg,
       borderWidth: 1,
-      borderColor: colors.border,
+      borderColor: colors.brand,
     },
     name: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
     type: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: 2 },
     loginBtn: { backgroundColor: colors.primary, paddingHorizontal: spacing.md, paddingVertical: 8, borderRadius: radius.pill },
-    loginBtnText: { color: colors.white, fontWeight: fontWeight.semibold, fontSize: fontSize.sm },
+    loginBtnText: { color: colors.onPrimary, fontWeight: fontWeight.semibold, fontSize: fontSize.sm },
     adminBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: spacing.md,
-      backgroundColor: colors.text,
+      backgroundColor: colors.primarySoft,
+      borderWidth: 1,
+      borderColor: colors.brand,
       borderRadius: radius.lg,
       padding: spacing.md,
     },
     adminIcon: { width: 44, height: 44, borderRadius: 12, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-    adminTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.surface },
-    adminSub: { fontSize: fontSize.xs, color: colors.surface, opacity: 0.75, marginTop: 2 },
+    adminTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text },
+    adminSub: { fontSize: fontSize.xs, color: colors.text, opacity: 0.75, marginTop: 2 },
     stats: { flexDirection: 'row', gap: spacing.md },
     statItem: {
       flex: 1,

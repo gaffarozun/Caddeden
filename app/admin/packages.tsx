@@ -5,7 +5,8 @@ import { AdminLoading, SmallButton, StatusPill } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { AD_TYPE_LABELS } from '@/services/adService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Pkg {
   id: string;
@@ -17,6 +18,7 @@ interface Pkg {
 }
 
 export default function AdminPackages() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [items, setItems] = useState<Pkg[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +81,7 @@ export default function AdminPackages() {
   if (loading) return <AdminLoading />;
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.note}>
           Reklam, Reels/Gönderi, kampanya ve bildirim paketlerinin fiyatını yalnızca sen belirlersin. İşletmeler bu fiyatları görerek başvurur; hiçbir içerik sen onaylamadan yayınlanmaz.
@@ -140,7 +142,7 @@ export default function AdminPackages() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
   note: { fontSize: fontSize.sm, color: colors.textSubtle, lineHeight: fontSize.sm * 1.5 },

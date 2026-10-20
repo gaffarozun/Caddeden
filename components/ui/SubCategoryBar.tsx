@@ -15,7 +15,7 @@ interface SubCategoryBarProps {
 export function SubCategoryBar({ main, selected, onSelect }: SubCategoryBarProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const mainColor = getMainCategory(main)?.color ?? colors.primary;
+  const mainColor = colors.primary;
   const items: Array<{ id: string; label: string; icon: string }> = [
     { id: 'all', label: 'Tümü', icon: 'view-grid' },
     ...subCategoriesOf(main).map((s) => ({ id: s.id, label: s.label, icon: s.icon })),
@@ -46,9 +46,9 @@ export function SubCategoryBar({ main, selected, onSelect }: SubCategoryBarProps
               <MaterialCommunityIcons
                 name={item.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                 size={16}
-                color={isSelected ? colors.white : colors.textSubtle}
+                color={isSelected ? colors.onPrimary : colors.textSubtle}
               />
-              <Text style={[styles.label, { color: isSelected ? colors.white : colors.text }]}>
+              <Text style={[styles.label, { color: isSelected ? colors.onPrimary : colors.text }]}>
                 {item.label}
               </Text>
             </Pressable>

@@ -4,7 +4,8 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { AdminEmpty, AdminLoading, SmallButton, StatusPill } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface UserRow {
   id: string;
@@ -18,6 +19,7 @@ interface UserRow {
 const plusDays = (n: number) => new Date(Date.now() + n * 86400000).toISOString();
 
 export default function AdminUsers() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [items, setItems] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function AdminUsers() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   list: { padding: spacing.lg, paddingBottom: spacing.xxxl },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.md, gap: spacing.sm },

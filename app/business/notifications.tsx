@@ -22,9 +22,11 @@ import {
   notifRequestStatusMeta,
 } from '@/services/notificationRequestService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 export default function BusinessNotifications() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
@@ -155,7 +157,7 @@ export default function BusinessNotifications() {
   const estimatedTotal = (selectedPlan?.price ?? 0) * count;
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Yeni Bildirim Talebi</Text>
@@ -166,7 +168,7 @@ export default function BusinessNotifications() {
               const active = bizId === b.id;
               return (
                 <Pressable key={b.id} onPress={() => setBizId(b.id)} style={[styles.chip, active && styles.chipActive]}>
-                  <Text style={[styles.chipText, active && { color: colors.white }]} numberOfLines={1}>{b.name}</Text>
+                  <Text style={[styles.chipText, active && { color: colors.onPrimary }]} numberOfLines={1}>{b.name}</Text>
                 </Pressable>
               );
             })}
@@ -189,12 +191,12 @@ export default function BusinessNotifications() {
           <Text style={styles.label}>Hedef Kitle</Text>
           <View style={styles.kindRow}>
             <Pressable onPress={() => setTargetMode('all')} style={[styles.kindBtn, targetMode === 'all' && styles.kindBtnActive]}>
-              <MaterialCommunityIcons name="account-group-outline" size={18} color={targetMode === 'all' ? colors.white : colors.textSubtle} />
-              <Text style={[styles.kindText, targetMode === 'all' && { color: colors.white }]}>Tüm kullanıcılar</Text>
+              <MaterialCommunityIcons name="account-group-outline" size={18} color={targetMode === 'all' ? colors.onPrimary : colors.textSubtle} />
+              <Text style={[styles.kindText, targetMode === 'all' && { color: colors.onPrimary }]}>Tüm kullanıcılar</Text>
             </Pressable>
             <Pressable onPress={() => setTargetMode('category')} style={[styles.kindBtn, targetMode === 'category' && styles.kindBtnActive]}>
-              <MaterialCommunityIcons name="shape-outline" size={18} color={targetMode === 'category' ? colors.white : colors.textSubtle} />
-              <Text style={[styles.kindText, targetMode === 'category' && { color: colors.white }]}>Kategoriye göre</Text>
+              <MaterialCommunityIcons name="shape-outline" size={18} color={targetMode === 'category' ? colors.onPrimary : colors.textSubtle} />
+              <Text style={[styles.kindText, targetMode === 'category' && { color: colors.onPrimary }]}>Kategoriye göre</Text>
             </Pressable>
           </View>
           {targetMode === 'category' ? (
@@ -203,7 +205,7 @@ export default function BusinessNotifications() {
                 const active = category === c.id;
                 return (
                   <Pressable key={c.id} onPress={() => setCategory(c.id)} style={[styles.chip, active && styles.chipActive]}>
-                    <Text style={[styles.chipText, active && { color: colors.white }]}>{c.label}</Text>
+                    <Text style={[styles.chipText, active && { color: colors.onPrimary }]}>{c.label}</Text>
                   </Pressable>
                 );
               })}
@@ -239,7 +241,7 @@ export default function BusinessNotifications() {
               const active = days.includes(d.value);
               return (
                 <Pressable key={d.value} onPress={() => toggleDay(d.value)} style={[styles.dayChip, active && styles.dayChipActive]}>
-                  <Text style={[styles.dayText, active && { color: colors.white }]}>{d.label}</Text>
+                  <Text style={[styles.dayText, active && { color: colors.onPrimary }]}>{d.label}</Text>
                 </Pressable>
               );
             })}
@@ -327,7 +329,7 @@ export default function BusinessNotifications() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },

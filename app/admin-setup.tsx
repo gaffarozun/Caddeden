@@ -20,7 +20,8 @@ import { Button } from '@/components';
 import { useAuth } from '@/hooks/useAuth';
 import { adminApi } from '@/services/adminService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface ClaimStatus {
   authorized: boolean;
@@ -31,6 +32,7 @@ interface ClaimStatus {
 }
 
 export default function AdminSetup() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser, isAdmin, refreshProfile } = useAuth();
@@ -103,7 +105,7 @@ export default function AdminSetup() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.iconBadge}>
-          <MaterialCommunityIcons name="shield-crown-outline" size={34} color={colors.white} />
+          <MaterialCommunityIcons name="shield-crown-outline" size={34} color={colors.onPrimary} />
         </View>
         <Text style={styles.title}>Yönetici Erişimi</Text>
         <Text style={styles.desc}>
@@ -221,6 +223,7 @@ export default function AdminSetup() {
 }
 
 function Step({ n, text }: { n: number; text: string }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.stepRow}>
       <View style={styles.stepNum}>
@@ -231,14 +234,14 @@ function Step({ n, text }: { n: number; text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, gap: spacing.md, flexGrow: 1, justifyContent: 'center' },
   iconBadge: {
     width: 68,
     height: 68,
     borderRadius: 20,
-    backgroundColor: colors.text,
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
@@ -295,7 +298,7 @@ const styles = StyleSheet.create({
   steps: { gap: spacing.sm, marginVertical: spacing.sm },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   stepNum: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  stepNumText: { color: colors.white, fontSize: fontSize.sm, fontWeight: fontWeight.bold },
+  stepNumText: { color: colors.onPrimary, fontSize: fontSize.sm, fontWeight: fontWeight.bold },
   stepText: { flex: 1, fontSize: fontSize.sm, color: colors.text },
   divider: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginVertical: spacing.sm },
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },

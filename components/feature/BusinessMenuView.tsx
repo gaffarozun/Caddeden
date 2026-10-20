@@ -5,16 +5,17 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { useBusinessMenu } from '@/hooks/useBusinessMenu';
-import { businessProfileColors as c, spacing } from '@/constants/theme';
-import { businessStyles as s } from '@/constants/businessProfileStyles';
+import { spacing } from '@/constants/theme';
+import { useBusinessTheme } from '@/hooks/useBusinessTheme';
 import { money } from '@/services/businessProfileService';
 import { BusinessChips, BusinessError, BusinessHeader, BusinessLink, BusinessPrimary } from './BusinessProfileControls';
 import { BusinessCheckoutSheet } from './BusinessCheckoutSheet';
 import { PhotoViewer } from './PhotoViewer';
 interface BusinessMenuViewProps { businessId: string }
 export const BusinessMenuView = memo(function BusinessMenuView({ businessId }: BusinessMenuViewProps) {
+  const { colors: c, styles: s, isDark } = useBusinessTheme();
   const m = useBusinessMenu(businessId); const p = m.profile; const b = p.business; const o = m.order;
-  return <SafeAreaView style={s.screen} edges={['top', 'bottom']}><StatusBar style="light" /><View style={s.frame}><BusinessHeader title="Menü & Fiyatlar" onBack={() => p.router.back()} />
+  return <SafeAreaView style={s.screen} edges={['top', 'bottom']}><StatusBar style={isDark ? 'light' : 'dark'} /><View style={s.frame}><BusinessHeader title="Menü & Fiyatlar" onBack={() => p.router.back()} />
     {p.loading && !b ? <View style={s.center}><ActivityIndicator color={c.primary} /></View> : !b ? <View style={s.body}><BusinessError message={p.error} /></View> : <>
       <BusinessChips label="Menü kategorileri" items={m.groups.map(group => ({ id: group.name, label: group.name }))} selected={m.group?.name ?? ''} onSelect={m.setSelected} />
       <FlatList data={b.allowMenu === false ? [] : m.group?.items ?? []} keyExtractor={item => item.id} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }} refreshControl={<RefreshControl refreshing={p.refreshing} onRefresh={p.refresh} tintColor={c.primary} />} ItemSeparatorComponent={() => <View style={s.separator} />}

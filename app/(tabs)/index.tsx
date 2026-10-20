@@ -92,6 +92,7 @@ export default function DiscoverScreen() {
       <View style={styles.header}>
         <View>
           <Text style={styles.brand}>Caddeden</Text>
+          <Text style={styles.brandSub}>İşletmeler, lezzetler ve sana özel keşifler</Text>
         </View>
       </View>
 
@@ -141,9 +142,9 @@ export default function DiscoverScreen() {
                 <MaterialCommunityIcons
                   name={onlyOpen ? 'door-open' : 'door-closed'}
                   size={15}
-                  color={onlyOpen ? colors.white : colors.textSubtle}
+                  color={onlyOpen ? colors.onPrimary : colors.textSubtle}
                 />
-                <Text style={[styles.openFilterText, onlyOpen && { color: colors.white }]}>Sadece Açık</Text>
+                <Text style={[styles.openFilterText, onlyOpen && { color: colors.onPrimary }]}>Sadece Açık</Text>
               </Pressable>
             </View>
             <View style={styles.ratingSort}>
@@ -172,9 +173,14 @@ const createStyles = (colors: ThemeColors) =>
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.primarySoft,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.brand,
   },
-  brand: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.text, letterSpacing: -0.5 },
+  brandSub: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: spacing.xs },
+  brand: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.primaryDark, letterSpacing: -0.5 },
   searchWrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
   listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
   bleed: { marginHorizontal: -spacing.lg },
@@ -204,6 +210,7 @@ const createStyles = (colors: ThemeColors) =>
   count: { fontSize: fontSize.sm, color: colors.textSubtle },
   ratingSort: { marginBottom: spacing.lg, gap: spacing.sm },
   openFilter: {
+    minHeight: spacing.xxxl,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,

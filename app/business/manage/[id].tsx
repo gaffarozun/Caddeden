@@ -41,11 +41,13 @@ import { MAIN_CATEGORIES, MainCategoryId, getSubCategory, subCategoriesOf } from
 import { WEEKDAYS, getOpenStatus } from '@/services/businessStatus';
 import { Business } from '@/services/types';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Tone = 'success' | 'warning' | 'danger';
 
 export default function BusinessManage() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { showAlert } = useAlert();
@@ -417,7 +419,7 @@ export default function BusinessManage() {
     : 'Onay bekliyor. Sayfanı burada düzenleyebilirsin; onaylandığında otomatik yayınlanır.';
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Pressable style={styles.cover} onPress={changeCover}>
           {coverUrl ? (
@@ -481,9 +483,9 @@ export default function BusinessManage() {
                   <MaterialCommunityIcons
                     name={m === 'auto' ? 'clock-outline' : 'toggle-switch-outline'}
                     size={16}
-                    color={active ? colors.white : colors.textSubtle}
+                    color={active ? colors.onPrimary : colors.textSubtle}
                   />
-                  <Text style={[styles.modeText, active && { color: colors.white }]}>{m === 'auto' ? 'Otomatik' : 'Manuel'}</Text>
+                  <Text style={[styles.modeText, active && { color: colors.onPrimary }]}>{m === 'auto' ? 'Otomatik' : 'Manuel'}</Text>
                 </Pressable>
               );
             })}
@@ -515,7 +517,7 @@ export default function BusinessManage() {
                   }
                   style={[styles.dayChip, active && styles.dayChipActive]}
                 >
-                  <Text style={[styles.dayText, active && { color: colors.white }]}>{d.label}</Text>
+                  <Text style={[styles.dayText, active && { color: colors.onPrimary }]}>{d.label}</Text>
                 </Pressable>
               );
             })}
@@ -636,8 +638,8 @@ export default function BusinessManage() {
             const active = sub === c.id;
             return (
               <Pressable key={c.id} onPress={() => setSub(c.id)} style={[styles.subChip, active && styles.subChipActive]}>
-                <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={15} color={active ? colors.white : colors.textSubtle} />
-                <Text style={[styles.subText, active && { color: colors.white }]}>{c.label}</Text>
+                <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={15} color={active ? colors.onPrimary : colors.textSubtle} />
+                <Text style={[styles.subText, active && { color: colors.onPrimary }]}>{c.label}</Text>
               </Pressable>
             );
           })}
@@ -798,6 +800,7 @@ function Field({
   multiline?: boolean;
   keyboardType?: 'default' | 'phone-pad' | 'numeric' | 'email-address';
 }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -816,7 +819,7 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },

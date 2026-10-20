@@ -22,11 +22,13 @@ import {
   uploadAdImage,
 } from '@/services/adService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Tone = 'success' | 'warning' | 'danger' | 'neutral' | 'info' | 'primary';
 
 export default function BusinessAds() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
@@ -169,7 +171,7 @@ export default function BusinessAds() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Yeni Reklam Başvurusu</Text>
@@ -180,7 +182,7 @@ export default function BusinessAds() {
               const active = bizId === b.id;
               return (
                 <Pressable key={b.id} onPress={() => setBizId(b.id)} style={[styles.chip, active && styles.chipActive]}>
-                  <Text style={[styles.chipText, active && { color: colors.white }]} numberOfLines={1}>{b.name}</Text>
+                  <Text style={[styles.chipText, active && { color: colors.onPrimary }]} numberOfLines={1}>{b.name}</Text>
                 </Pressable>
               );
             })}
@@ -303,7 +305,7 @@ export default function BusinessAds() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },

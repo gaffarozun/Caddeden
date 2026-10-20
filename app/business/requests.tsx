@@ -20,7 +20,8 @@ import {
 } from '@/services/businessRequestService';
 import { timeAgo } from '@/services/contentService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Section = 'orders' | 'reservations';
 
@@ -32,6 +33,7 @@ const STATUS_TABS = [
 ];
 
 export default function BusinessRequests() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
@@ -215,12 +217,12 @@ export default function BusinessRequests() {
     <View style={styles.screen}>
       <View style={styles.segment}>
         <Pressable onPress={() => setSection('orders')} style={[styles.segBtn, section === 'orders' && styles.segBtnActive]}>
-          <MaterialCommunityIcons name="receipt" size={16} color={section === 'orders' ? colors.white : colors.textSubtle} />
-          <Text style={[styles.segText, section === 'orders' && { color: colors.white }]}>Siparişler</Text>
+          <MaterialCommunityIcons name="receipt" size={16} color={section === 'orders' ? colors.onPrimary : colors.textSubtle} />
+          <Text style={[styles.segText, section === 'orders' && { color: colors.onPrimary }]}>Siparişler</Text>
         </Pressable>
         <Pressable onPress={() => setSection('reservations')} style={[styles.segBtn, section === 'reservations' && styles.segBtnActive]}>
-          <MaterialCommunityIcons name="calendar-check" size={16} color={section === 'reservations' ? colors.white : colors.textSubtle} />
-          <Text style={[styles.segText, section === 'reservations' && { color: colors.white }]}>Rezervasyon</Text>
+          <MaterialCommunityIcons name="calendar-check" size={16} color={section === 'reservations' ? colors.onPrimary : colors.textSubtle} />
+          <Text style={[styles.segText, section === 'reservations' && { color: colors.onPrimary }]}>Rezervasyon</Text>
         </Pressable>
       </View>
 
@@ -243,6 +245,7 @@ export default function BusinessRequests() {
 }
 
 function InfoChip({ icon, text }: { icon: string; text: string }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.infoChip}>
       <MaterialCommunityIcons name={icon as keyof typeof MaterialCommunityIcons.glyphMap} size={14} color={colors.textSubtle} />
@@ -251,7 +254,7 @@ function InfoChip({ icon, text }: { icon: string; text: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },
   guardText: { fontSize: fontSize.md, color: colors.textSubtle, textAlign: 'center' },

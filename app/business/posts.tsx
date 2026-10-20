@@ -18,7 +18,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { AdPackage, MyBusiness, listActivePackagesByTypes, listMyBusinesses } from '@/services/adService';
 import { ContentKind, FeedItem, createContent, deleteContent, listMyContent, timeAgo } from '@/services/contentService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface PickedImage {
   uri: string;
@@ -32,6 +33,7 @@ function contentStatusMeta(status?: string): { label: string; tone: 'success' | 
 }
 
 export default function BusinessPosts() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
@@ -175,7 +177,7 @@ export default function BusinessPosts() {
     ]);
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Yeni Paylaşım</Text>
@@ -192,7 +194,7 @@ export default function BusinessPosts() {
               const active = bizId === b.id;
               return (
                 <Pressable key={b.id} onPress={() => setBizId(b.id)} style={[styles.chip, active && styles.chipActive]}>
-                  <Text style={[styles.chipText, active && { color: colors.white }]} numberOfLines={1}>{b.name}</Text>
+                  <Text style={[styles.chipText, active && { color: colors.onPrimary }]} numberOfLines={1}>{b.name}</Text>
                 </Pressable>
               );
             })}
@@ -303,15 +305,16 @@ export default function BusinessPosts() {
 }
 
 function KindBtn({ label, icon, active, onPress }: { label: string; icon: string; active: boolean; onPress: () => void }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <Pressable onPress={onPress} style={[styles.kindBtn, active && styles.kindBtnActive]}>
-      <MaterialCommunityIcons name={icon as keyof typeof MaterialCommunityIcons.glyphMap} size={18} color={active ? colors.white : colors.textSubtle} />
-      <Text style={[styles.kindText, active && { color: colors.white }]}>{label}</Text>
+      <MaterialCommunityIcons name={icon as keyof typeof MaterialCommunityIcons.glyphMap} size={18} color={active ? colors.onPrimary : colors.textSubtle} />
+      <Text style={[styles.kindText, active && { color: colors.onPrimary }]}>{label}</Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },

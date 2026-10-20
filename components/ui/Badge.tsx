@@ -6,7 +6,7 @@ import { fontSize, fontWeight, radius, spacing } from '@/constants/theme';
 
 interface BadgeProps {
   label: string;
-  tone?: 'primary' | 'success' | 'warning' | 'neutral' | 'dark';
+  tone?: 'primary' | 'success' | 'warning' | 'danger' | 'neutral' | 'dark';
 }
 
 export function Badge({ label, tone = 'primary' }: BadgeProps) {
@@ -15,8 +15,9 @@ export function Badge({ label, tone = 'primary' }: BadgeProps) {
     primary: { bg: colors.primarySoft, fg: colors.primaryDark },
     success: { bg: colors.successSoft, fg: colors.success },
     warning: { bg: colors.warningSoft, fg: colors.warning },
+    danger: { bg: colors.dangerSoft, fg: colors.danger },
     neutral: { bg: colors.surfaceTint, fg: colors.textSubtle },
-    dark: { bg: 'rgba(0,0,0,0.6)', fg: colors.white },
+    dark: { bg: colors.overlay, fg: colors.white },
   } as const;
   const toneStyle = TONES[tone];
   return (

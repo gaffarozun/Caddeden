@@ -5,13 +5,13 @@ import { StatusBar } from 'expo-status-bar';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useBusinessProfile } from '@/hooks/useBusinessProfile';
 import { useBusinessReservation } from '@/hooks/useBusinessReservation';
-import { businessProfileColors as c } from '@/constants/theme';
-import { businessStyles as s } from '@/constants/businessProfileStyles';
+import { useBusinessTheme } from '@/hooks/useBusinessTheme';
 import { BusinessChips, BusinessError, BusinessHeader, BusinessPrimary } from './BusinessProfileControls';
 interface BusinessReservationViewProps { businessId: string }
 export const BusinessReservationView = memo(function BusinessReservationView({ businessId }: BusinessReservationViewProps) {
+  const { colors: c, styles: s, isDark } = useBusinessTheme();
   const p = useBusinessProfile(businessId); const m = useBusinessReservation(p.business, p.canReserve, p.data?.isDemo ?? false);
-  return <SafeAreaView style={s.screen} edges={['top', 'bottom']}><StatusBar style="light" /><KeyboardAvoidingView style={s.frame} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}><BusinessHeader title={m.appointment ? 'Randevu al' : 'Rezervasyon yap'} onBack={() => p.router.back()} />
+  return <SafeAreaView style={s.screen} edges={['top', 'bottom']}><StatusBar style={isDark ? 'light' : 'dark'} /><KeyboardAvoidingView style={s.frame} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}><BusinessHeader title={m.appointment ? 'Randevu al' : 'Rezervasyon yap'} onBack={() => p.router.back()} />
     {p.loading ? <View style={s.center}><ActivityIndicator color={c.primary} /></View> : <ScrollView style={s.screen} contentContainerStyle={s.body} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
       <View style={s.card}><Text style={s.title}>{p.business?.name}</Text><Text style={s.subtle}>Talebiniz işletme onayına gönderilir. Sonucu Geçmişim sayfasından takip edebilirsiniz.</Text></View>
       <BusinessError message={p.error || m.error} />

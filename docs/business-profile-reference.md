@@ -1,7 +1,7 @@
 # İşletme profili ve menü tasarımı
 
 ## Tasarım
-Caddeden müşterileri işletmenin görünümünü, konumunu ve fiyatlarını tek bakışta inceleyip güvenle sipariş veya rezervasyon talebi oluşturur. Görsel dil: koyu, pürüzsüz ve katmanlı sahne; sıcak altın vurgu, solda ürün fotoğrafı, sağda fiyat.
+Caddeden müşterileri işletmenin görünümünü, konumunu ve fiyatlarını tek bakışta inceleyip güvenle sipariş veya rezervasyon talebi oluşturur. Görsel dil: pürüzsüz ve katmanlı sahne; koyu temada sıcak altın, açık temada sıcak bej, pembe temada referans pembe/rose vurguları; solda ürün fotoğrafı, sağda fiyat. Aynı malzeme ve kontrol biçimleri artık Keşfet, gönderiler, profil, sipariş/rezervasyon ve işletme/yönetici panellerinde kullanılır.
 
 Görsel referans arayüz olarak kullanılır, uygulamada ekran görüntüsü gösterilmez. Dokunulabilir ve erişilebilir React Native bileşenleriyle uygulanmıştır. Mobil ölçüler `constants/theme.ts` içindeki `businessProfileLayout` üzerinden, ortak stiller `constants/businessProfileStyles.ts` üzerinden yönetilir. Ekran genişlikleri ve işletmenin metin uzunluğuna göre düzen uyarlanır; bütün cihazlarda piksel eşitliği iddia edilmez.
 
@@ -21,6 +21,22 @@ Ara, numarayı onay kutusunda gösterir ve `tel:` ile telefon uygulamasına geç
 
 ## Sipariş akışı
 Sepet `BusinessCartProvider` ile sayfalar arasında paylaşılır, hesap değişince temizlenir; henüz uygulama kapanışına karşı kalıcı saklama uygulanmaz. Telefon/adres/konum profilden doldurulur. Sipariş öncesinde güncel ürünlerin varlığı, fiyatı, minimum tutar, sahiplik ve açık/kapalı durumu istemcide tekrar kontrol edilir. Mevcut konum 100 m şartı korunur. Talep mevcut `orders` tablosuna aynı servis üzerinden yazılır ve Aktif siparişler sayfası açılır. Bu sürüm mevcut RLS'yi değiştirmez; istemci fiyat denetimi sunucu taraflı fiyat doğrulamasının yerine geçmez.
+
+## Hesaba özel görünüm
+`ThemeProvider`, `AuthProvider` içinde çalışır ve mevcut `authUser.gender` değerini kullanır. Varsayılan (`auto`) kadın için toz pembe, erkek için koyudur; cinsiyet belirtilmemiş/misafir hesap koyu açılır. Manuel açık/koyu/pembe seçimi cinsiyetten bağımsızdır. Cihaz teması seçeneği işletim sistemini takip eder. Profil → Ayarlar → Görünüm bölümünde üç tema önizlemesi, Varsayılan ve Cihaz teması seçenekleri vardır.
+
+Tercihler AsyncStorage üzerinde `caddeden-appearance-v2:<hesap-id>` anahtarıyla bu cihazda saklanır; misafir tercihi ayrıdır. Hesap değişimi eski hesabın temasını yeni hesaba taşımaz. Eski, hesapla ilişkilendirilmemiş cihaz tercihi yalnızca misafir için okunur. Yeniden giriş manuel seçimi sıfırlamaz. Profilde cinsiyet güncellendiğinde yalnızca Varsayılan modu buna uyar. Veri tabanına yeni alan eklenmez, mevcut cinsiyet/kimlik verisi değiştirilmez; cihazlar arası tema eşitlemesi yoktur.
+
+Aktif palet `useTheme`, `useThemeStyles` ve `useBusinessTheme` üzerinden okunur. İşletme profili/menü/ödeme formu artık sabit koyu palet kullanmaz. `onPrimary` renk tokenı altın butonların yazılarını koyu, açık/pembe butonların yazılarını açık tutar. Referans pembesi `pinkColors.brand` alanında bulunur; küçük metinlerde daha koyu rose rengi kullanılır. Navigasyon ve durum çubuğu palete uyar. Görünüm yüklenirken navigasyon sökülmeden geçici yükleme katmanı gösterilir.
+
+Ek görünüm kontrolleri (henüz çalıştırılmadı):
+- Yeni kadın hesabında Varsayılan/pembe, erkek hesabında Varsayılan/koyu açılış.
+- Her hesabın üç paleti seçebilmesi; işletme ve yönetici alt ekranlarının da değişmesi.
+- Kadın hesabında koyu seçip çıkış/yeniden giriş sonrası koyunun korunması; aynı cihazda farklı hesaba geçince tercihin taşınmaması.
+- Varsayılan moddayken cinsiyet güncellemesi; manuel moddayken değişmemesi.
+- Cihaz teması modunda OS açık/koyu değişimi; manuel pembe modunun OS tarafından değiştirilmemesi.
+- Depolama erişimi reddinde görünür hata ve oturum içi tema değişiminin çalışması.
+- Profil, menü, sepet, rezervasyon, puanlama, filtreler ve tüm panellerde üç paletin metin/arka plan okunabilirliği.
 
 ## Doğrulama sınırı ve cihaz kontrol listesi
 Derleme/gerçek cihaz testi bu oturumda çalıştırılmadı. Yayınlamadan önce:

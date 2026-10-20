@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { AdminEmpty, AdminLoading, SmallButton } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface AlertRow {
   id: string;
@@ -19,6 +20,7 @@ interface AlertRow {
 }
 
 export default function AdminAlerts() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const [items, setItems] = useState<AlertRow[]>([]);
@@ -65,7 +67,7 @@ export default function AdminAlerts() {
     const accent = item.type === 'ad' || item.type === 'campaign';
     return (
       <Pressable style={[styles.card, !item.is_read && styles.unread]} onPress={() => open(item)}>
-        <View style={[styles.icon, { backgroundColor: accent ? colors.primarySoft : '#E7F0FB' }]}>
+        <View style={[styles.icon, { backgroundColor: accent ? colors.primarySoft : colors.surfaceTint }]}>
           <MaterialCommunityIcons name={alertIcon(item.type) as keyof typeof MaterialCommunityIcons.glyphMap} size={20} color={accent ? colors.primaryDark : colors.info} />
         </View>
         <View style={{ flex: 1 }}>
@@ -103,7 +105,7 @@ export default function AdminAlerts() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   actionBar: { padding: spacing.lg, paddingBottom: spacing.sm, alignItems: 'flex-end' },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl, paddingTop: spacing.sm },

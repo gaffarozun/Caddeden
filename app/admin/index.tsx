@@ -6,7 +6,8 @@ import { useRouter } from 'expo-router';
 import { AdminLoading, AdminStat, LinkRow } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Overview {
   users: number;
@@ -23,6 +24,7 @@ interface Overview {
 }
 
 export default function AdminDashboard() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const [stats, setStats] = useState<Overview | null>(null);
@@ -67,12 +69,12 @@ export default function AdminDashboard() {
 
       <View style={styles.revenueCard}>
         <View style={styles.revenueHead}>
-          <MaterialCommunityIcons name="cash-multiple" size={22} color={colors.white} />
+          <MaterialCommunityIcons name="cash-multiple" size={22} color={colors.primary} />
           <Text style={styles.revenueLabel}>Toplam Gelir (tahsil edilen)</Text>
         </View>
         <Text style={styles.revenueValue}>{s.revenue.toLocaleString('tr-TR')} ₺</Text>
         <View style={styles.revenueNote}>
-          <MaterialCommunityIcons name="information-outline" size={14} color="rgba(255,255,255,0.8)" />
+          <MaterialCommunityIcons name="information-outline" size={14} color={colors.textSubtle} />
           <Text style={styles.revenueNoteText}>
             Gerçek ödeme entegrasyonu (Stripe) henüz kurulmadı. Tutarlar manuel takip içindir.
           </Text>
@@ -98,15 +100,15 @@ export default function AdminDashboard() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.md },
   heading: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  revenueCard: { backgroundColor: colors.text, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.sm },
+  revenueCard: { backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.borderStrong, borderRadius: radius.xl, padding: spacing.lg, gap: spacing.sm, marginTop: spacing.sm },
   revenueHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  revenueLabel: { color: 'rgba(255,255,255,0.85)', fontSize: fontSize.sm },
-  revenueValue: { color: colors.white, fontSize: fontSize.xxxl, fontWeight: fontWeight.bold, letterSpacing: -1 },
+  revenueLabel: { color: colors.textSubtle, fontSize: fontSize.sm },
+  revenueValue: { color: colors.primaryDark, fontSize: fontSize.xxxl, fontWeight: fontWeight.bold, letterSpacing: -1 },
   revenueNote: { flexDirection: 'row', gap: 6, alignItems: 'flex-start', marginTop: 4 },
-  revenueNoteText: { flex: 1, color: 'rgba(255,255,255,0.8)', fontSize: fontSize.xs, lineHeight: fontSize.xs * 1.5 },
+  revenueNoteText: { flex: 1, color: colors.textSubtle, fontSize: fontSize.xs, lineHeight: fontSize.xs * 1.5 },
   sectionTitle: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text, marginTop: spacing.md, marginBottom: spacing.xs },
 });

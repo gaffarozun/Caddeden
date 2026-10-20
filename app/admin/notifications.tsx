@@ -7,7 +7,8 @@ import { AdminEmpty, StatusPill } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { SUB_CATEGORIES } from '@/services/categories';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Notif {
   id: string;
@@ -19,6 +20,7 @@ interface Notif {
 }
 
 export default function AdminNotifications() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
@@ -61,7 +63,7 @@ export default function AdminNotifications() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View style={styles.card}>
           <Text style={styles.label}>Başlık</Text>
@@ -91,7 +93,7 @@ export default function AdminNotifications() {
                 const active = category === c.id;
                 return (
                   <Pressable key={c.id} onPress={() => setCategory(c.id)} style={[styles.chip, active && styles.chipActive]}>
-                    <Text style={[styles.chipText, active && { color: colors.white }]}>{c.label}</Text>
+                    <Text style={[styles.chipText, active && { color: colors.onPrimary }]}>{c.label}</Text>
                   </Pressable>
                 );
               })}
@@ -136,6 +138,7 @@ export default function AdminNotifications() {
 }
 
 function TargetBtn({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <Pressable onPress={onPress} style={[styles.targetBtn, active && styles.targetBtnActive]}>
       <MaterialCommunityIcons name={active ? 'radiobox-marked' : 'radiobox-blank'} size={18} color={active ? colors.primary : colors.textFaint} />
@@ -144,7 +147,7 @@ function TargetBtn({ label, active, onPress }: { label: string; active: boolean;
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.lg },
   card: { backgroundColor: colors.surface, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, padding: spacing.lg, gap: spacing.sm },

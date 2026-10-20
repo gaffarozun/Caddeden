@@ -10,7 +10,8 @@ import { adminApi } from '@/services/adminService';
 import { categoryLabel } from '@/services/categories';
 import { timeAgo } from '@/services/contentService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Section = 'content' | 'campaign';
 type Tone = 'success' | 'warning' | 'danger';
@@ -38,6 +39,7 @@ const STATUS_TABS = [
 ];
 
 export default function AdminContent() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [section, setSection] = useState<Section>('content');
   const [filter, setFilter] = useState('pending');
@@ -164,12 +166,12 @@ export default function AdminContent() {
     <View style={styles.screen}>
       <View style={styles.segment}>
         <Pressable onPress={() => setSection('content')} style={[styles.segBtn, section === 'content' && styles.segBtnActive]}>
-          <MaterialCommunityIcons name="image-multiple-outline" size={16} color={section === 'content' ? colors.white : colors.textSubtle} />
-          <Text style={[styles.segText, section === 'content' && { color: colors.white }]}>Gönderi & Reels</Text>
+          <MaterialCommunityIcons name="image-multiple-outline" size={16} color={section === 'content' ? colors.onPrimary : colors.textSubtle} />
+          <Text style={[styles.segText, section === 'content' && { color: colors.onPrimary }]}>Gönderi & Reels</Text>
         </Pressable>
         <Pressable onPress={() => setSection('campaign')} style={[styles.segBtn, section === 'campaign' && styles.segBtnActive]}>
-          <MaterialCommunityIcons name="sale" size={16} color={section === 'campaign' ? colors.white : colors.textSubtle} />
-          <Text style={[styles.segText, section === 'campaign' && { color: colors.white }]}>Kampanyalar</Text>
+          <MaterialCommunityIcons name="sale" size={16} color={section === 'campaign' ? colors.onPrimary : colors.textSubtle} />
+          <Text style={[styles.segText, section === 'campaign' && { color: colors.onPrimary }]}>Kampanyalar</Text>
         </Pressable>
       </View>
       <View style={styles.tabsWrap}>
@@ -193,7 +195,7 @@ export default function AdminContent() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   segment: { flexDirection: 'row', gap: spacing.sm, padding: spacing.lg, paddingBottom: spacing.sm },
   segBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface },

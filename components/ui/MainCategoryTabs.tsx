@@ -26,7 +26,7 @@ export function MainCategoryTabs({ selected, onSelect, counts }: MainCategoryTab
             onPress={() => onSelect(m.id)}
             style={({ pressed }) => [
               styles.card,
-              active ? { backgroundColor: m.color, borderColor: m.color } : styles.cardDefault,
+              active ? { backgroundColor: colors.primarySoft, borderColor: colors.brand, borderWidth: 1 } : styles.cardDefault,
               active ? (shadow.md as object) : null,
               pressed && { opacity: 0.92 },
             ]}
@@ -34,17 +34,17 @@ export function MainCategoryTabs({ selected, onSelect, counts }: MainCategoryTab
             <View
               style={[
                 styles.iconWrap,
-                { backgroundColor: active ? 'rgba(255,255,255,0.22)' : `${m.color}1A` },
+                { backgroundColor: colors.surfaceTint },
               ]}
             >
               <MaterialCommunityIcons
                 name={m.icon as keyof typeof MaterialCommunityIcons.glyphMap}
                 size={24}
-                color={active ? colors.white : m.color}
+                color={colors.primaryDark}
               />
             </View>
             <Text
-              style={[styles.label, { color: active ? colors.white : colors.text }]}
+              style={[styles.label, { color: active ? colors.primaryDark : colors.text }]}
               numberOfLines={2}
             >
               {m.label}
@@ -53,7 +53,7 @@ export function MainCategoryTabs({ selected, onSelect, counts }: MainCategoryTab
               <Text
                 style={[
                   styles.count,
-                  { color: active ? 'rgba(255,255,255,0.85)' : colors.textSubtle },
+                  { color: colors.textSubtle },
                 ]}
               >
                 {count} işletme

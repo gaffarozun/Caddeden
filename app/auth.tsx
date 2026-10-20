@@ -15,13 +15,15 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/components';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Account = 'user' | 'business';
 type Mode = 'login' | 'register';
 type Gender = 'male' | 'female' | '';
 
 export default function AuthScreen() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { signIn, sendOtp, registerWithOtp, refreshProfile, operationLoading } = useAuth();
@@ -165,22 +167,23 @@ export default function AuthScreen() {
                   <Field label="Soyad" icon="account-outline" value={lastName} onChangeText={setLastName} placeholder="Soyadın" />
                   <View style={styles.fieldWrap}>
                     <Text style={styles.fieldLabel}>Cinsiyet</Text>
+                    <Text style={styles.subtitle}>İlk girişte kadınlar için pembe, erkekler için koyu tema seçilir. Profil ayarlarından istediğin zaman değiştirebilirsin.</Text>
                     <View style={styles.genderRow}>
                       <Pressable
                         onPress={() => setGender('female')}
                         style={[styles.genderBtn, gender === 'female' && styles.genderBtnActive]}
                         accessibilityLabel="Kadın"
                       >
-                        <MaterialCommunityIcons name="gender-female" size={18} color={gender === 'female' ? colors.white : colors.textSubtle} />
-                        <Text style={[styles.genderText, gender === 'female' && { color: colors.white }]}>Kadın</Text>
+                        <MaterialCommunityIcons name="gender-female" size={18} color={gender === 'female' ? colors.onPrimary : colors.textSubtle} />
+                        <Text style={[styles.genderText, gender === 'female' && { color: colors.onPrimary }]}>Kadın</Text>
                       </Pressable>
                       <Pressable
                         onPress={() => setGender('male')}
                         style={[styles.genderBtn, gender === 'male' && styles.genderBtnActive]}
                         accessibilityLabel="Erkek"
                       >
-                        <MaterialCommunityIcons name="gender-male" size={18} color={gender === 'male' ? colors.white : colors.textSubtle} />
-                        <Text style={[styles.genderText, gender === 'male' && { color: colors.white }]}>Erkek</Text>
+                        <MaterialCommunityIcons name="gender-male" size={18} color={gender === 'male' ? colors.onPrimary : colors.textSubtle} />
+                        <Text style={[styles.genderText, gender === 'male' && { color: colors.onPrimary }]}>Erkek</Text>
                       </Pressable>
                     </View>
                   </View>
@@ -244,9 +247,10 @@ export default function AuthScreen() {
 }
 
 function SegmentBtn({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <Pressable onPress={onPress} style={[styles.segmentBtn, active && styles.segmentBtnActive]}>
-      <Text style={[styles.segmentText, active && { color: colors.white }]}>{label}</Text>
+      <Text style={[styles.segmentText, active && { color: colors.onPrimary }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -268,6 +272,7 @@ function Field({
   secureTextEntry?: boolean;
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
 }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -289,9 +294,9 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
-  content: { padding: spacing.lg, paddingBottom: spacing.xxxl },
+  content: { padding: spacing.xl, paddingBottom: spacing.xxxl, width: '100%', maxWidth: 600, alignSelf: 'center' },
   brand: { fontSize: fontSize.xxxl, fontWeight: fontWeight.bold, color: colors.text, letterSpacing: -1, marginTop: spacing.sm },
   subtitle: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: 4, marginBottom: spacing.xl },
   segment: { flexDirection: 'row', backgroundColor: colors.surfaceTint, borderRadius: radius.pill, padding: 4, marginBottom: spacing.lg },

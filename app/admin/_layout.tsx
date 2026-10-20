@@ -4,9 +4,10 @@ import { View } from 'react-native';
 import { Redirect, Stack } from 'expo-router';
 import { useAuth } from '@/hooks/useAuth';
 import { AdminLoading } from '@/components/admin/ui';
-import { colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/useTheme';
 
 export default function AdminLayout() {
+  const { colors } = useTheme();
   const { isAdmin, loading } = useAuth();
 
   if (loading) {

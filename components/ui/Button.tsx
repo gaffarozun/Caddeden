@@ -30,7 +30,7 @@ export function Button({
   const styles = useMemo(() => createStyles(colors), [colors]);
   const isPrimary = variant === 'primary';
   const isGhost = variant === 'ghost';
-  const textColor = isPrimary ? colors.white : isGhost ? colors.primary : colors.text;
+  const textColor = isPrimary ? colors.onPrimary : isGhost ? colors.primary : colors.text;
 
   return (
     <Pressable

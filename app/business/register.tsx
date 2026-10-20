@@ -8,9 +8,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { getSupabaseClient } from '@/template';
 import { useAlert } from '@/template';
 import { MAIN_CATEGORIES, MainCategoryId, subCategoriesOf } from '@/services/categories';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 export default function BusinessRegister() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
@@ -63,7 +65,7 @@ export default function BusinessRegister() {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.label}>Ana Kategori</Text>
         <View style={styles.mainRow}>
@@ -88,8 +90,8 @@ export default function BusinessRegister() {
             const active = sub === c.id;
             return (
               <Pressable key={c.id} onPress={() => setSub(c.id)} style={[styles.subChip, active && styles.subChipActive]}>
-                <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={15} color={active ? colors.white : colors.textSubtle} />
-                <Text style={[styles.subText, active && { color: colors.white }]}>{c.label}</Text>
+                <MaterialCommunityIcons name={c.icon as keyof typeof MaterialCommunityIcons.glyphMap} size={15} color={active ? colors.onPrimary : colors.textSubtle} />
+                <Text style={[styles.subText, active && { color: colors.onPrimary }]}>{c.label}</Text>
               </Pressable>
             );
           })}
@@ -129,6 +131,7 @@ function Field({
   multiline?: boolean;
   keyboardType?: 'default' | 'phone-pad';
 }) {
+  const { colors, styles } = useThemeStyles(createStyles);
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
@@ -146,7 +149,7 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxxl, gap: spacing.sm },
   guard: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md, padding: spacing.xl, backgroundColor: colors.background },

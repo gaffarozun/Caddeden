@@ -5,7 +5,8 @@ import { AdminEmpty, AdminLoading, FilterTabs, SmallButton, StatusPill } from '@
 import { adminApi } from '@/services/adminService';
 import { categoryLabel, getMainCategory } from '@/services/categories';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Biz {
   id: string;
@@ -27,6 +28,7 @@ const TABS = [
 ];
 
 export default function AdminBusinesses() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [filter, setFilter] = useState('pending');
   const [items, setItems] = useState<Biz[]>([]);
@@ -135,7 +137,7 @@ export default function AdminBusinesses() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   tabsWrap: { padding: spacing.lg, paddingBottom: spacing.sm },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl },

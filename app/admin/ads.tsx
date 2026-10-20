@@ -5,7 +5,8 @@ import { AdminEmpty, AdminLoading, FilterTabs, SmallButton, StatusPill } from '@
 import { adminApi } from '@/services/adminService';
 import { AD_TYPE_LABELS } from '@/services/adService';
 import { useAlert } from '@/template';
-import { colors, fontSize, fontWeight, radius, spacing } from '@/constants/theme';
+import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 interface Ad {
   id: string;
@@ -30,6 +31,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const plusDays = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 
 export default function AdminAds() {
+  const { colors, styles } = useThemeStyles(createStyles);
   const { showAlert } = useAlert();
   const [filter, setFilter] = useState('pending');
   const [items, setItems] = useState<Ad[]>([]);
@@ -121,7 +123,7 @@ export default function AdminAds() {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   tabsWrap: { padding: spacing.lg, paddingBottom: spacing.sm },
   list: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxxl },

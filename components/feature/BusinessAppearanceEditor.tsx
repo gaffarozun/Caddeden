@@ -2,11 +2,11 @@ import React, { memo } from 'react';
 import { FlatList, Text, TextInput, View } from 'react-native';
 import { Image } from 'expo-image';
 import { useBusinessAppearance } from '@/hooks/useBusinessAppearance';
-import { businessProfileColors as c } from '@/constants/theme';
-import { businessStyles as s } from '@/constants/businessProfileStyles';
+import { useBusinessTheme } from '@/hooks/useBusinessTheme';
 import { BusinessError, BusinessLink, BusinessPrimary } from './BusinessProfileControls';
 interface BusinessAppearanceEditorProps { businessId: string; menuVersion: string }
 export const BusinessAppearanceEditor = memo(function BusinessAppearanceEditor({ businessId, menuVersion }: BusinessAppearanceEditorProps) {
+  const { colors: c, styles: s } = useBusinessTheme();
   const m = useBusinessAppearance(businessId);
   React.useEffect(() => { void m.loadGroups().catch(() => {}); }, [menuVersion, m.loadGroups]);
   return <View style={s.card}><Text style={s.heading}>Profil ve menü görünümü</Text><Text style={s.subtle}>Üst menü fotoğrafı ve kategori fotoğrafları doğrudan kaydedilir; yönetici onayı gerekmez. Fotoğraflar otomatik kırpılmaz, yatay görseller önerilir.</Text>
