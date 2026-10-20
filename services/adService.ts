@@ -4,6 +4,7 @@
 // admin-defined packages; clients can never set them.
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
+import { businessAccessError } from './accountAccessService';
 
 const sb = () => getSupabaseClient();
 const BUCKET = 'business-media';
@@ -85,6 +86,7 @@ export async function listActivePackagesByTypes(
 }
 
 export async function listMyBusinesses(ownerId: string): Promise<{ data: MyBusiness[]; error: string | null }> {
+  const denied = await businessAccessError(undefined, ownerId); if (denied) return { data: [], error: denied };
   const { data, error } = await sb()
     .from('businesses')
     .select('id, name, approval_status')
@@ -94,6 +96,7 @@ export async function listMyBusinesses(ownerId: string): Promise<{ data: MyBusin
 }
 
 export async function listMyAds(): Promise<{ data: MyAd[]; error: string | null }> {
+  const denied = await businessAccessError(); if (denied) return { data: [], error: denied };
   // RLS restricts rows to ads whose business is owned by the caller.
   const { data, error } = await sb()
     .from('ads')
@@ -109,6 +112,7 @@ export async function applyForAd(params: {
   title: string;
   image_url?: string | null;
 }): Promise<{ error: string | null }> {
+  const denied = await businessAccessError(params.business_id); if (denied) return { error: denied };
   // price/status/payment_status are intentionally omitted: the DB trigger sets
   // them authoritatively (price from the package, status=pending, unpaid).
   const { error } = await sb().from('ads').insert({
@@ -128,6 +132,7 @@ export async function uploadAdImage(
   base64: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
+    const denied = await businessAccessError(businessId); if (denied) return { url: null, error: denied };
     const path = `${businessId}/ads/${Date.now()}.jpg`;
     const { error: upErr } = await sb()
       .storage.from(BUCKET)

@@ -38,11 +38,12 @@ export async function getCurrentSession() {
 }
 
 export async function fetchProfile(userId: string, fallbackEmail: string): Promise<AuthProfile> {
-  const { data } = await sb()
+  const { data, error } = await sb()
     .from('user_profiles')
     .select('id, username, email, role, status, restricted_until, first_name, last_name, gender, phone, address, lat, lng')
     .eq('id', userId)
     .single();
+  if (error || !data || !['user', 'business', 'admin'].includes(data.role)) throw new Error(error?.message ?? 'Hesap türü doğrulanamadı.');
   if (data) {
     return {
       id: data.id,
@@ -60,32 +61,26 @@ export async function fetchProfile(userId: string, fallbackEmail: string): Promi
       lng: data.lng ?? null,
     };
   }
-  return {
-    id: userId,
-    email: fallbackEmail,
-    username: null,
-    role: 'user',
-    status: 'active',
-    restricted_until: null,
-    first_name: null,
-    last_name: null,
-    gender: null,
-    phone: null,
-    address: null,
-    lat: null,
-    lng: null,
-  };
+  throw new Error('Hesap bilgisi bulunamadı.');
 }
 
-export async function signInWithPassword(email: string, password: string) {
-  const { error } = await sb().auth.signInWithPassword({ email: email.trim(), password });
-  return { error: error?.message ?? null };
+export async function signInWithPassword(email: string, password: string, account?: 'user' | 'business') {
+  const { data, error } = await sb().auth.signInWithPassword({ email: email.trim(), password });
+  if (error || !data.user) return { error: error?.message ?? 'Oturum doğrulanamadı.' };
+  try {
+    const profile = await fetchProfile(data.user.id, data.user.email ?? '');
+    if (account && profile.role !== 'admin' && profile.role !== account) {
+      const { error: logoutError } = await sb().auth.signOut();
+      return { error: logoutError?.message ?? (profile.role === 'business' ? 'Bu bir işletme hesabıdır. İşletme girişini seçin.' : 'Bu bir kullanıcı hesabıdır. Kullanıcı girişini seçin; işletme hesabı türünü yönetici belirler.') };
+    }
+    return { error: null };
+  } catch (reason) { return { error: reason instanceof Error ? reason.message : 'Hesap doğrulanamadı.' }; }
 }
 
-export async function sendEmailOtp(email: string) {
+export async function sendEmailOtp(email: string, meta?: RegisterMeta) {
   const { error } = await sb().auth.signInWithOtp({
     email: email.trim(),
-    options: { shouldCreateUser: true },
+    options: { shouldCreateUser: true, data: { ...meta, role: meta?.role === 'business' ? 'business' : 'user' } },
   });
   return { error: error?.message ?? null };
 }
@@ -103,6 +98,12 @@ export async function verifyOtpAndRegister(
   });
   if (error) return { error: error.message };
 
+  if (!data.user) return { error: 'Doğrulanmış hesap bulunamadı.' };
+  const profile = await fetchProfile(data.user.id, data.user.email ?? '');
+  if (profile.role !== 'admin' && profile.role !== (meta.role === 'business' ? 'business' : 'user')) {
+    await sb().auth.signOut();
+    return { error: 'Bu e-posta farklı hesap türüne ait. Mevcut hesap türünüzle giriş yapın.' };
+  }
   const { error: upErr } = await sb().auth.updateUser({
     password,
     data: {
@@ -116,19 +117,16 @@ export async function verifyOtpAndRegister(
   if (upErr) return { error: upErr.message };
 
   if (data.user) {
-    // Persist the chosen account type (customer vs business) plus identity. The
-    // protect_user_profile_cols trigger only permits user<->business from the
-    // client and never grants/removes admin, so this is safe.
-    const safeRole: UserRole = meta.role === 'business' ? 'business' : 'user';
+    // Account type is assigned once by handle_new_user; client never changes it.
     const patch: Record<string, unknown> = {
       username: meta.username ?? null,
       phone: meta.phone ?? null,
-      role: safeRole,
     };
     if (meta.first_name !== undefined) patch.first_name = meta.first_name ?? null;
     if (meta.last_name !== undefined) patch.last_name = meta.last_name ?? null;
     if (meta.gender !== undefined) patch.gender = meta.gender ?? null;
-    await sb().from('user_profiles').update(patch).eq('id', data.user.id);
+    const { error: profileError } = await sb().from('user_profiles').update(patch).eq('id', data.user.id);
+    if (profileError) return { error: profileError.message };
   }
   return { error: null };
 }
@@ -157,7 +155,8 @@ export async function updateMyProfile(patch: {
 }
 
 export async function signOut() {
-  await sb().auth.signOut();
+  const { error } = await sb().auth.signOut();
+  if (error) throw new Error(error.message);
 }
 
 // Masked customer display name shown to businesses: the full first name plus the

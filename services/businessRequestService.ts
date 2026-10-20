@@ -4,6 +4,7 @@
 // or rejects it. Customer contact + delivery location live on the order row so
 // the business can read them (user_profiles rows are private via RLS).
 import { getSupabaseClient } from '@/template';
+import { requireCustomer, accessError, businessAccessError, ownedRowAccessError } from './accountAccessService';
 
 const sb = () => getSupabaseClient();
 
@@ -70,9 +71,8 @@ export async function placeOrder(params: {
   note?: string | null;
   customer_name?: string | null;
 }): Promise<{ error: string | null }> {
-  const { data: auth } = await sb().auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) return { error: 'Oturum bulunamadı.' };
+  let uid: string;
+  try { uid = await requireCustomer(); } catch (reason) { return { error: accessError(reason) }; }
   const { error } = await sb().from('orders').insert({
     user_id: uid,
     business_id: params.business_id,
@@ -114,6 +114,8 @@ export async function listMyOrders(userId: string): Promise<{ data: OrderRow[]; 
 
 // Incoming orders for every business owned by the caller (business panel).
 export async function listIncomingOrders(ownerId: string): Promise<{ data: OrderRow[]; error: string | null }> {
+  const denied = await businessAccessError(undefined, ownerId);
+  if (denied) return { data: [], error: denied };
   const { data, error } = await sb()
     .from('orders')
     .select('*, businesses!inner(name, owner_id)')
@@ -123,8 +125,9 @@ export async function listIncomingOrders(ownerId: string): Promise<{ data: Order
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus): Promise<{ error: string | null }> {
-  const { error } = await sb().from('orders').update({ status }).eq('id', orderId);
-  return { error: error?.message ?? null };
+  const denied = await ownedRowAccessError('orders', orderId); if (denied) return { error: denied };
+  const { data, error } = await sb().from('orders').update({ status }).eq('id', orderId).select('id').maybeSingle();
+  return { error: error?.message ?? (!data ? 'Sipariş bulunamadı veya yetkiniz değişti.' : null) };
 }
 
 // ---------------- Reservations / appointments ----------------
@@ -139,9 +142,8 @@ export async function createReservation(params: {
   type?: string;
   customer_name?: string | null;
 }): Promise<{ error: string | null }> {
-  const { data: auth } = await sb().auth.getUser();
-  const uid = auth.user?.id;
-  if (!uid) return { error: 'Oturum bulunamadı.' };
+  let uid: string;
+  try { uid = await requireCustomer(); } catch (reason) { return { error: accessError(reason) }; }
   const { error } = await sb().from('reservations').insert({
     user_id: uid,
     business_id: params.business_id,
@@ -168,6 +170,7 @@ export async function listMyReservations(userId: string): Promise<{ data: Reserv
 export async function listIncomingReservations(
   ownerId: string
 ): Promise<{ data: ReservationRow[]; error: string | null }> {
+  const denied = await businessAccessError(undefined, ownerId); if (denied) return { data: [], error: denied };
   const { data, error } = await sb()
     .from('reservations')
     .select('*, businesses!inner(name, owner_id)')
@@ -180,8 +183,9 @@ export async function updateReservationStatus(
   id: string,
   status: RequestStatus
 ): Promise<{ error: string | null }> {
-  const { error } = await sb().from('reservations').update({ status }).eq('id', id);
-  return { error: error?.message ?? null };
+  const denied = await ownedRowAccessError('reservations', id); if (denied) return { error: denied };
+  const { data, error } = await sb().from('reservations').update({ status }).eq('id', id).select('id').maybeSingle();
+  return { error: error?.message ?? (!data ? 'Talep bulunamadı veya yetkiniz değişti.' : null) };
 }
 
 export function requestStatusMeta(status?: string): { label: string; tone: 'success' | 'warning' | 'danger' } {

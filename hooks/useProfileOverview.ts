@@ -14,12 +14,12 @@ export function useProfileOverview() {
   useFocusEffect(useCallback(() => {
     let active = true;
     setError('');
-    if (loadedUser.current !== (authUser?.id ?? '')) {
+    if (loadedUser.current !== `${authUser?.id ?? ''}:${authUser?.role ?? ''}`) {
       setOwned([]); setMyOrders([]); setMyReservations([]);
-      loadedUser.current = authUser?.id ?? '';
+      loadedUser.current = `${authUser?.id ?? ''}:${authUser?.role ?? ''}`;
     }
     if (authUser) {
-      void loadProfileOverview(authUser.id).then(data => {
+      void loadProfileOverview(authUser.id, authUser.role).then(data => {
         if (!active) return;
         setOwned(data.owned); setMyOrders(data.orders); setMyReservations(data.reservations);
       }).catch(reason => {
@@ -27,6 +27,6 @@ export function useProfileOverview() {
       });
     }
     return () => { active = false; };
-  }, [authUser?.id]));
+  }, [authUser?.id, authUser?.role]));
   return { owned, myOrders, myReservations, error };
 }

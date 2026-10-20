@@ -22,6 +22,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Button } from '@/components';
+import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { StatusPill } from '@/components/admin/ui';
 import { ExperienceAccessCard } from '@/components/feature/ExperienceAccessCard';
 import { BusinessAppearanceEditor } from '@/components/feature/BusinessAppearanceEditor';
@@ -46,7 +47,8 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
 
 type Tone = 'success' | 'warning' | 'danger';
 
-export default function BusinessManage() {
+export default function BusinessManageScreen() { return <AccountRouteBoundary><BusinessManage /></AccountRouteBoundary>; }
+function BusinessManage() {
   const { colors, styles } = useThemeStyles(createStyles);
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();

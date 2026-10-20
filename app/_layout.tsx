@@ -9,6 +9,9 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { RatingProvider } from '@/contexts/RatingContext';
 import { BusinessCartProvider } from '@/contexts/BusinessCartContext';
+import { AccountAccessProvider } from '@/contexts/AccountAccessContext';
+import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
+import { useAuth } from '@/hooks/useAuth';
 import { businessProfileLayout, spacing, fontSize } from '@/constants/theme';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
@@ -19,6 +22,7 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <AuthProvider>
           <ThemeProvider>
+            <AccountAccessProvider>
             <AppProvider>
               <FeedbackProvider>
                 <RatingProvider>
@@ -28,6 +32,7 @@ export default function RootLayout() {
                 </RatingProvider>
               </FeedbackProvider>
             </AppProvider>
+            </AccountAccessProvider>
           </ThemeProvider>
         </AuthProvider>
       </SafeAreaProvider>
@@ -37,6 +42,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { colors, isDark, ready } = useTheme();
+  const { profileError } = useAuth();
   const header = {
     headerTintColor: colors.text,
     headerStyle: { backgroundColor: colors.surface },
@@ -55,6 +61,7 @@ function RootNavigator() {
       >
         <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(business-tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
         <Stack.Screen name="admin-setup" options={{ headerShown: true, title: 'Yönetici Erişimi', ...header }} />
         <Stack.Screen name="business/[id]" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
@@ -76,6 +83,7 @@ function RootNavigator() {
         <Stack.Screen name="auth" options={{ headerShown: true, title: '', presentation: 'modal', ...header }} />
       </Stack>
       </View>
+      {profileError ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
     </View>
   );

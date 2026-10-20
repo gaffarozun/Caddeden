@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '@/components';
+import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { CROP_PRESETS, ImageCropper } from '@/components/feature/ImageCropper';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,7 +33,8 @@ function contentStatusMeta(status?: string): { label: string; tone: 'success' | 
   return { label: 'Onay bekliyor', tone: 'warning' };
 }
 
-export default function BusinessPosts() {
+export default function BusinessPostsScreen() { return <AccountRouteBoundary><BusinessPosts /></AccountRouteBoundary>; }
+function BusinessPosts() {
   const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();

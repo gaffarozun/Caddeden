@@ -1,5 +1,6 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { getSupabaseClient } from '@/template';
+import { requireCustomer } from './accountAccessService';
 
 export interface BusinessRatingState { rating: number; count: number; mine: number | null; canRate: boolean }
 export function isHalfStarRating(value: number): boolean {
@@ -29,7 +30,8 @@ export async function ratingServer(action: string, params: Record<string, unknow
   }
   if (!data?.ok) throw new Error(data?.error ?? 'İşlem doğrulanamadı.');
 }
-export const submitBusinessRating = (businessId: string, rating: number) => {
+export const submitBusinessRating = async (businessId: string, rating: number) => {
+  await requireCustomer();
   if (!isHalfStarRating(rating)) return Promise.reject(new Error('0,5–5 arasında yarım yıldız adımlarıyla puan seçin.'));
   return ratingServer('rate', { business_id: businessId, rating });
 };

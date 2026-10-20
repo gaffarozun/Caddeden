@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './useAuth';
+import { useAccountAccess } from './useAccountAccess';
 import { useFeedback } from './useFeedback';
 import { useRatings } from './useRatings';
 import { BusinessFeedback, CriteriaRatings, FeedbackTopic, feedbackTopics, reviewCriteria, summarizeCriteria, removeUnusedEvidence, uploadFeedbackEvidence } from '@/services/feedbackService';
 
 export type FeedbackTab = 'review' | 'suggestion' | 'complaint';
 export function useBusinessFeedback(id: string, enabled = true, startWriting = false) {
-  const { authUser } = useAuth();
+  const { authUser } = useAuth(); const access = useAccountAccess();
   const { read, mutate, revision, invalidate } = useFeedback();
   const { experienceEnabled, experienceLoading } = useRatings();
   const allowed = enabled && experienceEnabled && !experienceLoading;
@@ -43,7 +44,7 @@ export function useBusinessFeedback(id: string, enabled = true, startWriting = f
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
     lastMine.current = ''; openedOnEntry.current = false; formOpenRef.current = false; setData(null); setFormOpen(false); setTarget({ type: 'business', id }); setOffset(0); setError(''); setEvidence(null); setCriteriaRatings({}); setComment(''); setNotice('');
-  }, [id, authUser?.id]);
+  }, [id, authUser?.id, authUser?.role]);
   useEffect(() => {
     let active = true;
     const generation = ++epoch.current;
@@ -61,7 +62,7 @@ export function useBusinessFeedback(id: string, enabled = true, startWriting = f
     return () => { active = false; };
   }, [allowed, id, read, sort, offset, revision]);
   useEffect(() => { if (!allowed) setFormOpen(false); }, [allowed]);
-  const canCustomer = allowed && !!authUser && authUser.role === 'user' && authUser.status === 'active' && !data?.owner;
+  const canCustomer = allowed && access.customer && !data?.owner;
   const commentPreview = useMemo(() => (data?.reviews ?? []).filter(review => review.comment.trim().length > 0).slice(0, 2), [data?.reviews]);
   useEffect(() => {
     if (startWriting && canCustomer && data && !loading && !openedOnEntry.current) {

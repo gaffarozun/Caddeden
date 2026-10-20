@@ -146,24 +146,29 @@ export function SmallButton({
   onPress,
   tone = 'primary',
   outline,
+  disabled = false,
 }: {
   label: string;
   icon?: string;
   onPress: () => void;
   tone?: Tone;
   outline?: boolean;
+  disabled?: boolean;
 }) {
   const { colors, styles } = useThemeStyles(createStyles);
   const t = createToneMap(colors)[tone];
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityState={{ disabled }}
       style={({ pressed }) => [
         styles.smallBtn,
         outline
           ? { borderWidth: 1, borderColor: t.fg, backgroundColor: 'transparent' }
           : { backgroundColor: t.fg },
-        pressed && { opacity: 0.85 },
+        (pressed || disabled) && { opacity: disabled ? 0.45 : 0.85 },
       ]}
     >
       {icon ? (

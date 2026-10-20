@@ -3,6 +3,7 @@ import { Linking, Share } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAlert } from '@/template';
 import { useAuth } from './useAuth';
+import { useAccountAccess } from './useAccountAccess';
 import { useApp } from './useApp';
 import { useRatings } from './useRatings';
 import { BusinessProfileData, businessMapsUrl, loadBusinessProfile } from '@/services/businessProfileService';
@@ -11,7 +12,7 @@ import { getSubCategory } from '@/services/categories';
 import { distanceMeters } from '@/services/geo';
 import { getBusinessCapabilities } from '@/services/businessCapabilitiesService';
 export function useBusinessProfile(id: string) {
-  const { authUser } = useAuth(); const { showAlert } = useAlert(); const router = useRouter();
+  const { authUser } = useAuth(); const access = useAccountAccess(); const { showAlert } = useAlert(); const router = useRouter();
   const { savedBusinessIds, toggleSaveBusiness } = useApp(); const { states } = useRatings();
   const [data, setData] = useState<BusinessProfileData | null>(null);
   const [loading, setLoading] = useState(true); const [error, setError] = useState('');
@@ -22,7 +23,7 @@ export function useBusinessProfile(id: string) {
     let active = true; generation.current += 1; setLoading(true); setError(''); setData(null);
     loadBusinessProfile(id).then(value => { if (active) setData(value); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Profil yüklenemedi.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; generation.current += 1; };
-  }, [id, authUser?.id]));
+  }, [id, authUser?.id, authUser?.role]));
   const refresh = useCallback(async () => {
     const version = generation.current;
     setRefreshing(true); setError('');
@@ -37,7 +38,8 @@ export function useBusinessProfile(id: string) {
     return stars && !data.isDemo ? { ...b, rating: stars.rating, reviewCount: stars.count, distanceKm } : { ...b, distanceKm };
   }, [data, id, states, authUser?.lat, authUser?.lng]);
   const isOwner = !!authUser && data?.ownerId === authUser.id;
-  const customer = !authUser || (authUser.role === 'user' && !isOwner);
+  const customer = !authUser || (access.customer && !isOwner);
+  const canManage = isOwner && (access.business || access.admin);
   const sub = business ? getSubCategory(business.category) : undefined;
   const capabilities = getBusinessCapabilities(business);
   const orderingEnabled = capabilities.orders;
@@ -62,7 +64,7 @@ export function useBusinessProfile(id: string) {
     bookingType: capabilities.bookingType,
   } }), [id, router, orderingEnabled, capabilities.historyScope, capabilities.bookingType]);
   return { id, data, business, loading, error, refreshing, refresh, tab, setTab, photoUri, setPhotoUri,
-    status: business ? getOpenStatus(business) : null, sub, isOwner, customer, canOrder, orderingEnabled, canReserve,
+    status: business ? getOpenStatus(business) : null, sub, isOwner, canManage, customer, canOrder, orderingEnabled, canReserve,
     historyLabel: capabilities.historyLabel,
     saved: savedBusinessIds.includes(id), toggleSave: () => toggleSaveBusiness(id), call, maps, share, history, router, authUser };
 }

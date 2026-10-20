@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { Button } from '@/components';
 import { useAuth } from '@/hooks/useAuth';
 import { useAlert } from '@/template';
@@ -26,7 +26,7 @@ export default function AuthScreen() {
   const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
-  const { signIn, sendOtp, registerWithOtp, refreshProfile, operationLoading } = useAuth();
+  const { authUser, loading, signIn, sendOtp, registerWithOtp, operationLoading } = useAuth();
 
   const [account, setAccount] = useState<Account>('user');
   const [mode, setMode] = useState<Mode>('login');
@@ -39,6 +39,7 @@ export default function AuthScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [otp, setOtp] = useState('');
 
   const resetFlow = () => {
@@ -51,16 +52,12 @@ export default function AuthScreen() {
       showAlert('Eksik bilgi', 'Lütfen e-posta ve şifre alanlarını doldur.', [{ text: 'Tamam' }]);
       return;
     }
-    const { error } = await signIn(email, password);
+    const { error } = await signIn(email, password, account);
     if (error) {
       showAlert('Giriş başarısız', error, [{ text: 'Tamam' }]);
       return;
     }
-    if (account === 'business') {
-      router.replace('/(tabs)/profile');
-    } else {
-      router.back();
-    }
+    // The authenticated route selects navigation from the database role.
   };
 
   const handleSendOtp = async () => {
@@ -83,7 +80,15 @@ export default function AuthScreen() {
       showAlert('Eksik bilgi', 'Geçerli bir e-posta ve en az 6 haneli şifre gir.', [{ text: 'Tamam' }]);
       return;
     }
-    const { error } = await sendOtp(email);
+    if (password !== confirmPassword) { showAlert('Şifreler eşleşmiyor', 'Şifreyi tekrar kontrol edin.'); return; }
+    const { error } = await sendOtp(email, {
+      role: account,
+      username: account === 'business' ? name.trim() : `${firstName.trim()} ${lastName.trim()}`.trim(),
+      phone: phone.trim() || undefined,
+      first_name: account === 'user' ? firstName.trim() : undefined,
+      last_name: account === 'user' ? lastName.trim() : undefined,
+      gender: account === 'user' && gender ? gender : undefined,
+    });
     if (error) {
       showAlert('Kod gönderilemedi', error, [{ text: 'Tamam' }]);
       return;
@@ -113,16 +118,10 @@ export default function AuthScreen() {
       showAlert('Doğrulama başarısız', error, [{ text: 'Tamam' }]);
       return;
     }
-    await refreshProfile();
-    if (account === 'business') {
-      showAlert('Hesap oluşturuldu', 'Şimdi işletmeni kaydet. Yönetici onayından sonra yayınlanır.', [
-        { text: 'Devam', onPress: () => router.replace('/business/register') },
-      ]);
-    } else {
-      router.back();
-    }
+    // Auth state drives the redirect; account type is never changed here.
   };
 
+  if (authUser && !loading && !operationLoading) return <Redirect href="/" />;
   return (
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -205,6 +204,7 @@ export default function AuthScreen() {
             ) : null}
 
             <Field label="Şifre" icon="lock-outline" value={password} onChangeText={setPassword} placeholder="En az 6 karakter" secureTextEntry />
+            {mode === 'register' ? <Field label="Şifreyi tekrar gir" icon="lock-check-outline" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Şifreni doğrula" secureTextEntry /> : null}
 
             <View style={{ marginTop: spacing.lg }}>
               <Button
@@ -237,7 +237,7 @@ export default function AuthScreen() {
         </Pressable>
 
         {account === 'user' ? (
-          <Pressable style={styles.guestBtn} onPress={() => router.back()}>
+          <Pressable style={styles.guestBtn} onPress={() => router.replace('/(tabs)')}>
             <Text style={styles.guestText}>Misafir olarak devam et</Text>
           </Pressable>
         ) : null}

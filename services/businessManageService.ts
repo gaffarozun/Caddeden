@@ -5,6 +5,7 @@
 // enforced server-side by the protect_business_cols trigger and cannot be changed here.
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
+import { businessAccessError, ownedRowAccessError } from './accountAccessService';
 
 const sb = () => getSupabaseClient();
 const BUCKET = 'business-media';
@@ -59,6 +60,7 @@ export async function fetchOwnedBusiness(
   id: string,
   ownerId: string
 ): Promise<{ data: OwnedBusinessFull | null; error: string | null }> {
+  const denied = await businessAccessError(id, ownerId); if (denied) return { data: null, error: denied };
   const { data, error } = await sb()
     .from('businesses')
     .select('*')
@@ -109,8 +111,9 @@ export async function updateBusinessProfile(
   id: string,
   patch: Record<string, unknown>
 ): Promise<{ error: string | null }> {
-  const { error } = await sb().from('businesses').update(patch).eq('id', id);
-  return { error: error?.message ?? null };
+  const denied = await businessAccessError(id); if (denied) return { error: denied };
+  const { data, error } = await sb().from('businesses').update(patch).eq('id', id).select('id').maybeSingle();
+  return { error: error?.message ?? (!data ? 'İşletme bulunamadı veya yetkiniz değişti.' : null) };
 }
 
 // Upload an image to the business-media bucket under {businessId}/{folder}/.
@@ -121,6 +124,7 @@ export async function uploadBusinessMedia(
   folder: string
 ): Promise<{ url: string | null; error: string | null }> {
   try {
+    const denied = await businessAccessError(businessId); if (denied) return { url: null, error: denied };
     const path = `${businessId}/${folder}/${Date.now()}.jpg`;
     const { error: upErr } = await sb()
       .storage.from(BUCKET)
@@ -156,6 +160,7 @@ export async function addMenuItem(item: {
   image_url?: string | null;
   sort_order?: number;
 }): Promise<{ error: string | null }> {
+  const denied = await businessAccessError(item.business_id); if (denied) return { error: denied };
   const { error } = await sb().from('menu_items').insert({
     business_id: item.business_id,
     name: item.name,
@@ -171,6 +176,7 @@ export async function addMenuItem(item: {
 }
 
 export async function deleteMenuItem(id: string): Promise<{ error: string | null }> {
+  const denied = await ownedRowAccessError('menu_items', id); if (denied) return { error: denied };
   const { error } = await sb().from('menu_items').delete().eq('id', id);
   return { error: error?.message ?? null };
 }
@@ -179,6 +185,7 @@ export async function updateMenuItem(
   id: string,
   patch: Partial<Pick<MenuItemRow, 'name' | 'price' | 'group_name' | 'description' | 'duration_min' | 'image_url'>>
 ): Promise<{ error: string | null }> {
+  const denied = await ownedRowAccessError('menu_items', id); if (denied) return { error: denied };
   const { error } = await sb().from('menu_items').update(patch).eq('id', id);
   return { error: error?.message ?? null };
 }

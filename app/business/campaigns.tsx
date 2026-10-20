@@ -9,6 +9,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { Button } from '@/components';
+import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { CROP_PRESETS, ImageCropper } from '@/components/feature/ImageCropper';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,7 +28,8 @@ const CAMPAIGN_RATIOS = [
   CROP_PRESETS.free,
 ];
 
-export default function BusinessCampaigns() {
+export default function BusinessCampaignsScreen() { return <AccountRouteBoundary><BusinessCampaigns /></AccountRouteBoundary>; }
+function BusinessCampaigns() {
   const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();

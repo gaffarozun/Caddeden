@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { AdminEmpty, AdminLoading, SmallButton, StatusPill } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
+import { useAdminAccountTypes } from '@/hooks/useAdminAccountTypes';
 import { useAlert } from '@/template';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -13,6 +14,8 @@ interface UserRow {
   email?: string | null;
   role: string;
   status: string;
+  businesses?: { id: string }[];
+  account_type_decisions?: { role: string; decided_at: string } | null;
   restricted_until?: string | null;
 }
 
@@ -33,6 +36,7 @@ export default function AdminUsers() {
     setRefreshing(false);
   }, [showAlert]);
 
+  const accountTypes = useAdminAccountTypes(load);
   useEffect(() => {
     load();
   }, [load]);
@@ -62,6 +66,11 @@ export default function AdminUsers() {
           </View>
         </View>
 
+        {!isAdmin ? <View style={styles.actions}>
+          <Text style={styles.note}>{item.businesses?.length ?? 0} bağlı işletme{item.role === 'user' && (item.businesses?.length ?? 0) > 0 && !item.account_type_decisions ? ' · Hesap türü kararı bekliyor' : ''}</Text>
+          <SmallButton label="Kullanıcı olarak onayla" icon="account-outline" outline disabled={!!accountTypes.busy} onPress={() => accountTypes.decide(item.id, item.username || item.email || 'Hesap', item.role, 'user')} />
+          <SmallButton label="İşletme olarak onayla" icon="storefront-outline" outline disabled={!!accountTypes.busy} onPress={() => accountTypes.decide(item.id, item.username || item.email || 'Hesap', item.role, 'business')} />
+        </View> : null}
         {isAdmin ? (
           <Text style={styles.note}>Yönetici hesapları kısıtlanamaz.</Text>
         ) : (

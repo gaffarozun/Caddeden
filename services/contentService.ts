@@ -3,6 +3,7 @@
 // Images upload to the business-media bucket under {business_id}/content/.
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
+import { businessAccessError, ownedRowAccessError } from './accountAccessService';
 
 const sb = () => getSupabaseClient();
 const BUCKET = 'business-media';
@@ -38,6 +39,7 @@ export async function listFeed(kind: ContentKind): Promise<{ data: FeedItem[]; e
 }
 
 export async function listMyContent(ownerId: string): Promise<{ data: FeedItem[]; error: string | null }> {
+  const denied = await businessAccessError(undefined, ownerId); if (denied) return { data: [], error: denied };
   const { data, error } = await sb()
     .from('business_posts')
     .select('*, businesses!inner(name, category, owner_id)')
@@ -55,6 +57,7 @@ export async function createContent(params: {
   price?: number;
 }): Promise<{ error: string | null }> {
   try {
+    const denied = await businessAccessError(params.business_id); if (denied) return { error: denied };
     const path = `${params.business_id}/content/${Date.now()}.jpg`;
     const { error: upErr } = await sb()
       .storage.from(BUCKET)
@@ -78,6 +81,7 @@ export async function createContent(params: {
 }
 
 export async function deleteContent(id: string): Promise<{ error: string | null }> {
+  const denied = await ownedRowAccessError('business_posts', id); if (denied) return { error: denied };
   const { error } = await sb().from('business_posts').delete().eq('id', id);
   return { error: error?.message ?? null };
 }

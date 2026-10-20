@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRatings } from './useRatings';
 import { useAuth } from './useAuth';
 import { isHalfStarRating } from '@/services/ratingService';
+import { useAccountAccess } from './useAccountAccess';
 export function useBusinessRating(id: string, enabled = true) {
   const { states, load, submit: save, revision, refresh } = useRatings();
-  const { authUser } = useAuth();
+  const { authUser } = useAuth(); const access = useAccountAccess();
   const state = states[id];
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -26,13 +27,13 @@ export function useBusinessRating(id: string, enabled = true) {
   useEffect(() => { if (!dirty.current) setSelected(Number(state?.mine ?? 0)); }, [state?.mine, id]);
   const choose = useCallback((value: number) => { if (lock.current || !isHalfStarRating(value)) return; dirty.current = true; setSelected(value); setError(''); setNotice(''); }, []);
   const submit = useCallback(async () => {
-    if (lock.current || !state?.canRate || !isHalfStarRating(selected)) return;
+    if (lock.current || !access.customer || !state?.canRate || !isHalfStarRating(selected)) return;
     lock.current = true; setBusy(true); setError(''); setNotice('');
     try {
       await save(id, selected);
       if (alive.current) { setNotice('Puanınız kaydedildi. İşletmenin ortalaması güncelleniyor.'); }
     } catch (reason) { if (alive.current) setError(reason instanceof Error ? reason.message : 'Puan gönderilemedi.'); }
     finally { lock.current = false; if (alive.current) setBusy(false); }
-  }, [id, selected, save, state?.canRate]);
-  return { state, selected, choose, submit, busy, loading, error, notice, signedIn: !!authUser, refresh };
+  }, [id, selected, save, state?.canRate, access.customer]);
+  return { state: state ? { ...state, canRate: access.customer && state.canRate } : state, selected, choose, submit, busy, loading, error, notice, signedIn: !!authUser, refresh };
 }

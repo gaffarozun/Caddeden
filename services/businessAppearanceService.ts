@@ -2,12 +2,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { Platform } from 'react-native';
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
+import { requireBusinessAccess } from './accountAccessService';
 import { listMenuItems, updateBusinessProfile } from './businessManageService';
 import { isGoogleMapsUrl } from './businessProfileService';
 export interface BusinessAppearance {
   mapsUrl: string; menuCover: string; groupCovers: Record<string, string>; tags: string[]; groups: string[];
 }
 export async function loadBusinessAppearance(id: string): Promise<BusinessAppearance> {
+  await requireBusinessAccess(id);
   const sb = getSupabaseClient();
   const { data, error } = await sb.from('businesses').select('maps_url,menu_cover_url,menu_group_covers,profile_tags').eq('id', id).single();
   if (error) throw new Error(error.message);
@@ -22,6 +24,7 @@ export async function saveBusinessAppearance(id: string, mapsUrl: string, tags: 
   if (result.error) throw new Error(result.error);
 }
 export async function pickAppearanceImage(id: string): Promise<string | null> {
+  await requireBusinessAccess(id);
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync(); if (!permission.granted) throw new Error('Fotoğraf seçmek için galeri izni gerekli.');
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: false, quality: 0.9, base64: true });
   if (result.canceled || !result.assets?.[0]) return null;
@@ -47,6 +50,7 @@ export async function saveMenuCover(id: string, url: string | null, groupCovers?
   if (result.error) throw new Error(result.error);
 }
 export async function renameMenuGroup(id: string, oldName: string, newName: string) {
+  await requireBusinessAccess(id);
   const name = newName.trim(); if (!name || name.length > 50) throw new Error('Kategori adı 1–50 karakter olmalıdır.');
   const sb = getSupabaseClient();
   const menu = await listMenuItems(id); if (menu.error) throw new Error(menu.error);

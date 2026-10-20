@@ -24,6 +24,8 @@ Deno.serve(async req => {
       return json({ ok: true });
     }
     if (body.action !== 'rate') return json({ error: 'Bilinmeyen işlem.' }, 400);
+    const { data: ratingProfile, error: ratingProfileError } = await admin.from('user_profiles').select('role,status,restricted_until').eq('id', caller.id).single();
+    if (ratingProfileError || ratingProfile?.role !== 'user' || ratingProfile.status !== 'active' || (ratingProfile.restricted_until && new Date(ratingProfile.restricted_until).getTime() > Date.now())) return json({ error: 'Puanlama yalnızca aktif müşteri hesaplarına açıktır.' }, 403);
     const rating = body.rating;
     if (typeof body.business_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.business_id) || typeof rating !== 'number' || !Number.isFinite(rating) || rating < 0.5 || rating > 5 || !Number.isInteger(rating * 2)) return json({ error: 'İşletme ve 0,5–5 arası yarım yıldız puanı gerekli.' }, 400);
     // Never accept a user_id or admin decision from the request. The JWT identifies the actor.

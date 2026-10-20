@@ -4,6 +4,7 @@
 // admin approval before the notification is actually published to users.
 // status/payment_status are forced server-side (protect_notification_request_insert).
 import { getSupabaseClient } from '@/template';
+import { businessAccessError, ownedRowAccessError } from './accountAccessService';
 
 const sb = () => getSupabaseClient();
 
@@ -37,6 +38,7 @@ export async function createNotificationRequest(params: {
   time_end?: string | null;
   days: number[];
 }): Promise<{ error: string | null }> {
+  const denied = await businessAccessError(params.business_id); if (denied) return { error: denied };
   const { error } = await sb().from('notification_requests').insert({
     business_id: params.business_id,
     package_id: params.package_id ?? null,
@@ -55,6 +57,7 @@ export async function createNotificationRequest(params: {
 export async function listMyNotificationRequests(
   ownerId: string
 ): Promise<{ data: MyNotificationRequest[]; error: string | null }> {
+  const denied = await businessAccessError(undefined, ownerId); if (denied) return { data: [], error: denied };
   const { data, error } = await sb()
     .from('notification_requests')
     .select('*, businesses!inner(name, category, owner_id)')
@@ -64,6 +67,7 @@ export async function listMyNotificationRequests(
 }
 
 export async function deleteNotificationRequest(id: string): Promise<{ error: string | null }> {
+  const denied = await ownedRowAccessError('notification_requests', id); if (denied) return { error: denied };
   const { error } = await sb().from('notification_requests').delete().eq('id', id);
   return { error: error?.message ?? null };
 }

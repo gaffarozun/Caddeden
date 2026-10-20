@@ -5,6 +5,7 @@
 // can approve via the admin-api edge function.
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
+import { businessAccessError, ownedRowAccessError } from './accountAccessService';
 import { MainCategoryId, getSubCategory } from './categories';
 
 const sb = () => getSupabaseClient();
@@ -34,6 +35,7 @@ export interface DiscoverCampaign {
 }
 
 export async function listMyCampaigns(ownerId: string): Promise<{ data: MyCampaign[]; error: string | null }> {
+  const denied = await businessAccessError(undefined, ownerId); if (denied) return { data: [], error: denied };
   const { data, error } = await sb()
     .from('campaigns')
     .select('*, businesses!inner(name, category, owner_id)')
@@ -51,6 +53,7 @@ export async function createCampaign(params: {
   price?: number;
 }): Promise<{ error: string | null }> {
   try {
+    const denied = await businessAccessError(params.business_id); if (denied) return { error: denied };
     let imageUrl: string | null = null;
     if (params.base64) {
       const path = `${params.business_id}/campaigns/${Date.now()}.jpg`;
@@ -78,6 +81,7 @@ export async function createCampaign(params: {
 }
 
 export async function deleteCampaign(id: string): Promise<{ error: string | null }> {
+  const denied = await ownedRowAccessError('campaigns', id); if (denied) return { error: denied };
   const { error } = await sb().from('campaigns').delete().eq('id', id);
   return { error: error?.message ?? null };
 }

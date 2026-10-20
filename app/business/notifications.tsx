@@ -8,6 +8,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Button } from '@/components';
+import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { AdPackage, MyBusiness, listActivePackagesByTypes, listMyBusinesses } from '@/services/adService';
@@ -25,7 +26,8 @@ import { useAlert } from '@/template';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 
-export default function BusinessNotifications() {
+export default function BusinessNotificationsScreen() { return <AccountRouteBoundary><BusinessNotifications /></AccountRouteBoundary>; }
+function BusinessNotifications() {
   const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
