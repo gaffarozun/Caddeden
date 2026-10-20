@@ -177,7 +177,7 @@ export async function deleteMenuItem(id: string): Promise<{ error: string | null
 
 export async function updateMenuItem(
   id: string,
-  patch: Partial<Pick<MenuItemRow, 'name' | 'price' | 'group_name' | 'duration_min' | 'image_url'>>
+  patch: Partial<Pick<MenuItemRow, 'name' | 'price' | 'group_name' | 'description' | 'duration_min' | 'image_url'>>
 ): Promise<{ error: string | null }> {
   const { error } = await sb().from('menu_items').update(patch).eq('id', id);
   return { error: error?.message ?? null };

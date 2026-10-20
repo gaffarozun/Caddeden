@@ -24,6 +24,7 @@ import * as Location from 'expo-location';
 import { Button } from '@/components';
 import { StatusPill } from '@/components/admin/ui';
 import { ExperienceAccessCard } from '@/components/feature/ExperienceAccessCard';
+import { BusinessAppearanceEditor } from '@/components/feature/BusinessAppearanceEditor';
 import { useAuth } from '@/hooks/useAuth';
 import {
   MenuItemRow,
@@ -85,6 +86,7 @@ export default function BusinessManage() {
 
   const [menu, setMenu] = useState<MenuItemRow[]>([]);
   const [miName, setMiName] = useState('');
+  const [miDescription, setMiDescription] = useState('');
   const [miPrice, setMiPrice] = useState('');
   const [miGroup, setMiGroup] = useState('');
   const [miDuration, setMiDuration] = useState('');
@@ -366,6 +368,7 @@ export default function BusinessManage() {
     const { error } = await addMenuItem({
       business_id: bizId,
       name: miName.trim(),
+      description: miDescription.trim() || null,
       price: Number.isFinite(priceNum) ? priceNum : 0,
       group_name: miGroup.trim() || null,
       item_type: isService ? 'service' : 'product',
@@ -379,6 +382,7 @@ export default function BusinessManage() {
       return;
     }
     setMiName('');
+    setMiDescription('');
     setMiPrice('');
     setMiGroup('');
     setMiDuration('');
@@ -465,6 +469,7 @@ export default function BusinessManage() {
 
         <Button label="İşletme Sayfamı Önizle" icon="eye-outline" variant="secondary" onPress={() => router.push(`/business/${bizId}`)} />
         <ExperienceAccessCard businessId={bizId} />
+        <BusinessAppearanceEditor businessId={bizId} menuVersion={menu.map(item => `${item.id}:${item.group_name}`).join('|')} />
 
         <Text style={styles.sectionTitle}>Durum & Çalışma Saatleri</Text>
         <View style={styles.card}>
@@ -721,6 +726,7 @@ export default function BusinessManage() {
               <Text style={styles.addTitle}>{isService ? 'Hizmet Ekle' : 'Ürün Ekle'}</Text>
               <Text style={styles.helperText}>Aynı "Grup / Başlık" altındaki ürünler kullanıcıya tek başlıkta ve yana kaydırmalı olarak gösterilir.</Text>
               <Field label={isService ? 'Hizmet Adı' : 'Ürün Adı'} value={miName} onChangeText={setMiName} placeholder={isService ? 'Örn. Saç Kesimi' : 'Örn. Adana Kebap'} />
+              <Field label="Kısa açıklama / içerik" value={miDescription} onChangeText={setMiDescription} placeholder="Ürünün içeriği veya hizmet açıklaması" multiline />
               <View style={styles.inlineRow}>
                 <View style={{ flex: 1 }}>
                   <Field label="Fiyat (₺)" value={miPrice} onChangeText={setMiPrice} placeholder="0" keyboardType="numeric" />

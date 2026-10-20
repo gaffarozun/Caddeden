@@ -8,6 +8,8 @@ import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { RatingProvider } from '@/contexts/RatingContext';
+import { BusinessCartProvider } from '@/contexts/BusinessCartContext';
+import { businessProfileColors } from '@/constants/theme';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function RootLayout() {
@@ -19,7 +21,9 @@ export default function RootLayout() {
             <AppProvider>
               <FeedbackProvider>
                 <RatingProvider>
-                  <RootNavigator />
+                  <BusinessCartProvider>
+                    <RootNavigator />
+                  </BusinessCartProvider>
                 </RatingProvider>
               </FeedbackProvider>
             </AppProvider>
@@ -51,7 +55,10 @@ function RootNavigator() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
         <Stack.Screen name="admin-setup" options={{ headerShown: true, title: 'Yönetici Erişimi', ...header }} />
-        <Stack.Screen name="business/[id]" options={{ headerShown: true, title: '', ...header }} />
+        <Stack.Screen name="business/[id]" options={{ headerShown: false, contentStyle: { backgroundColor: businessProfileColors.background } }} />
+        <Stack.Screen name="business/menu/[id]" options={{ headerShown: false, contentStyle: { backgroundColor: businessProfileColors.background } }} />
+        <Stack.Screen name="business/reserve/[id]" options={{ headerShown: false, contentStyle: { backgroundColor: businessProfileColors.background } }} />
+        <Stack.Screen name="business/rate/[id]" options={{ headerShown: false, contentStyle: { backgroundColor: businessProfileColors.background } }} />
         <Stack.Screen name="business/feedback/[id]" options={{ headerShown: true, title: 'Müşteri Deneyimleri', ...header }} />
         <Stack.Screen name="account-delete" options={{ headerShown: true, title: 'Hesabımı Sil', ...header }} />
         <Stack.Screen name="business/manage/[id]" options={{ headerShown: true, title: 'İşletme Sayfam', ...header }} />
@@ -62,7 +69,7 @@ function RootNavigator() {
         <Stack.Screen name="business/requests" options={{ headerShown: true, title: 'Gelen Talepler', ...header }} />
         <Stack.Screen name="business/notifications" options={{ headerShown: true, title: 'Bildirim Gönder', ...header }} />
         <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Hesap Bilgilerim', ...header }} />
-        <Stack.Screen name="history" options={{ headerShown: true, title: 'Geçmişim', ...header }} />
+        <Stack.Screen name="history" options={{ headerShown: false, contentStyle: { backgroundColor: businessProfileColors.background } }} />
         <Stack.Screen name="auth" options={{ headerShown: true, title: '', presentation: 'modal', ...header }} />
       </Stack>
     </>

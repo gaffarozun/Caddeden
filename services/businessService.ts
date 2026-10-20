@@ -27,10 +27,16 @@ function mapBusinessRow(row: Record<string, any>, includeMenu = false): Business
   const sub = getSubCategory(row.category);
   const menu = includeMenu ? ((row.menu_items as any[]) ?? []).slice().sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)).map(m => ({
     id: m.id, name: m.name, price: Number(m.price ?? 0), image: m.image_url ?? undefined, group: m.group_name ?? undefined,
+    description: m.description ?? undefined, durationMin: m.duration_min ?? undefined,
   })) : [];
   return {
     id: row.id, name: row.name, category: row.category, description: row.description ?? '', cover,
     images: images.length ? images : cover ? [cover] : [],
+    logo: row.logo_url || undefined, mapsUrl: row.maps_url || undefined,
+    menuCover: row.menu_cover_url || undefined,
+    menuGroupCovers: row.menu_group_covers && typeof row.menu_group_covers === 'object' && !Array.isArray(row.menu_group_covers) ? row.menu_group_covers : {},
+    profileTags: Array.isArray(row.profile_tags) ? row.profile_tags.filter((tag: unknown) => typeof tag === 'string') : [],
+    lat: row.lat ?? undefined, lng: row.lng ?? undefined,
     rating: Number(row.rating ?? 0), reviewCount: row.review_count ?? 0, distanceKm: 0,
     address: row.address ?? '', phone: row.phone ?? '', hours: row.hours ?? '',
     openTime: row.open_time ?? undefined, closeTime: row.close_time ?? undefined,

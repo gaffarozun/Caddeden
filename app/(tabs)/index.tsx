@@ -1,6 +1,6 @@
 // Powered by OnSpace.AI
 import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
@@ -88,6 +88,7 @@ export default function DiscoverScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
+      <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.header}>
         <View>
           <Text style={styles.brand}>Caddeden</Text>
@@ -118,23 +119,9 @@ export default function DiscoverScreen() {
                   <Text style={styles.sectionTitle}>Güncel Kampanyalar</Text>
                   <MaterialCommunityIcons name="fire" size={18} color={colors.primary} />
                 </View>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={styles.campaignRow}
-                >
-                  {campaigns.map((c) => (
-                    <CampaignCard
-                      key={c.id}
-                      id={c.id}
-                      businessId={c.businessId}
-                      title={c.title}
-                      name={c.name}
-                      category={c.category}
-                      cover={c.cover}
-                    />
-                  ))}
-                </ScrollView>
+                <View style={styles.campaignRail}>
+                  <FlatList horizontal data={campaigns} keyExtractor={item => item.id} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campaignRow} renderItem={({ item: c }) => <CampaignCard id={c.id} businessId={c.businessId} title={c.title} description={c.description} name={c.name} category={c.category} cover={c.cover} />} />
+                </View>
               </View>
             ) : null}
 
@@ -172,6 +159,7 @@ export default function DiscoverScreen() {
           </View>
         }
       />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -228,7 +216,8 @@ const createStyles = (colors: ThemeColors) =>
   },
   openFilterActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   openFilterText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.textSubtle },
-  campaignRow: { gap: spacing.md, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+  campaignRail: { minHeight: 76 },
+  campaignRow: { gap: spacing.md, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, alignItems: 'center' },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
   emptyText: { fontSize: fontSize.md, color: colors.textSubtle },
 });

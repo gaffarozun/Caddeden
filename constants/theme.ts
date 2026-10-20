@@ -147,5 +147,21 @@ export const shadow = {
   }),
 };
 
+// Business profile: smooth, layered dark stage with warm gold accents.
+// Reference proportions scale with screen width; never render a screenshot as UI.
+export const businessProfileColors: ThemeColors = {
+  ...darkColors,
+  background: '#07090A', surface: '#111416', surfaceAlt: '#15191C', surfaceTint: '#1C2023',
+  primary: '#F1C77F', primaryDark: '#F5D396', primarySoft: '#30271B',
+  text: '#F6F6F5', textSubtle: '#ADB0BC', textFaint: '#858A96',
+  border: '#202427', borderStrong: '#33383C',
+  success: '#39C87B', danger: '#FF6B73', warning: '#F1C77F',
+};
+export const businessProfileLayout = {
+  maxWidth: 960, coverRatio: 2.06, menuCoverRatio: 2.22,
+  actionHeight: 60, menuButtonHeight: 48, campaignHeight: 60,
+  menuRowHeight: 80, menuImageSize: 68, logoSize: 60, tabHeight: 52,
+};
+
 export const theme = { colors, spacing, radius, fontSize, fontWeight, shadow };
 export type Theme = typeof theme;

@@ -29,6 +29,8 @@ export interface MenuItem {
   id: string;
   name: string;
   price: number;
+  description?: string;
+  durationMin?: number;
   tag?: string;
   image?: string;
   group?: string;
@@ -40,6 +42,13 @@ export interface Business {
   category: CategoryId;
   description: string;
   cover: string;
+  logo?: string;
+  mapsUrl?: string;
+  menuCover?: string;
+  menuGroupCovers?: Record<string, string>;
+  profileTags?: string[];
+  lat?: number;
+  lng?: number;
   images: string[];
   rating: number;
   reviewCount: number;

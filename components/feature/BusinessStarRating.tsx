@@ -4,13 +4,13 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/useTheme';
 import { useBusinessRating } from '@/hooks/useBusinessRating';
-import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
+import { businessProfileColors, fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 import { FeedbackButton, FeedbackError } from './FeedbackControls';
 const values = Array.from({ length: 10 }, (_, index) => (index + 1) / 2);
 const label = (value: number) => value.toFixed(1).replace('.', ',');
-interface BusinessStarRatingProps { businessId: string; isDemo?: boolean; onRatingsChange?: (rating: number, count: number) => void }
-export const BusinessStarRating = memo(function BusinessStarRating({ businessId, isDemo = false, onRatingsChange }: BusinessStarRatingProps) {
-  const { colors } = useTheme(); const styles = useMemo(() => createStyles(colors), [colors]);
+interface BusinessStarRatingProps { businessId: string; isDemo?: boolean; referenceStyle?: boolean; onRatingsChange?: (rating: number, count: number) => void }
+export const BusinessStarRating = memo(function BusinessStarRating({ businessId, isDemo = false, referenceStyle = false, onRatingsChange }: BusinessStarRatingProps) {
+  const { colors: themeColors } = useTheme(); const colors = referenceStyle ? businessProfileColors : themeColors; const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const m = useBusinessRating(businessId, !isDemo);
   const rating = m.state?.rating;

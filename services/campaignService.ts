@@ -26,6 +26,7 @@ export interface DiscoverCampaign {
   id: string;
   businessId: string;
   title: string;
+  description?: string;
   name: string;
   category: string;
   cover: string;
@@ -88,8 +89,9 @@ export async function fetchDiscoverCampaigns(): Promise<DiscoverCampaign[]> {
   const today = new Date().toISOString().slice(0, 10);
   const { data, error } = await sb()
     .from('campaigns')
-    .select('id, title, image_url, business_id, businesses(name, category, cover_url, logo_url, images)')
+    .select('id, title, description, image_url, business_id, businesses(name, category, cover_url, logo_url, images)')
     .eq('status', 'approved')
+    .or(`start_date.is.null,start_date.lte.${today}`)
     .or(`end_date.is.null,end_date.gte.${today}`)
     .order('created_at', { ascending: false })
     .limit(30);
@@ -102,6 +104,7 @@ export async function fetchDiscoverCampaigns(): Promise<DiscoverCampaign[]> {
       id: row.id,
       businessId: row.business_id,
       title: row.title,
+      description: row.description ?? '',
       name: biz.name ?? 'İşletme',
       category: biz.category ?? 'restoran',
       cover,
