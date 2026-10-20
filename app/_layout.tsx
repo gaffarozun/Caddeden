@@ -72,6 +72,7 @@ function RootNavigator() {
         <Stack.Screen name="business/notifications" options={{ headerShown: true, title: 'Bildirim Gönder', ...header }} />
         <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Hesap Bilgilerim', ...header }} />
         <Stack.Screen name="history" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
+        <Stack.Screen name="saved" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="auth" options={{ headerShown: true, title: '', presentation: 'modal', ...header }} />
       </Stack>
       </View>

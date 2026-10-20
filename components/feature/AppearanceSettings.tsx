@@ -10,12 +10,11 @@ const palettes = [
   { id: 'pink', label: 'Toz pembe', palette: pinkColors },
 ] as const;
 interface AppearanceSettingsProps { compact?: boolean }
-export const AppearanceSettings = memo(function AppearanceSettings({ compact = false }: AppearanceSettingsProps) {
+export const AppearanceSettings = memo(function AppearanceSettings(_props: AppearanceSettingsProps) {
   const { colors, styles, mode, resolvedMode, setMode, preferenceError, ready } = useThemeStyles(createStyles);
   const choose = (next: ThemeMode) => setMode(next);
   return <View style={styles.card}>
     <View style={styles.row}><MaterialCommunityIcons name="palette-outline" size={22} color={colors.primary} /><View style={styles.info}><Text style={styles.title}>Görünüm</Text><Text style={styles.subtle}>Aktif tema: {palettes.find(item => item.id === resolvedMode)?.label}</Text></View></View>
-    {!compact ? <Text style={styles.body}>İşletme profilleriyle aynı tasarım, seçtiğin renklerle tüm uygulamada.</Text> : null}
     <View style={styles.previews}>{palettes.map(item => {
       const selected = mode === item.id;
       return <Pressable key={item.id} disabled={!ready} accessibilityRole="button" accessibilityLabel={`${item.label} tema`} accessibilityState={{ selected, disabled: !ready }} onPress={() => choose(item.id)} style={({ pressed }) => [styles.choice, selected ? styles.selected : null, pressed ? styles.pressed : null]}>
@@ -30,7 +29,6 @@ export const AppearanceSettings = memo(function AppearanceSettings({ compact = f
       </Pressable>;
     })}</View>
     <View style={styles.row}>{([{ id: 'auto', label: 'Varsayılan', icon: 'account-outline' }, { id: 'system', label: 'Cihaz teması', icon: 'theme-light-dark' }] as const).map(item => <Pressable key={item.id} disabled={!ready} accessibilityRole="button" accessibilityState={{ selected: mode === item.id, disabled: !ready }} onPress={() => choose(item.id)} style={({ pressed }) => [styles.mode, mode === item.id ? styles.modeSelected : null, pressed ? styles.pressed : null]}><MaterialCommunityIcons name={item.icon} size={18} color={mode === item.id ? colors.primaryDark : colors.textSubtle} /><Text style={styles.label}>{item.label}</Text></Pressable>)}</View>
-    <Text style={styles.subtle}>Varsayılan: kadınlar için pembe, erkekler için koyu. Her tema herkese açıktır; manuel seçimin bu cihazda hesabına özel saklanır ve sonraki girişte korunur.</Text>
     {preferenceError ? <View style={styles.row} accessibilityLiveRegion="polite"><MaterialCommunityIcons name="alert-circle-outline" size={20} color={colors.danger} /><Text style={[styles.body, styles.info, { color: colors.danger }]}>{preferenceError}</Text></View> : null}
   </View>;
 });

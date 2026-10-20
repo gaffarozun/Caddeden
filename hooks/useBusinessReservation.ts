@@ -31,7 +31,7 @@ export function useBusinessReservation(business: Business | null, allowed: boole
     try {
       const result = await createReservation({ business_id: business.id, date, time, phone: phone.trim(), guests: appointment ? 1 : guests, service_id: appointment ? serviceId : null, type: appointment ? 'appointment' : 'reservation', customer_name: maskFullName(authUser.first_name, authUser.last_name, authUser.username) });
       if (result.error) throw new Error(result.error);
-      invalidate(); router.push({ pathname: '/history', params: { businessId: business.id, section: 'reservations' } });
+      invalidate(); router.push({ pathname: '/history', params: { businessId: business.id, section: 'reservations', scope: 'bookings', bookingType: appointment ? 'appointment' : 'reservation' } });
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Talep gönderilemedi.'); }
     finally { setBusy(false); lock.current = false; }
   }, [authUser, business, allowed, isDemo, date, time, phone, appointment, serviceId, guests, invalidate, router]);

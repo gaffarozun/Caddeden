@@ -9,6 +9,7 @@ import { BusinessProfileData, businessMapsUrl, loadBusinessProfile } from '@/ser
 import { getOpenStatus } from '@/services/businessStatus';
 import { getSubCategory } from '@/services/categories';
 import { distanceMeters } from '@/services/geo';
+import { getBusinessCapabilities } from '@/services/businessCapabilitiesService';
 export function useBusinessProfile(id: string) {
   const { authUser } = useAuth(); const { showAlert } = useAlert(); const router = useRouter();
   const { savedBusinessIds, toggleSaveBusiness } = useApp(); const { states } = useRatings();
@@ -38,9 +39,10 @@ export function useBusinessProfile(id: string) {
   const isOwner = !!authUser && data?.ownerId === authUser.id;
   const customer = !authUser || (authUser.role === 'user' && !isOwner);
   const sub = business ? getSubCategory(business.category) : undefined;
-  const orderingEnabled = !!business && !!sub?.hasOrder && !!business.allowOrder && business.allowMenu !== false;
+  const capabilities = getBusinessCapabilities(business);
+  const orderingEnabled = capabilities.orders;
   const canOrder = orderingEnabled && customer && !data?.isDemo;
-  const canReserve = !!business && (business.allowReservation ?? !!(sub?.hasReservation || sub?.hasAppointment)) && customer;
+  const canReserve = capabilities.bookings && customer;
   const openLink = useCallback((url: string) => { void Linking.openURL(url).catch(() => showAlert('Bağlantı açılamadı', 'Bu bağlantıyı cihazınızda açamadık.')); }, [showAlert]);
   const call = useCallback(() => {
     if (!business?.phone) { showAlert('Telefon eklenmemiş', 'İşletme henüz telefon numarası eklememiş.'); return; }
@@ -52,8 +54,15 @@ export function useBusinessProfile(id: string) {
     try { await Share.share({ message: `${business.name}\n${business.address}\nonspaceapp://business/${business.id}\n${businessMapsUrl(business)}` }); }
     catch { showAlert('Paylaşılamadı', 'Cihazınızda paylaşım işlemi açılamadı.'); }
   }, [business, showAlert]);
-  const history = useCallback((mode: 'active' | 'past') => router.push({ pathname: '/history', params: { businessId: id, mode } }), [id, router]);
+  const history = useCallback((mode: 'active' | 'past' | 'all') => router.push({ pathname: '/history', params: {
+    businessId: id,
+    mode,
+    section: orderingEnabled ? 'orders' : 'reservations',
+    scope: mode === 'all' ? capabilities.historyScope : 'orders',
+    bookingType: capabilities.bookingType,
+  } }), [id, router, orderingEnabled, capabilities.historyScope, capabilities.bookingType]);
   return { id, data, business, loading, error, refreshing, refresh, tab, setTab, photoUri, setPhotoUri,
     status: business ? getOpenStatus(business) : null, sub, isOwner, customer, canOrder, orderingEnabled, canReserve,
+    historyLabel: capabilities.historyLabel,
     saved: savedBusinessIds.includes(id), toggleSave: () => toggleSaveBusiness(id), call, maps, share, history, router, authUser };
 }

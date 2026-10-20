@@ -21,7 +21,7 @@ export const BusinessCard = memo(function BusinessCard({ business }: BusinessCar
   const category = getSubCategory(business.category);
   const status = getOpenStatus(business);
   const isDemo = !/^[0-9a-f-]{36}$/i.test(business.id);
-  const distance = business.distanceKm > 0 ? business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)} m` : `${business.distanceKm.toFixed(1)} km` : 'Konum';
+  const distance = business.distanceKm > 0 ? business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)} m` : `${business.distanceKm.toFixed(1)} km` : '';
   return <Pressable accessibilityRole="button" accessibilityLabel={`${business.name}, ${status.open ? 'açık' : 'kapalı'}`} onPress={() => router.push(`/business/${business.id}`)} style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}>
     <View style={styles.imageWrap}>
       {business.cover ? <Image source={{ uri: business.cover }} style={styles.image} contentFit="cover" transition={200} /> : <MaterialCommunityIcons name="storefront-outline" size={32} color={colors.primary} />}
@@ -30,7 +30,7 @@ export const BusinessCard = memo(function BusinessCard({ business }: BusinessCar
     <View style={styles.body}>
       <View style={styles.topRow}><Text style={styles.name} numberOfLines={2}>{business.name}</Text>{user.type !== 'business' ? <Pressable accessibilityRole="button" accessibilityLabel={saved ? 'İşletmeyi kayıttan çıkar' : 'İşletmeyi kaydet'} accessibilityState={{ selected: saved }} onPress={event => { event.stopPropagation(); toggleSaveBusiness(business.id); }} style={({ pressed }) => [styles.save, pressed ? styles.pressed : null]}><MaterialCommunityIcons name={saved ? 'bookmark' : 'bookmark-outline'} size={22} color={saved ? colors.primary : colors.textSubtle} /></Pressable> : null}</View>
       <View style={styles.metaRow}><MaterialCommunityIcons name="star" size={16} color={colors.primary} /><Text style={styles.rating}>{business.reviewCount || isDemo ? Number(business.rating).toFixed(1) : '—'}</Text><Text style={styles.meta}>{business.reviewCount ? `(${business.reviewCount})` : isDemo ? '' : 'Henüz puan yok'}</Text></View>
-      <Text style={styles.meta} numberOfLines={1}>{category?.label ?? 'İşletme'} · {distance}</Text>
+      <Text style={styles.meta} numberOfLines={1}>{category?.label ?? 'İşletme'}{distance ? ` · ${distance}` : ''}</Text>
       {business.allowOrder ? <Text style={styles.meta}>Min. {business.minOrder ?? 0} ₺{business.avgDeliveryMinutes ? ` · ~${business.avgDeliveryMinutes} dk` : ''}</Text> : null}
       <View style={styles.bottomRow}><View style={styles.statusRow}><View style={[styles.statusDot, { backgroundColor: status.open ? colors.success : colors.danger }]} /><Text style={[styles.status, { color: status.open ? colors.success : colors.danger }]}>{status.open ? 'Açık' : 'Kapalı'}</Text></View>{business.campaign ? <View style={styles.campaign}><Badge label={business.campaign} tone="primary" /></View> : null}</View>
     </View>

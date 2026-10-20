@@ -63,8 +63,11 @@ export async function fetchBusinessDetail(id?: string): Promise<Business | null>
 export async function fetchBusinessesByIds(ids: string[]): Promise<Business[]> {
   const unique = Array.from(new Set(ids.filter(Boolean)));
   if (!unique.length) return [];
-  const { data, error } = await getSupabaseClient().from('businesses').select('*').in('id', unique);
-  const real = !error && Array.isArray(data) ? await withRatings(data.map(map => mapBusinessRow(map))) : [];
+  // Demo ids are not UUIDs; do not include them in the PostgreSQL UUID query.
+  const realIds = unique.filter(id => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id));
+  const result = realIds.length ? await getSupabaseClient().from('businesses').select('*').in('id', realIds) : { data: [], error: null };
+  if (result.error) throw new Error(result.error.message);
+  const real = Array.isArray(result.data) ? await withRatings(result.data.map(map => mapBusinessRow(map))) : [];
   const byId = new Map<string, Business>();
   real.forEach(b => byId.set(b.id, b));
   BUSINESSES.forEach(b => { if (unique.includes(b.id) && !byId.has(b.id)) byId.set(b.id, b); });
