@@ -13,17 +13,17 @@ import { FeedbackForm } from '@/components/feature/FeedbackForm';
 import { FeedbackCriteriaScores } from '@/components/feature/FeedbackCriteria';
 import { FeedbackReply } from '@/components/feature/FeedbackReply';
 
-const tabs = [{ id: 'review', label: 'Değerlendirmeler' }, { id: 'suggestion', label: 'Öneriler' }, { id: 'complaint', label: 'Şikâyetlerim' }];
+const tabs = [{ id: 'review', label: 'Yorumlar ve puanlar' }, { id: 'suggestion', label: 'Öneriler' }, { id: 'complaint', label: 'Şikâyetlerim' }];
 const sorts = [{ id: 'newest', label: 'En yeni' }, { id: 'highest', label: 'En yüksek puan' }, { id: 'lowest', label: 'En düşük puan' }];
 type Item = FeedbackReview | FeedbackSuggestion | FeedbackComplaint;
 const date = (value: string) => new Date(value).toLocaleString('tr-TR');
 
 export default function FeedbackScreen() {
-  const { id: routeId } = useLocalSearchParams<{ id: string }>();
+  const { id: routeId, compose } = useLocalSearchParams<{ id: string; compose?: string }>();
   const id = typeof routeId === 'string' ? routeId : '';
   const router = useRouter(); const { showAlert } = useAlert();
   const { colors } = useTheme(); const styles = useMemo(() => createFeedbackStyles(colors), [colors]);
-  const m = useBusinessFeedback(id);
+  const m = useBusinessFeedback(id, true, compose === '1');
   const listRef = useRef<FlatList<Item>>(null);
   const items: Item[] = m.tab === 'review' ? m.data?.reviews ?? [] : m.tab === 'suggestion' ? m.data?.suggestions ?? [] : m.data?.complaints ?? [];
   const removeReview = useCallback(() => {
@@ -48,17 +48,18 @@ export default function FeedbackScreen() {
     return <View style={styles.card}><Text style={styles.heading}>{feedbackTopicLabel(complaint.feedback_category)}</Text><Text style={styles.subtle}>{feedbackStatusLabel(complaint.status)} · {date(complaint.created_at)}</Text>{complaint.description ? <Text style={styles.text}>{complaint.description}</Text> : null}{complaint.resolution_note ? <View style={styles.reply}><Text style={styles.heading}>Yönetici sonucu</Text><Text style={styles.text}>{complaint.resolution_note}</Text></View> : null}</View>;
   };
   return <SafeAreaView style={styles.screen} edges={['bottom']}><KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-    <FlatList<Item> ref={listRef} style={styles.screen} data={items} keyExtractor={item => item.id} renderItem={renderItem} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={m.loading && !!m.data} onRefresh={m.refresh} tintColor={colors.primaryDark} />}
+    <FlatList<Item> ref={listRef} style={styles.screen} data={items} keyExtractor={item => item.id} renderItem={renderItem} removeClippedSubviews={false} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={m.loading && !!m.data} onRefresh={m.refresh} tintColor={colors.primaryDark} />}
       ListHeaderComponent={<View style={styles.section}><View style={styles.compactHero}><View style={styles.compactRow}><View style={styles.compactInfo}><Text style={styles.compactTitle}>Müşteri deneyimleri</Text><Text style={styles.subtle}>{m.data?.ratings?.count ?? 0} değerlendirme · Yorumlar herkese açık</Text></View>{m.data ? <Text style={styles.compactRating}>{Number(m.data.ratings?.rating ?? 0).toFixed(1)} / 5</Text> : null}</View></View>{m.data ? <FeedbackHighlights data={m.data} /> : null}<FeedbackError message={m.error} />{m.notice ? <View style={styles.tint} accessibilityLiveRegion="polite"><Text style={styles.text}>{m.notice}</Text></View> : null}{m.loading && !m.data ? <ActivityIndicator color={colors.primaryDark} /> : null}
         <FeedbackChips label="Deneyim alanı" items={tabs} selected={m.tab} onSelect={value => m.setTab(value as FeedbackTab)} disabled={m.busy} />
         {m.tab === 'review' ? <FeedbackChips label="Yorum sıralaması" items={sorts} selected={m.sort} onSelect={m.setSort} disabled={m.busy} /> : null}
         {m.tab === 'review' && m.data?.mine ? <View style={styles.card}><Text style={styles.heading}>Değerlendirmeniz · {Number(m.data.mine.rating).toFixed(1)} / 5</Text><FeedbackCriteriaScores scores={m.data.mine.criteria_ratings} /><Text style={styles.subtle}>{feedbackStatusLabel(m.data.mine.status)}</Text>{m.data.mine.comment ? <Text style={styles.text}>{m.data.mine.comment}</Text> : null}{m.data.mine.moderation_reason ? <Text style={styles.subtle}>Gerekçe: {m.data.mine.moderation_reason}</Text> : null}<View style={styles.row}><FeedbackButton secondary label="Düzenle" onPress={() => m.setFormOpen(true)} disabled={m.busy} /><FeedbackButton secondary danger label="Değerlendirmemi sil" onPress={removeReview} disabled={m.busy} /></View></View> : null}
-        {m.canCustomer && !m.formOpen ? <FeedbackButton label={m.tab === 'review' ? m.data?.mine ? 'Değerlendirmemi güncelle' : 'Puan ve yorum ekle' : m.tab === 'suggestion' ? 'İyileştirme öner' : 'İşletme şikâyeti gönder'} onPress={() => m.setFormOpen(true)} disabled={m.busy} icon="plus" /> : !m.signedIn ? <FeedbackButton label="İşlem yapmak için giriş yap" onPress={() => router.push('/auth')} icon="login" /> : !m.canCustomer ? <Text style={styles.subtle}>{m.data?.owner ? 'Yayımlanmış yorum ve önerilere işletme olarak cevap verebilirsiniz.' : 'Puan, şikâyet ve öneri işlemleri yalnızca müşteri hesaplarına açıktır.'}</Text> : null}
-        <FeedbackForm model={m} />
+        {m.canCustomer && !m.formOpen ? <FeedbackButton label={m.tab === 'review' ? m.data?.mine ? 'Puan ve yorumumu düzenle' : 'Yorum yaz ve değerlendir' : m.tab === 'suggestion' ? 'İyileştirme öner' : 'İşletme şikâyeti gönder'} onPress={() => m.setFormOpen(true)} disabled={m.busy} icon="plus" /> : !m.signedIn ? <FeedbackButton label="İşlem yapmak için giriş yap" onPress={() => router.push('/auth')} icon="login" /> : !m.canCustomer ? <Text style={styles.subtle}>{m.data?.owner ? 'Yayımlanmış yorum ve önerilere işletme olarak cevap verebilirsiniz.' : 'Puan, şikâyet ve öneri işlemleri yalnızca müşteri hesaplarına açıktır.'}</Text> : null}
+        {m.tab === 'review' ? <View style={styles.section}><Text style={styles.heading}>Yayımlanan yorumlar ve puanlar</Text><Text style={styles.subtle}>Müşteri yorumları ve işletme cevapları aşağıda herkese açık olarak gösterilir.</Text></View> : null}
         {m.tab === 'complaint' ? <Text style={styles.subtle}>Yalnızca bu işletme hakkındaki kendi şikâyetleriniz görünür. İçerik bildirimleri yönetici tarafından ayrıca incelenir.</Text> : null}
       </View>}
-      ListEmptyComponent={!m.loading ? <View style={styles.card}><Text style={styles.text}>{m.tab === 'review' ? 'Henüz yayımlanmış değerlendirme yok.' : m.tab === 'suggestion' ? 'Henüz öneri yok. İlk öneriyi gönderebilirsiniz.' : 'Bu işletme için şikâyet kaydınız yok.'}</Text></View> : null}
+      ListEmptyComponent={!m.loading ? <View style={styles.card}><Text style={styles.text}>{m.tab === 'review' ? 'Henüz yayımlanmış yorum veya puan yok. Yorum yaz butonuyla ilk deneyimi paylaşabilirsiniz.' : m.tab === 'suggestion' ? 'Henüz öneri yok. İlk öneriyi gönderebilirsiniz.' : 'Bu işletme için şikâyet kaydınız yok.'}</Text></View> : null}
       ListFooterComponent={m.tab === 'review' ? <View style={styles.row}><FeedbackButton secondary label="Önceki yorumlar" disabled={m.offset === 0 || m.loading} onPress={() => m.setOffset(Math.max(0, m.offset - 20))} /><FeedbackButton secondary label="Sonraki yorumlar" disabled={items.length < 20 || m.loading} onPress={() => m.setOffset(m.offset + 20)} /></View> : null}
     />
+    <FeedbackForm model={m} />
   </KeyboardAvoidingView></SafeAreaView>;
 }

@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
@@ -20,10 +20,11 @@ export const FeedbackChips = memo(function FeedbackChips({ items, selected, onSe
     <View style={styles.chipOuter}><FlatList horizontal data={items} keyExtractor={item => item.id} contentContainerStyle={styles.chipRow} showsHorizontalScrollIndicator={false} renderItem={({ item }) => <Pressable disabled={disabled} accessibilityRole="button" accessibilityState={{ selected: item.id === selected }} onPress={() => onSelect(item.id)} style={({ pressed }) => [styles.chip, item.id === selected ? styles.chipActive : null, pressed ? styles.pressed : null]}><Text style={[styles.chipText, item.id === selected ? styles.chipTextActive : null]}>{item.label}</Text></Pressable>} /></View>
   </View>;
 });
-interface FeedbackInputProps { label: string; value: string; onChange: (value: string) => void; maxLength?: number; secure?: boolean; multiline?: boolean; disabled?: boolean }
-export const FeedbackInput = memo(function FeedbackInput({ label, value, onChange, maxLength = 2000, secure, multiline = true, disabled }: FeedbackInputProps) {
+interface FeedbackInputProps { label: string; value: string; onChange: (value: string) => void; maxLength?: number; secure?: boolean; multiline?: boolean; disabled?: boolean; placeholder?: string; autoFocus?: boolean }
+export const FeedbackInput = memo(function FeedbackInput({ label, value, onChange, maxLength = 2000, secure, multiline = true, disabled, placeholder, autoFocus = false }: FeedbackInputProps) {
   const { colors } = useTheme(); const styles = useMemo(() => createFeedbackStyles(colors), [colors]);
-  return <View style={styles.section}><Text style={styles.label}>{label}</Text><TextInput accessibilityLabel={label} value={value} onChangeText={onChange} maxLength={maxLength} secureTextEntry={secure} multiline={multiline} editable={!disabled} autoCapitalize={secure ? 'none' : 'sentences'} autoCorrect={!secure} style={[styles.input, multiline ? styles.multiline : null]} placeholderTextColor={colors.textSubtle} />{multiline ? <Text style={styles.subtle}>{value.length} / {maxLength}</Text> : null}</View>;
+  const [focused, setFocused] = useState(false);
+  return <View style={styles.section}><Text style={styles.label}>{label}</Text><TextInput accessibilityLabel={label} value={value} onChangeText={onChange} maxLength={maxLength} secureTextEntry={secure} multiline={multiline} editable={!disabled} autoFocus={autoFocus} placeholder={placeholder} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} autoCapitalize={secure ? 'none' : 'sentences'} autoCorrect={!secure} style={[styles.input, multiline ? styles.multiline : null, focused ? styles.inputFocused : null]} placeholderTextColor={colors.textSubtle} />{multiline ? <Text style={styles.subtle}>{value.length} / {maxLength}</Text> : null}</View>;
 });
 export const FeedbackError = memo(function FeedbackError({ message }: { message: string }) {
   const { colors } = useTheme(); const styles = useMemo(() => createFeedbackStyles(colors), [colors]);

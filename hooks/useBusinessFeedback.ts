@@ -5,7 +5,7 @@ import { useFeedback } from './useFeedback';
 import { BusinessFeedback, CriteriaRatings, FeedbackTopic, feedbackTopics, reviewCriteria, summarizeCriteria, removeUnusedEvidence, uploadFeedbackEvidence } from '@/services/feedbackService';
 
 export type FeedbackTab = 'review' | 'suggestion' | 'complaint';
-export function useBusinessFeedback(id: string, enabled = true) {
+export function useBusinessFeedback(id: string, enabled = true, startWriting = false) {
   const { authUser } = useAuth();
   const { read, mutate, revision, invalidate } = useFeedback();
   const [data, setData] = useState<BusinessFeedback | null>(null);
@@ -17,6 +17,9 @@ export function useBusinessFeedback(id: string, enabled = true) {
   const [offset, setOffset] = useState(0);
   const [tab, setTab] = useState<FeedbackTab>('review');
   const [formOpen, setFormOpen] = useState(false);
+  const formOpenRef = useRef(false);
+  const openedOnEntry = useRef(false);
+  useEffect(() => { formOpenRef.current = formOpen; }, [formOpen]);
   const [criteriaRatings, setCriteriaRatings] = useState<CriteriaRatings>({});
   const criteriaSummary = useMemo(() => summarizeCriteria(criteriaRatings), [criteriaRatings]);
   const [comment, setComment] = useState('');
@@ -36,7 +39,7 @@ export function useBusinessFeedback(id: string, enabled = true) {
   const lastMine = useRef('');
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
-    lastMine.current = ''; setData(null); setFormOpen(false); setTarget({ type: 'business', id }); setOffset(0); setError(''); setEvidence(null); setCriteriaRatings({}); setComment(''); setNotice('');
+    lastMine.current = ''; openedOnEntry.current = false; formOpenRef.current = false; setData(null); setFormOpen(false); setTarget({ type: 'business', id }); setOffset(0); setError(''); setEvidence(null); setCriteriaRatings({}); setComment(''); setNotice('');
   }, [id, authUser?.id]);
   useEffect(() => {
     let active = true;
@@ -47,7 +50,7 @@ export function useBusinessFeedback(id: string, enabled = true) {
       if (!active || generation !== epoch.current) return;
       setData(result); setError('');
       const mineKey = `${result.mine?.id ?? ''}:${result.mine?.updated_at ?? ''}`;
-      if (mineKey !== lastMine.current) {
+      if (mineKey !== lastMine.current && !formOpenRef.current) {
         lastMine.current = mineKey;
         setCriteriaRatings(reviewCriteria(result.mine)); setComment(result.mine?.comment ?? '');
       }
@@ -55,6 +58,14 @@ export function useBusinessFeedback(id: string, enabled = true) {
     return () => { active = false; };
   }, [enabled, id, read, sort, offset, revision]);
   const canCustomer = !!authUser && authUser.role === 'user' && authUser.status === 'active' && !data?.owner;
+  const commentPreview = useMemo(() => (data?.reviews ?? []).filter(review => review.comment.trim().length > 0).slice(0, 2), [data?.reviews]);
+  useEffect(() => {
+    if (startWriting && canCustomer && data && !loading && !openedOnEntry.current) {
+      openedOnEntry.current = true;
+      setTab('review');
+      setFormOpen(true);
+    }
+  }, [startWriting, canCustomer, data, loading]);
   const run = useCallback(async (action: string, params: Record<string, unknown>) => {
     if (busy || actionLock.current) return false;
     actionLock.current = true;
@@ -79,7 +90,7 @@ export function useBusinessFeedback(id: string, enabled = true) {
     if (tab === 'review') {
       const missing = feedbackTopics.filter(feature => !criteriaRatings[feature.id]);
       if (criteriaSummary.selected !== feedbackTopics.length) { setError(`Her özellik için yıldız seçin. Eksik: ${missing.map(feature => feature.label).join(', ')}.`); return; }
-      const ok = await run('review', { business_id: id, criteria_ratings: criteriaRatings, comment });
+      const ok = await run('review', { business_id: id, criteria_ratings: criteriaRatings, comment: comment.trim() });
       if (ok) { setFormOpen(false); setOffset(0); }
     } else if (tab === 'suggestion') {
       if (description.trim().length < 5) { setError('Öneri açıklaması en az 5 karakter olmalı.'); return; }
@@ -103,7 +114,7 @@ export function useBusinessFeedback(id: string, enabled = true) {
   }, []);
   const changeTab = useCallback((next: FeedbackTab) => { setTab(next); setFormOpen(false); setDescription(''); setTarget({ type: 'business', id }); setNotice(''); }, [id]);
   const changeSort = useCallback((next: string) => { setOffset(0); setSort(next); }, []);
-  return { data, loading, busy, error, notice, sort, setSort: changeSort, offset, setOffset, tab, setTab: changeTab, formOpen, setFormOpen,
+  return { data, commentPreview, loading, busy, error, notice, sort, setSort: changeSort, offset, setOffset, tab, setTab: changeTab, formOpen, setFormOpen,
     criteriaRatings, criteriaSummary, setCriteriaRating, comment, setComment, suggestionTopic, setSuggestionTopic, description, setDescription, category, setCategory,
     target, evidence, setEvidence, pickEvidence, submit, report, run, canCustomer, signedIn: !!authUser, refresh: invalidate };
 }
