@@ -77,7 +77,7 @@ export async function signInWithPassword(email: string, password: string, accoun
     const profile = await fetchProfile(data.user.id, data.user.email ?? '');
     if (account && profile.role !== 'admin' && profile.role !== account) {
       const { error: logoutError } = await sb().auth.signOut();
-      return { error: logoutError?.message ?? (profile.role === 'business' ? 'Bu bir işletme hesabıdır. İşletme girişini seçin.' : 'Bu bir kullanıcı hesabıdır. Kullanıcı girişini seçin; işletme hesabı türünü yönetici belirler.') };
+      return { error: logoutError?.message ?? (profile.role === 'business' ? 'Bu bir işletme hesabıdır. İşletme girişini seçin.' : 'Bu bir kullanıcı hesabıdır. Kullanıcı girişini seçin. Yeni işletme hesabı için İşletme bölümünden kayıt olun.') };
     }
     return { error: null };
   } catch (reason) { return { error: reason instanceof Error ? reason.message : 'Hesap doğrulanamadı.' }; }

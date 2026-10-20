@@ -54,6 +54,9 @@ function BusinessManage() {
   const router = useRouter();
   const { showAlert } = useAlert();
   const { authUser } = useAuth();
+  const userId = authUser?.id;
+  const accountRole = authUser?.role;
+  const businessAccess = authUser?.businessAccess;
 
   const [business, setBusiness] = useState<OwnedBusinessFull | null>(null);
   const [loading, setLoading] = useState(true);
@@ -138,22 +141,23 @@ function BusinessManage() {
   useEffect(() => {
     let active = true;
     (async () => {
-      if (!authUser || !id) {
+      if (!userId || !id) {
         setLoading(false);
         return;
       }
-      const { data } = await fetchOwnedBusiness(id, authUser.id);
+      const { data, error } = await fetchOwnedBusiness(id, userId);
       if (!active) return;
+      if (error) showAlert('İşletme yüklenemedi', error);
       if (data) {
         applyBusiness(data);
         await loadMenu(id);
       }
-      setLoading(false);
+      if (active) setLoading(false);
     })();
     return () => {
       active = false;
     };
-  }, [authUser, id, applyBusiness, loadMenu]);
+  }, [userId, accountRole, businessAccess, id, applyBusiness, loadMenu, showAlert]);
 
   if (!authUser) {
     return (

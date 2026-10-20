@@ -84,14 +84,14 @@ export default function AdminDashboard() {
       <Text style={styles.sectionTitle}>Yönetim</Text>
       <View style={{ gap: spacing.sm }}>
         <LinkRow icon="bell-badge-outline" title="Başvuru Bildirimleri" subtitle="Yeni işletme ve reklam başvuruları" badge={s.unreadAlerts} tone="danger" onPress={() => router.push('/admin/alerts')} />
-        <LinkRow icon="shield-clock-outline" title="İşletme Giriş Onayları" subtitle="Kayıt olan işletme hesaplarını incele ve girişini onayla" tone="warning" onPress={() => router.push('/admin/users')} />
+        <LinkRow icon="shield-clock-outline" title="İşletme Girişleri ve Onayları" subtitle="Yalnızca işletme hesapları ve panel giriş onayları" tone="warning" onPress={() => router.push({ pathname: '/admin/users', params: { account: 'business' } })} />
         <LinkRow icon="storefront-outline" title="İşletme Yönetimi" subtitle="Onay, yayın ve öne çıkarma" badge={s.pendingBusinesses} onPress={() => router.push('/admin/businesses')} />
         <LinkRow icon="image-check-outline" title="İçerik Onayı" subtitle="Gönderi, Reels ve kampanya onayı" badge={s.pendingContent + s.pendingCampaigns} tone="warning" onPress={() => router.push('/admin/content')} />
         <LinkRow icon="bell-plus-outline" title="Bildirim Talepleri" subtitle="İşletme bildirim gönderim talepleri" badge={s.pendingNotificationRequests} tone="warning" onPress={() => router.push('/admin/notification-requests')} />
         <LinkRow icon="bullhorn-outline" title="Reklam Yönetimi" subtitle="Başvuru, yayın ve ücretlendirme" badge={s.pendingAds} tone="success" onPress={() => router.push('/admin/ads')} />
         <LinkRow icon="tag-multiple-outline" title="Fiyatlandırma" subtitle="Reklam, içerik ve bildirim ücretleri" tone="success" onPress={() => router.push('/admin/packages')} />
         <LinkRow icon="bell-ring-outline" title="Bildirim Merkezi" subtitle="Duyuru ve kampanya gönder" tone="info" onPress={() => router.push('/admin/notifications')} />
-        <LinkRow icon="account-cog-outline" title="Kullanıcı Yönetimi" subtitle="Hesap durumu ve kısıtlama" tone="info" onPress={() => router.push('/admin/users')} />
+        <LinkRow icon="account-cog-outline" title="Kullanıcı Girişleri" subtitle="Kullanıcılar onay beklemez; hesap durumu ve kısıtlama" tone="info" onPress={() => router.push({ pathname: '/admin/users', params: { account: 'user' } })} />
         <LinkRow icon="chart-line" title="Gelir Yönetimi" subtitle="Ödemeler ve raporlar" tone="success" onPress={() => router.push('/admin/revenue')} />
         <LinkRow icon="comment-text-multiple-outline" title="Müşteri Deneyimleri" subtitle="Deneyim alanını onayla/aç, yorum ve önerileri denetle" tone="primary" onPress={() => router.push('/admin/feedback')} />
         <LinkRow icon="flag-outline" title="Şikâyet ve Denetim" subtitle="İçerik ve kullanıcı şikâyetleri" badge={s.openComplaints} tone="danger" onPress={() => router.push('/admin/complaints')} />

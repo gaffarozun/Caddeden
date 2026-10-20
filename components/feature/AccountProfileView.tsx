@@ -6,7 +6,6 @@ import { useRouter } from 'expo-router';
 import { Avatar, Button } from '@/components';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/hooks/useApp';
-import { useAccountAccess } from '@/hooks/useAccountAccess';
 import { useProfileOverview } from '@/hooks/useProfileOverview';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { useAlert } from '@/template';
@@ -15,7 +14,7 @@ import { fontSize, spacing, radius, ThemeColors } from '@/constants/theme';
 interface AccountProfileViewProps { businessPage?: boolean }
 export const AccountProfileView = memo(function AccountProfileView({ businessPage = false }: AccountProfileViewProps) {
   const router = useRouter(); const { showAlert } = useAlert(); const { colors, styles: s } = useThemeStyles(createStyles);
-  const { authUser, isAdmin, isBusiness, signOut } = useAuth(); const access = useAccountAccess();
+  const { authUser, isAdmin, isBusiness, signOut } = useAuth();
   const { user, savedBusinessIds, savedPosts, savedReels, savedCampaigns, notificationsEnabled, setNotificationsEnabled } = useApp();
   const m = useProfileOverview(); const guest = !authUser;
   const saved = savedBusinessIds.length + savedPosts.length + savedReels.length + savedCampaigns.length;
@@ -33,7 +32,6 @@ export const AccountProfileView = memo(function AccountProfileView({ businessPag
       {isAdmin ? <Button label="Yönetici Paneli" icon="shield-crown-outline" onPress={() => router.push('/admin')} /> : null}
       <View style={s.stats}>{(isBusiness ? [{ label: 'İşletme', value: m.owned.length }, { label: 'Yayında', value: m.owned.filter(b => b.is_published).length }, { label: 'Onayda', value: m.owned.filter(b => b.approval_status === 'pending').length }] : [{ label: 'Sipariş', value: m.myOrders.length }, { label: 'Rezervasyon / Randevu', value: m.myReservations.length }, { label: 'Kayıtlı', value: saved }]).map(item => <View key={item.label} style={s.stat}><Text style={s.title}>{item.value}</Text><Text style={s.small}>{item.label}</Text></View>)}</View>
       {m.error ? <View style={s.notice}><Text style={s.error}>{m.error}</Text></View> : null}
-      {authUser?.role === 'user' && authUser.status === 'active' && !access.checking && !access.customer ? <View style={s.notice}><Text style={s.heading}>Hesap türü yönetici kararı bekliyor</Text><Text style={s.subtle}>Bu hesap işletme sahibi olarak kayıtlıdır. Yönetici hesap türünü belirleyene kadar işletme yönetimi ve yeni müşteri işlemleri kapalıdır. Mevcut verileriniz korunur.</Text></View> : null}
       {isBusiness || businessPage ? <Button label="İşletmelerim" icon="storefront-outline" variant="secondary" onPress={() => router.push('/(business-tabs)')} /> : <><Text style={s.heading}>Kayıtlılarım</Text><Pressable style={({ pressed }) => [s.row, pressed ? s.pressed : null]} onPress={() => router.push('/saved')}><MaterialCommunityIcons name="bookmark-multiple-outline" color={colors.primary} size={26} /><View style={s.info}><Text style={s.heading}>Tüm kayıtlarım</Text><Text style={s.subtle}>{saved} kayıt · İşletme, gönderi, Reels ve kampanya</Text></View><MaterialCommunityIcons name="chevron-right" color={colors.primary} size={24} /></Pressable>{!guest ? <Button label="Sipariş, Rezervasyon ve Randevu Geçmişim" variant="secondary" icon="history" onPress={() => router.push('/history')} /> : <Button label="Giriş Yap / Kayıt Ol" icon="login" onPress={() => router.push('/auth')} />}</>}
       <Text style={s.heading}>Ayarlar</Text><AppearanceSettings />
       <View style={s.row}><MaterialCommunityIcons name="bell-outline" size={22} color={colors.primary} /><Text style={s.rowText}>Bildirimler</Text><Switch accessibilityLabel="Bildirimler" value={notificationsEnabled} onValueChange={setNotificationsEnabled} trackColor={{ true: colors.primary, false: colors.border }} thumbColor={colors.onPrimary} /></View>

@@ -335,7 +335,7 @@ Deno.serve(async (req) => {
       case 'list_users': {
         const { data, error } = await admin
           .from('user_profiles')
-          .select('id, username, email, role, status, restricted_until, businesses(id), account_type_decisions(role,decided_at)')
+          .select('id, username, email, role, status, restricted_until, businesses!businesses_owner_id_fkey(id), account_type_decisions(role,decided_at)')
           .order('role', { ascending: false });
         if (error) return json({ error: error.message }, 400);
         const businessIds = (data ?? []).filter(row => row.role === 'business').map(row => row.id);

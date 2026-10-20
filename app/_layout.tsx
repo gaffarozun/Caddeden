@@ -88,7 +88,7 @@ function RootNavigator() {
       </Stack>
       </View>
       {approvalGate ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background }]}><BusinessApprovalView /></View> : null}
-      {profileError ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
+      {profileError && path !== '/auth' ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
     </View>
   );

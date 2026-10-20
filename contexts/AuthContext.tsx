@@ -3,6 +3,8 @@ import React, { createContext, ReactNode, useCallback, useEffect, useMemo, useRe
 import { AppState } from 'react-native';
 import { getSupabaseClient, useAlert } from '@/template';
 import { AuthProfile, RegisterMeta, fetchProfile, sendEmailOtp, signInWithPassword, signOut as svcSignOut, verifyOtpAndRegister } from '@/services/authService';
+import { withRequestTimeout } from '@/services/requestTimeoutService';
+
 export interface AuthContextType {
   authUser: AuthProfile | null; loading: boolean; operationLoading: boolean; profileError: string;
   isAdmin: boolean; isBusiness: boolean;
@@ -13,54 +15,124 @@ export interface AuthContextType {
 }
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const client = getSupabaseClient(); const { showAlert } = useAlert();
+  const client = getSupabaseClient();
+  const { showAlert } = useAlert();
   const [authUser, setAuthUser] = useState<AuthProfile | null>(null);
-  const [loading, setLoading] = useState(true); const [operationLoading, setOperationLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [operationLoading, setOperationLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
-  const epoch = useRef(0); const alive = useRef(true); const operation = useRef(false);
-  const refreshProfile = useCallback(async () => {
+  const epoch = useRef(0);
+  const alive = useRef(true);
+  const operation = useRef(false);
+  const currentProfile = useRef<AuthProfile | null>(null);
+  const pending = useRef<Promise<void> | null>(null);
+
+  const refreshProfile = useCallback((): Promise<void> => {
+    // Startup, foreground, polling and auth events share a single read.
+    if (pending.current) return pending.current;
     const version = ++epoch.current;
-    try {
-      const { data, error } = await client.auth.getSession();
-      if (error) throw error;
-      const session = data.session;
-      const profile = session?.user ? await fetchProfile(session.user.id, session.user.email ?? '') : null;
-      if (alive.current && version === epoch.current) { setAuthUser(profile); setProfileError(''); }
-    } catch (reason) {
-      if (alive.current && version === epoch.current) { setAuthUser(null); setProfileError(reason instanceof Error ? reason.message : 'Hesap doğrulanamadı.'); }
-    } finally { if (alive.current && version === epoch.current) setLoading(false); }
+    const task = (async () => {
+      try {
+        const profile = await withRequestTimeout((async () => {
+          const { data, error } = await client.auth.getSession();
+          if (error) throw error;
+          const session = data.session;
+          return session?.user ? fetchProfile(session.user.id, session.user.email ?? '') : null;
+        })(), 'Oturum bilgileri yüklenemedi. Bağlantınızı kontrol edip yeniden deneyin.');
+        if (!alive.current || version !== epoch.current) return;
+        // Preserve object identity when values did not change. Editors and data
+        // hooks must not restart merely because a background poll completed.
+        if (JSON.stringify(currentProfile.current) !== JSON.stringify(profile)) {
+          currentProfile.current = profile;
+          setAuthUser(profile);
+        }
+        setProfileError('');
+      } catch (reason) {
+        if (!alive.current || version !== epoch.current) return;
+        currentProfile.current = null;
+        setAuthUser(null);
+        setProfileError(reason instanceof Error ? reason.message : 'Oturum bilgileri yüklenemedi.');
+      } finally {
+        if (alive.current && version === epoch.current) setLoading(false);
+      }
+    })();
+    pending.current = task;
+    void task.finally(() => { if (pending.current === task) pending.current = null; });
+    return task;
   }, [client]);
+
   useEffect(() => {
-    alive.current = true; void refreshProfile();
+    alive.current = true;
+    void refreshProfile();
     const timers = new Set<ReturnType<typeof setTimeout>>();
-    // Never await database calls inside the auth callback (avoids Supabase lock deadlocks).
-    const { data: sub } = client.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT' || !session) { epoch.current += 1; setAuthUser(null); setProfileError(''); setLoading(false); return; }
-      const timer = setTimeout(() => { timers.delete(timer); if (!operation.current && alive.current) void refreshProfile(); }, 0);
+    // Never await Supabase reads in this callback: doing so can deadlock the auth lock.
+    const { data: subscription } = client.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+        epoch.current += 1;
+        pending.current = null;
+        currentProfile.current = null;
+        setAuthUser(null); setProfileError(''); setLoading(false);
+        return;
+      }
+      if (!session || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+      // getUser() in existing business services can emit SIGNED_IN for the
+      // current account. It must not trigger a profile/route-check feedback loop.
+      if (event === 'SIGNED_IN' && currentProfile.current?.id === session.user.id) return;
+      const timer = setTimeout(() => {
+        timers.delete(timer);
+        if (!operation.current && alive.current) void refreshProfile();
+      }, 0);
       timers.add(timer);
     });
-    const timer = setInterval(() => { if (!operation.current && AppState.currentState === 'active') void refreshProfile(); }, 30000);
+    const poll = setInterval(() => {
+      if (!operation.current && AppState.currentState === 'active') void refreshProfile();
+    }, 30000);
     const appState = AppState.addEventListener('change', state => {
-      if (state === 'active') { client.auth.startAutoRefresh(); if (!operation.current) void refreshProfile(); }
-      else client.auth.stopAutoRefresh();
+      if (state === 'active') {
+        client.auth.startAutoRefresh();
+        if (!operation.current) void refreshProfile();
+      } else client.auth.stopAutoRefresh();
     });
     client.auth.startAutoRefresh();
-    return () => { alive.current = false; epoch.current += 1; sub.subscription.unsubscribe(); clearInterval(timer); timers.forEach(clearTimeout); appState.remove(); client.auth.stopAutoRefresh(); };
+    return () => {
+      alive.current = false; epoch.current += 1; pending.current = null;
+      subscription.subscription.unsubscribe(); clearInterval(poll);
+      timers.forEach(clearTimeout); appState.remove(); client.auth.stopAutoRefresh();
+    };
   }, [client, refreshProfile]);
+
   const run = useCallback(async (task: () => Promise<{ error: string | null }>, refresh: boolean) => {
     if (operation.current) return { error: 'İşlem devam ediyor.' };
     operation.current = true; setOperationLoading(true);
-    try { const result = await task(); if (refresh) await refreshProfile(); return result; }
-    catch (reason) { if (refresh) await refreshProfile(); return { error: reason instanceof Error ? reason.message : 'Giriş işlemi tamamlanamadı.' }; }
-    finally { operation.current = false; if (alive.current) setOperationLoading(false); }
+    if (refresh) { epoch.current += 1; pending.current = null; }
+    try {
+      const result = await task();
+      if (refresh) await refreshProfile();
+      return result;
+    } catch (reason) {
+      if (refresh) await refreshProfile();
+      return { error: reason instanceof Error ? reason.message : 'Giriş işlemi tamamlanamadı.' };
+    } finally {
+      operation.current = false;
+      if (alive.current) setOperationLoading(false);
+    }
   }, [refreshProfile]);
   const signIn = useCallback((email: string, password: string, account?: 'user' | 'business') => run(() => signInWithPassword(email, password, account), true), [run]);
   const sendOtp = useCallback((email: string, meta?: RegisterMeta) => run(() => sendEmailOtp(email, meta), false), [run]);
   const registerWithOtp = useCallback((email: string, otp: string, password: string, meta: RegisterMeta) => run(() => verifyOtpAndRegister(email, otp, password, meta), true), [run]);
   const signOut = useCallback(async () => {
-    try { await svcSignOut(); epoch.current += 1; setAuthUser(null); setProfileError(''); }
-    catch (reason) { showAlert('Çıkış yapılamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); }
+    try {
+      await svcSignOut(); epoch.current += 1; pending.current = null;
+      currentProfile.current = null; setAuthUser(null); setProfileError('');
+    } catch (reason) {
+      showAlert('Çıkış yapılamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.');
+    }
   }, [showAlert]);
-  const value = useMemo<AuthContextType>(() => ({ authUser, loading, operationLoading, profileError, isAdmin: authUser?.role === 'admin', isBusiness: authUser?.role === 'business' && authUser.businessAccess === true, signIn, sendOtp, registerWithOtp, signOut, refreshProfile }), [authUser, loading, operationLoading, profileError, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);
+  const value = useMemo<AuthContextType>(() => ({
+    authUser, loading, operationLoading, profileError,
+    isAdmin: authUser?.role === 'admin' && authUser.status === 'active',
+    isBusiness: authUser?.role === 'business' && authUser.businessAccess === true,
+    signIn, sendOtp, registerWithOtp, signOut, refreshProfile,
+  }), [authUser, loading, operationLoading, profileError, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
