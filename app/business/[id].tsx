@@ -27,6 +27,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { Badge, Button } from '@/components';
 import { PhotoViewer } from '@/components/feature/PhotoViewer';
+import { BusinessFeedbackSummary } from '@/components/feature/BusinessFeedbackSummary';
 import { fetchBusinessDetail, getBusinessById } from '@/services/businessService';
 import { categoryLabel, getSubCategory } from '@/services/categories';
 import { getOpenStatus } from '@/services/businessStatus';
@@ -67,6 +68,11 @@ export default function BusinessDetailScreen() {
   const isMock = !!mockBusiness;
   const [dbBusiness, setDbBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(!mockBusiness);
+  const handleFeedbackRatings = useCallback((rating: number, count: number) => {
+    setDbBusiness(previous => previous && (previous.rating !== rating || previous.reviewCount !== count)
+      ? { ...previous, rating, reviewCount: count }
+      : previous);
+  }, []);
   const { user, savedBusinessIds, toggleSaveBusiness } = useApp();
   const { authUser } = useAuth();
   const { colors } = useTheme();
@@ -439,6 +445,7 @@ export default function BusinessDetailScreen() {
 
         <View style={styles.body}>
           <Text style={styles.desc}>{business.description}</Text>
+          <BusinessFeedbackSummary businessId={business.id} isDemo={isMock} onRatingsChange={handleFeedbackRatings} />
 
           {isOwner ? (
             <View style={styles.ownerCard}>

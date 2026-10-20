@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { FeedbackProvider } from '@/contexts/FeedbackContext';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function RootLayout() {
@@ -15,7 +16,9 @@ export default function RootLayout() {
         <ThemeProvider>
           <AuthProvider>
             <AppProvider>
-              <RootNavigator />
+              <FeedbackProvider>
+                <RootNavigator />
+              </FeedbackProvider>
             </AppProvider>
           </AuthProvider>
         </ThemeProvider>
@@ -41,10 +44,13 @@ function RootNavigator() {
           contentStyle: { backgroundColor: colors.background },
         }}
       >
+        <Stack.Screen name="index" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="admin" options={{ headerShown: false }} />
         <Stack.Screen name="admin-setup" options={{ headerShown: true, title: 'Yönetici Erişimi', ...header }} />
         <Stack.Screen name="business/[id]" options={{ headerShown: true, title: '', ...header }} />
+        <Stack.Screen name="business/feedback/[id]" options={{ headerShown: true, title: 'Müşteri Deneyimleri', ...header }} />
+        <Stack.Screen name="account-delete" options={{ headerShown: true, title: 'Hesabımı Sil', ...header }} />
         <Stack.Screen name="business/manage/[id]" options={{ headerShown: true, title: 'İşletme Sayfam', ...header }} />
         <Stack.Screen name="business/register" options={{ headerShown: true, title: 'İşletme Kaydı', ...header }} />
         <Stack.Screen name="business/ads" options={{ headerShown: true, title: 'Reklam Ver', ...header }} />

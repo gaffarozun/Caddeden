@@ -37,6 +37,7 @@ export interface AppContextType {
   addOrder: (o: OrderRequest) => void;
   setNotificationsEnabled: (v: boolean) => void;
   logout: () => void;
+  clearLocalAccountData: () => Promise<void>;
 }
 
 export const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -148,6 +149,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     signOut();
   }, [signOut]);
 
+  const clearLocalAccountData = useCallback(async () => {
+    setSavedBusinessIds([]);
+    setSavedPosts([]);
+    setSavedReels([]);
+    setSavedCampaigns([]);
+    setLikedReelIds([]);
+    setReservations([]);
+    setOrders([]);
+    await AsyncStorage.removeItem(STORAGE_KEY);
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -173,6 +185,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addOrder,
         setNotificationsEnabled,
         logout,
+        clearLocalAccountData,
       }}
     >
       {children}

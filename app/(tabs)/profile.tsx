@@ -382,6 +382,21 @@ export default function ProfileScreen() {
             <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textFaint} />
           </Pressable>
 
+          {!isGuest && !isAdmin ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Hesabımı sil"
+              style={({ pressed }) => [styles.linkRow, pressed ? { opacity: 0.7 } : null]}
+              onPress={() => router.push('/account-delete')}
+            >
+              <View style={styles.settingLeft}>
+                <MaterialCommunityIcons name="account-remove-outline" size={20} color={colors.danger} />
+                <Text style={[styles.settingText, { color: colors.danger }]}>Hesabımı Sil</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={22} color={colors.textSubtle} />
+            </Pressable>
+          ) : null}
+
           {!isGuest ? (
             <Pressable style={styles.linkRow} onPress={handleLogout}>
               <View style={styles.settingLeft}>

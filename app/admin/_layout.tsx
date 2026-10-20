@@ -42,6 +42,7 @@ export default function AdminLayout() {
       <Stack.Screen name="users" options={{ title: 'Kullanıcı Yönetimi' }} />
       <Stack.Screen name="revenue" options={{ title: 'Gelir Yönetimi' }} />
       <Stack.Screen name="complaints" options={{ title: 'Şikâyet ve Denetim' }} />
+      <Stack.Screen name="feedback" options={{ title: 'Müşteri Deneyimi Denetimi' }} />
       <Stack.Screen name="logs" options={{ title: 'İşlem Kayıtları' }} />
     </Stack>
   );
