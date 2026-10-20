@@ -61,6 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try { await svcSignOut(); epoch.current += 1; setAuthUser(null); setProfileError(''); }
     catch (reason) { showAlert('Çıkış yapılamadı', reason instanceof Error ? reason.message : 'Tekrar deneyin.'); }
   }, [showAlert]);
-  const value = useMemo<AuthContextType>(() => ({ authUser, loading, operationLoading, profileError, isAdmin: authUser?.role === 'admin', isBusiness: authUser?.role === 'business', signIn, sendOtp, registerWithOtp, signOut, refreshProfile }), [authUser, loading, operationLoading, profileError, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);
+  const value = useMemo<AuthContextType>(() => ({ authUser, loading, operationLoading, profileError, isAdmin: authUser?.role === 'admin', isBusiness: authUser?.role === 'business' && authUser.businessAccess === true, signIn, sendOtp, registerWithOtp, signOut, refreshProfile }), [authUser, loading, operationLoading, profileError, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

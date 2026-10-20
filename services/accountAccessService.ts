@@ -1,7 +1,7 @@
 import { getSupabaseClient } from '@/template';
 export type AccountRole = 'user' | 'business' | 'admin';
 export const customerAccessMessage = 'Bu işlem yalnızca aktif müşteri hesaplarına açıktır.';
-export const businessAccessMessage = 'İşletme işlemleri yalnızca yetkili işletme hesabına açıktır.';
+export const businessAccessMessage = 'İşletme işlemleri yalnızca yönetici tarafından onaylanmış yetkili işletme hesaplarına açıktır.';
 export async function requireCustomer(): Promise<string> {
   const sb = getSupabaseClient();
   const { data: auth, error: authError } = await sb.auth.getUser();
@@ -18,9 +18,9 @@ export async function requireBusinessAccess(businessId?: string, expectedUserId?
   if (expectedUserId && auth.user.id !== expectedUserId) throw new Error(businessAccessMessage);
   const { data, error } = businessId
     ? await sb.rpc('account_can_manage', { p_business: businessId })
-    : await sb.from('user_profiles').select('role,status').eq('id', auth.user.id).single();
+    : await sb.rpc('account_business_access');
   if (error) throw new Error(error.message);
-  if (businessId ? data !== true : !data || !['business', 'admin'].includes(data.role) || data.status !== 'active') throw new Error(businessAccessMessage);
+  if (data !== true) throw new Error(businessAccessMessage);
   return auth.user.id;
 }
 export async function requireOwnedRow(table: string, id: string): Promise<string> {

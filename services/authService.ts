@@ -1,5 +1,6 @@
 // Powered by OnSpace.AI
 import { getSupabaseClient } from '@/template';
+import { BusinessApprovalStatus, loadBusinessApproval } from './businessApprovalService';
 
 const sb = () => getSupabaseClient();
 
@@ -12,6 +13,8 @@ export interface AuthProfile {
   email: string;
   username: string | null;
   role: UserRole;
+  businessApproval: BusinessApprovalStatus | null;
+  businessAccess: boolean;
   status: AccountStatus;
   restricted_until: string | null;
   first_name: string | null;
@@ -45,11 +48,14 @@ export async function fetchProfile(userId: string, fallbackEmail: string): Promi
     .single();
   if (error || !data || !['user', 'business', 'admin'].includes(data.role)) throw new Error(error?.message ?? 'Hesap türü doğrulanamadı.');
   if (data) {
+    const approval = data.role === 'business' ? await loadBusinessApproval() : null;
     return {
       id: data.id,
       email: data.email ?? fallbackEmail,
       username: data.username ?? null,
       role: (data.role ?? 'user') as UserRole,
+      businessApproval: approval?.status ?? null,
+      businessAccess: approval?.canManage ?? false,
       status: (data.status ?? 'active') as AccountStatus,
       restricted_until: data.restricted_until ?? null,
       first_name: data.first_name ?? null,

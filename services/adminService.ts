@@ -83,6 +83,8 @@ export const adminApi = {
   markAlertRead: (alertId?: string) => call('mark_alert_read', { alertId }),
 
   listUsers: () => call('list_users'),
+  setBusinessAccountApproval: (userId: string, status: 'pending' | 'approved') =>
+    call('set_business_account_approval', { userId, status }),
   setAccountType: (userId: string, role: 'user' | 'business', expectedRole: string) => call('set_account_type', { userId, role, expectedRole }),
   restrictUser: (userId: string, status: string, restricted_until?: string | null) =>
     call('restrict_user', { userId, status, restricted_until }),

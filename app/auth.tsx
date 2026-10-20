@@ -130,6 +130,8 @@ export default function AuthScreen() {
           {account === 'business' ? 'İşletme hesabınla devam et' : 'Topluluğa katıl, keşfet ve kazan'}
         </Text>
 
+        {account === 'business' ? <View style={styles.approvalNote}><MaterialCommunityIcons name="shield-clock-outline" size={20} color={colors.primary} /><Text style={styles.approvalText}>İşletme hesabınızla giriş yapabilirsiniz. İşletme paneli, kayıt sonrası yönetici giriş onayıyla açılır.</Text></View> : null}
+
         <View style={styles.segment}>
           <SegmentBtn label="Kullanıcı" active={account === 'user'} onPress={() => { setAccount('user'); resetFlow(); }} />
           <SegmentBtn label="İşletme" active={account === 'business'} onPress={() => { setAccount('business'); resetFlow(); }} />
@@ -332,6 +334,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   },
   genderBtnActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   genderText: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textSubtle },
+  approvalNote: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md, backgroundColor: colors.primarySoft, marginBottom: spacing.lg },
+  approvalText: { flex: 1, color: colors.text, fontSize: fontSize.sm, lineHeight: fontSize.sm * 1.6 },
   otpBox: { gap: spacing.sm },
   otpInfo: { fontSize: fontSize.sm, color: colors.textSubtle, marginBottom: spacing.sm },
   resend: { alignItems: 'center', paddingVertical: spacing.sm },

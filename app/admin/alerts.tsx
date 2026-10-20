@@ -48,7 +48,9 @@ export default function AdminAlerts() {
   const open = (a: AlertRow) => {
     if (!a.is_read) markRead(a.id);
     const dest =
-      a.type === 'ad'
+      a.type === 'business_account_approval'
+        ? '/admin/users'
+        : a.type === 'ad'
         ? '/admin/ads'
         : a.type === 'content' || a.type === 'campaign'
         ? '/admin/content'
@@ -57,6 +59,7 @@ export default function AdminAlerts() {
   };
 
   const alertIcon = (type: string) => {
+    if (type === 'business_account_approval') return 'shield-clock-outline';
     if (type === 'ad') return 'bullhorn-outline';
     if (type === 'content') return 'image-multiple-outline';
     if (type === 'campaign') return 'sale';
@@ -66,7 +69,7 @@ export default function AdminAlerts() {
   const renderItem = ({ item }: { item: AlertRow }) => {
     const accent = item.type === 'ad' || item.type === 'campaign';
     return (
-      <Pressable style={[styles.card, !item.is_read && styles.unread]} onPress={() => open(item)}>
+      <Pressable accessibilityRole="button" style={({ pressed }) => [styles.card, !item.is_read && styles.unread, pressed && { opacity: 0.75 }]} onPress={() => open(item)}>
         <View style={[styles.icon, { backgroundColor: accent ? colors.primarySoft : colors.surfaceTint }]}>
           <MaterialCommunityIcons name={alertIcon(item.type) as keyof typeof MaterialCommunityIcons.glyphMap} size={20} color={accent ? colors.primaryDark : colors.info} />
         </View>

@@ -119,10 +119,10 @@ Deno.serve(async (req) => {
     // ---- All other actions require admin role (verified server-side) ----
     const { data: profile } = await admin
       .from('user_profiles')
-      .select('role')
+      .select('role,status')
       .eq('id', caller.id)
       .single();
-    if (!profile || profile.role !== 'admin') {
+    if (!profile || profile.role !== 'admin' || profile.status !== 'active') {
       return json({ error: 'Bu işlem için yönetici yetkisi gereklidir.' }, 403);
     }
     // Hard lock: only the single authorized owner account may use admin actions.
@@ -134,6 +134,24 @@ Deno.serve(async (req) => {
     }
 
     switch (action) {
+      case 'set_business_account_approval': {
+        if (typeof body.userId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.userId) || !['pending','approved'].includes(body.status)) {
+          return json({ error: 'Geçersiz işletme hesabı onayı.' }, 400);
+        }
+        const { data, error } = await admin.rpc('admin_set_business_account_approval', {
+          p_admin: caller.id, p_user: body.userId, p_status: body.status,
+        });
+        if (error) return json({ error: error.message }, error.code === '42501' ? 403 : 400);
+        return json(data);
+      }
+
+      case 'set_account_type': {
+        if (!['user','business'].includes(body.role) || !['user','business'].includes(body.expectedRole) || typeof body.userId !== 'string') return json({ error: 'Geçersiz hesap türü.' }, 400);
+        const { data, error } = await admin.rpc('admin_set_account_type', { p_admin: caller.id, p_user: body.userId, p_role: body.role, p_expected: body.expectedRole });
+        if (error) return json({ error: error.message }, error.code === '42501' ? 403 : 409);
+        return json(data);
+      }
+
       case 'overview': {
         const [usersC, bizC, pendBizC, adsActiveC, adsPendC, compOpenC, alertsC, pendContentC, pendCampaignC, pendNotifC] =
           await Promise.all([
@@ -317,10 +335,18 @@ Deno.serve(async (req) => {
       case 'list_users': {
         const { data, error } = await admin
           .from('user_profiles')
-          .select('id, username, email, role, status, restricted_until')
+          .select('id, username, email, role, status, restricted_until, businesses(id), account_type_decisions(role,decided_at)')
           .order('role', { ascending: false });
         if (error) return json({ error: error.message }, 400);
-        return json({ users: data });
+        const businessIds = (data ?? []).filter(row => row.role === 'business').map(row => row.id);
+        const approvals: Record<string, { status: string; decided_at: string | null }> = {};
+        if (businessIds.length > 0) {
+          const { data: rows, error: approvalError } = await admin.from('business_account_approvals')
+            .select('user_id,status,decided_at').in('user_id', businessIds);
+          if (approvalError) return json({ error: approvalError.message }, 400);
+          for (const row of rows ?? []) approvals[row.user_id] = { status: row.status, decided_at: row.decided_at };
+        }
+        return json({ users: (data ?? []).map(row => ({ ...row, business_account_approval: row.role === 'business' ? (approvals[row.id] ?? { status: 'pending', decided_at: null }) : null })) });
       }
 
       case 'restrict_user': {

@@ -4,6 +4,7 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { AdminEmpty, AdminLoading, SmallButton, StatusPill } from '@/components/admin/ui';
 import { adminApi } from '@/services/adminService';
 import { useAdminAccountTypes } from '@/hooks/useAdminAccountTypes';
+import { useAdminBusinessApproval } from '@/hooks/useAdminBusinessApproval';
 import { useAlert } from '@/template';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
@@ -16,6 +17,7 @@ interface UserRow {
   status: string;
   businesses?: { id: string }[];
   account_type_decisions?: { role: string; decided_at: string } | null;
+  business_account_approval?: { status: 'pending' | 'approved'; decided_at: string | null } | null;
   restricted_until?: string | null;
 }
 
@@ -37,6 +39,7 @@ export default function AdminUsers() {
   }, [showAlert]);
 
   const accountTypes = useAdminAccountTypes(load);
+  const businessApproval = useAdminBusinessApproval(load);
   useEffect(() => {
     load();
   }, [load]);
@@ -53,6 +56,8 @@ export default function AdminUsers() {
     const statusTone = item.status === 'active' ? 'success' : item.status === 'restricted' ? 'warning' : 'danger';
     const statusLabel = item.status === 'active' ? 'Aktif' : item.status === 'restricted' ? 'Kısıtlı' : 'Yasaklı';
     const isAdmin = item.role === 'admin';
+    const approved = item.business_account_approval?.status === 'approved';
+    const deciding = !!accountTypes.busy || !!businessApproval.busy;
     return (
       <View style={styles.card}>
         <View style={styles.rowTop}>
@@ -63,13 +68,20 @@ export default function AdminUsers() {
           <View style={styles.pills}>
             <StatusPill label={roleLabel} tone={roleTone} />
             <StatusPill label={statusLabel} tone={statusTone} />
+            {item.role === 'business' ? <StatusPill label={approved ? 'Giriş onaylı' : 'Giriş onayı bekliyor'} tone={approved ? 'success' : 'warning'} /> : null}
           </View>
         </View>
 
+        {item.role === 'business' ? <View style={styles.approvalBox}>
+          <Text style={styles.approvalTitle}>İşletme hesabı giriş onayı</Text>
+          <Text style={styles.approvalText}>{approved ? 'Hesabın giriş onayı verildi. Hesap aktif olduğu sürece işletme panelini kullanabilir.' : 'Hesap giriş yapabilir ancak işletme paneli için onay bekleme ekranında kalır.'}</Text>
+          <SmallButton label={approved ? 'Giriş onayını geri al' : 'İşletme girişini onayla'} icon={approved ? 'lock-outline' : 'check-circle-outline'} tone={approved ? 'warning' : 'success'} disabled={deciding} onPress={() => businessApproval.decide(item.id, item.username || item.email || 'İşletme hesabı', approved ? 'pending' : 'approved')} />
+          <Text style={styles.approvalText}>Bu onay, işletme profili yayın onayından ayrıdır.</Text>
+        </View> : null}
         {!isAdmin ? <View style={styles.actions}>
           <Text style={styles.note}>{item.businesses?.length ?? 0} bağlı işletme{item.role === 'user' && (item.businesses?.length ?? 0) > 0 && !item.account_type_decisions ? ' · Hesap türü kararı bekliyor' : ''}</Text>
-          <SmallButton label="Kullanıcı olarak onayla" icon="account-outline" outline disabled={!!accountTypes.busy} onPress={() => accountTypes.decide(item.id, item.username || item.email || 'Hesap', item.role, 'user')} />
-          <SmallButton label="İşletme olarak onayla" icon="storefront-outline" outline disabled={!!accountTypes.busy} onPress={() => accountTypes.decide(item.id, item.username || item.email || 'Hesap', item.role, 'business')} />
+          <SmallButton label="Kullanıcı hesabı olarak belirle" icon="account-outline" outline disabled={deciding} onPress={() => accountTypes.decide(item.id, item.username || item.email || 'Hesap', item.role, 'user')} />
+          <SmallButton label="İşletme hesabı olarak belirle" icon="storefront-outline" outline disabled={deciding} onPress={() => accountTypes.decide(item.id, item.username || item.email || 'Hesap', item.role, 'business')} />
         </View> : null}
         {isAdmin ? (
           <Text style={styles.note}>Yönetici hesapları kısıtlanamaz.</Text>
@@ -115,5 +127,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   email: { fontSize: fontSize.xs, color: colors.textSubtle, marginTop: 2 },
   pills: { gap: 4, alignItems: 'flex-end' },
   note: { fontSize: fontSize.xs, color: colors.textFaint, fontStyle: 'italic' },
+  approvalBox: { padding: spacing.md, gap: spacing.sm, borderRadius: radius.md, backgroundColor: colors.primarySoft, borderWidth: 1, borderColor: colors.borderStrong },
+  approvalTitle: { color: colors.text, fontSize: fontSize.md, fontWeight: fontWeight.semibold },
+  approvalText: { color: colors.textSubtle, fontSize: fontSize.sm, lineHeight: fontSize.sm * 1.6 },
   actions: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' },
 });

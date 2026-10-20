@@ -84,6 +84,7 @@ export default function AdminDashboard() {
       <Text style={styles.sectionTitle}>Yönetim</Text>
       <View style={{ gap: spacing.sm }}>
         <LinkRow icon="bell-badge-outline" title="Başvuru Bildirimleri" subtitle="Yeni işletme ve reklam başvuruları" badge={s.unreadAlerts} tone="danger" onPress={() => router.push('/admin/alerts')} />
+        <LinkRow icon="shield-clock-outline" title="İşletme Giriş Onayları" subtitle="Kayıt olan işletme hesaplarını incele ve girişini onayla" tone="warning" onPress={() => router.push('/admin/users')} />
         <LinkRow icon="storefront-outline" title="İşletme Yönetimi" subtitle="Onay, yayın ve öne çıkarma" badge={s.pendingBusinesses} onPress={() => router.push('/admin/businesses')} />
         <LinkRow icon="image-check-outline" title="İçerik Onayı" subtitle="Gönderi, Reels ve kampanya onayı" badge={s.pendingContent + s.pendingCampaigns} tone="warning" onPress={() => router.push('/admin/content')} />
         <LinkRow icon="bell-plus-outline" title="Bildirim Talepleri" subtitle="İşletme bildirim gönderim talepleri" badge={s.pendingNotificationRequests} tone="warning" onPress={() => router.push('/admin/notification-requests')} />

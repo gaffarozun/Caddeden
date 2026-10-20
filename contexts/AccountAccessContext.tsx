@@ -11,6 +11,6 @@ export function AccountAccessProvider({ children }: { children: ReactNode }) {
   void loadCustomerAccess().then(value => { if (active) { setCustomer(value); setChecking(false); } }, () => { if (active) setChecking(false); });
   return () => { active = false; };
  }, [authUser]);
- const value = useMemo(() => ({ customer, checking: checking || loading || operationLoading, business: authUser?.role === 'business' && authUser.status === 'active', admin: authUser?.role === 'admin', guest: !authUser }), [customer, checking, loading, operationLoading, authUser]);
+ const value = useMemo(() => ({ customer, checking: checking || loading || operationLoading, business: authUser?.role === 'business' && authUser.businessAccess === true, admin: authUser?.role === 'admin', guest: !authUser }), [customer, checking, loading, operationLoading, authUser]);
  return <AccountAccessContext.Provider value={value}>{children}</AccountAccessContext.Provider>;
 }
