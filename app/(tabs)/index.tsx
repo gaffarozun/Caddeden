@@ -21,6 +21,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useRatings } from '@/hooks/useRatings';
 import { DiscoveryRatingSort, discoveryRatingSorts, sortDiscoveryBusinesses } from '@/services/discoveryRatingService';
 import { FeedbackChips } from '@/components/feature/FeedbackControls';
+import { UniversityBanner } from '@/components/feature/UniversityBanner';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
@@ -112,6 +113,10 @@ export default function DiscoverScreen() {
             <Text style={styles.pickTitle}>Ne keşfetmek istersin?</Text>
             <View style={styles.bleed}>
               <MainCategoryTabs selected={main} onSelect={handleMain} counts={counts} />
+            </View>
+
+            <View style={styles.bleed}>
+              <UniversityBanner />
             </View>
 
             {campaigns.length > 0 ? (

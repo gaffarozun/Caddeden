@@ -20,6 +20,7 @@ interface Overview {
   pendingContent: number;
   pendingCampaigns: number;
   pendingNotificationRequests: number;
+  pendingUniversityMessages: number;
   revenue: number;
 }
 
@@ -46,7 +47,7 @@ export default function AdminDashboard() {
   if (loading) return <AdminLoading />;
 
   const s = stats ?? {
-    users: 0, businesses: 0, pendingBusinesses: 0, activeAds: 0, pendingAds: 0, openComplaints: 0, unreadAlerts: 0, pendingContent: 0, pendingCampaigns: 0, pendingNotificationRequests: 0, revenue: 0,
+    users: 0, businesses: 0, pendingBusinesses: 0, activeAds: 0, pendingAds: 0, openComplaints: 0, unreadAlerts: 0, pendingContent: 0, pendingCampaigns: 0, pendingNotificationRequests: 0, pendingUniversityMessages: 0, revenue: 0,
   };
 
   return (
@@ -87,6 +88,7 @@ export default function AdminDashboard() {
         <LinkRow icon="shield-clock-outline" title="İşletme Girişleri ve Onayları" subtitle="Yalnızca işletme hesapları ve panel giriş onayları" tone="warning" onPress={() => router.push({ pathname: '/admin/users', params: { account: 'business' } })} />
         <LinkRow icon="storefront-outline" title="İşletme Yönetimi" subtitle="Onay, yayın ve öne çıkarma" badge={s.pendingBusinesses} onPress={() => router.push('/admin/businesses')} />
         <LinkRow icon="image-check-outline" title="İçerik Onayı" subtitle="Gönderi, Reels ve kampanya onayı" badge={s.pendingContent + s.pendingCampaigns} tone="warning" onPress={() => router.push('/admin/content')} />
+        <LinkRow icon="school-outline" title="Üniversiteden Yazı Onayları" subtitle="Kullanıcı yazılarını incele, LED bantta yayınla" badge={s.pendingUniversityMessages} tone="primary" onPress={() => router.push('/admin/university')} />
         <LinkRow icon="bell-plus-outline" title="Bildirim Talepleri" subtitle="İşletme bildirim gönderim talepleri" badge={s.pendingNotificationRequests} tone="warning" onPress={() => router.push('/admin/notification-requests')} />
         <LinkRow icon="bullhorn-outline" title="Reklam Yönetimi" subtitle="Başvuru, yayın ve ücretlendirme" badge={s.pendingAds} tone="success" onPress={() => router.push('/admin/ads')} />
         <LinkRow icon="tag-multiple-outline" title="Fiyatlandırma" subtitle="Reklam, içerik ve bildirim ücretleri" tone="success" onPress={() => router.push('/admin/packages')} />

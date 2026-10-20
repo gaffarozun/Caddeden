@@ -134,6 +134,30 @@ Deno.serve(async (req) => {
     }
 
     switch (action) {
+      case 'list_university_messages': {
+        if (!['pending', 'approved', 'rejected'].includes(body.status)) return json({ error: 'Geçersiz yazı filtresi.' }, 400);
+        const { data, error } = await admin.from('university_messages')
+          .select('id,user_id,text,status,moderation_reason,created_at,published_at,decided_at,author:user_profiles!university_messages_user_id_fkey(username,email)')
+          .eq('status', body.status).order('created_at', { ascending: false });
+        if (error) { console.error('university list failed', error.code); return json({ error: error.message }, 400); }
+        return json({ messages: data ?? [] });
+      }
+
+      case 'moderate_university_message': {
+        const validId = typeof body.id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id);
+        if (!validId || !['approved', 'rejected'].includes(body.status) || !['pending', 'approved', 'rejected'].includes(body.expectedStatus) || (body.reason != null && typeof body.reason !== 'string')) {
+          return json({ error: 'Geçersiz yazı kararı.' }, 400);
+        }
+        const { data, error } = await admin.rpc('moderate_university_message', {
+          p_admin: caller.id, p_id: body.id, p_status: body.status, p_expected: body.expectedStatus, p_reason: body.reason ?? null,
+        });
+        if (error) {
+          console.error('university moderation failed', error.code);
+          return json({ error: error.message }, error.code === '42501' ? 403 : error.code === '40001' ? 409 : 400);
+        }
+        return json(data);
+      }
+
       case 'set_business_account_approval': {
         if (typeof body.userId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.userId) || !['pending','approved'].includes(body.status)) {
           return json({ error: 'Geçersiz işletme hesabı onayı.' }, 400);
@@ -153,7 +177,7 @@ Deno.serve(async (req) => {
       }
 
       case 'overview': {
-        const [usersC, bizC, pendBizC, adsActiveC, adsPendC, compOpenC, alertsC, pendContentC, pendCampaignC, pendNotifC] =
+        const [usersC, bizC, pendBizC, adsActiveC, adsPendC, compOpenC, alertsC, pendContentC, pendCampaignC, pendNotifC, pendUniversityC] =
           await Promise.all([
             admin.from('user_profiles').select('*', { count: 'exact', head: true }),
             admin.from('businesses').select('*', { count: 'exact', head: true }),
@@ -165,6 +189,7 @@ Deno.serve(async (req) => {
             admin.from('business_posts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
             admin.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
             admin.from('notification_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            admin.from('university_messages').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
           ]);
         const { data: paid } = await admin.from('payments').select('amount').eq('status', 'paid');
         const revenue = (paid ?? []).reduce((s, p) => s + Number(p.amount || 0), 0);
@@ -179,6 +204,7 @@ Deno.serve(async (req) => {
           pendingContent: pendContentC.count ?? 0,
           pendingCampaigns: pendCampaignC.count ?? 0,
           pendingNotificationRequests: pendNotifC.count ?? 0,
+          pendingUniversityMessages: pendUniversityC.count ?? 0,
           revenue,
         });
       }
