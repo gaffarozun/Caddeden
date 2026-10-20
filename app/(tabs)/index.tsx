@@ -97,6 +97,8 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
+      <UniversityBanner />
+
       <View style={styles.searchWrap}>
         <SearchBar value={query} onChangeText={setQuery} />
       </View>
@@ -113,10 +115,6 @@ export default function DiscoverScreen() {
             <Text style={styles.pickTitle}>Ne keşfetmek istersin?</Text>
             <View style={styles.bleed}>
               <MainCategoryTabs selected={main} onSelect={handleMain} counts={counts} />
-            </View>
-
-            <View style={styles.bleed}>
-              <UniversityBanner />
             </View>
 
             {campaigns.length > 0 ? (

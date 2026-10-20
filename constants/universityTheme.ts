@@ -7,4 +7,4 @@ export const universityColors = {
   white: '#FFFFFF', border: '#F044D1',
 };
 export const universityLayout = { height: spacing.xxxl, headerHeight: spacing.xxl, railHeight: 3 };
-export const universityMotion = { pixelsPerSecond: 40, railPixelsPerSecond: 24, glowDuration: 1600 };
+export const universityMotion = { pixelsPerSecond: 48, railPixelsPerSecond: 24, glowDuration: 1600 };
