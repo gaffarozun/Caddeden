@@ -90,7 +90,7 @@ export default function AdminDashboard() {
         <LinkRow icon="bell-ring-outline" title="Bildirim Merkezi" subtitle="Duyuru ve kampanya gönder" tone="info" onPress={() => router.push('/admin/notifications')} />
         <LinkRow icon="account-cog-outline" title="Kullanıcı Yönetimi" subtitle="Hesap durumu ve kısıtlama" tone="info" onPress={() => router.push('/admin/users')} />
         <LinkRow icon="chart-line" title="Gelir Yönetimi" subtitle="Ödemeler ve raporlar" tone="success" onPress={() => router.push('/admin/revenue')} />
-        <LinkRow icon="comment-text-multiple-outline" title="Müşteri Deneyimleri" subtitle="Puanlar, yorumlar, öneriler ve hesap silme istekleri" tone="primary" onPress={() => router.push('/admin/feedback')} />
+        <LinkRow icon="comment-text-multiple-outline" title="Müşteri Deneyimleri" subtitle="Deneyim alanını onayla/aç, yorum ve önerileri denetle" tone="primary" onPress={() => router.push('/admin/feedback')} />
         <LinkRow icon="flag-outline" title="Şikâyet ve Denetim" subtitle="İçerik ve kullanıcı şikâyetleri" badge={s.openComplaints} tone="danger" onPress={() => router.push('/admin/complaints')} />
         <LinkRow icon="history" title="İşlem Kayıtları" subtitle="Yönetici işlem geçmişi" tone="neutral" onPress={() => router.push('/admin/logs')} />
       </View>

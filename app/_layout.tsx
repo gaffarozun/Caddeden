@@ -7,6 +7,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { AppProvider } from '@/contexts/AppContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { FeedbackProvider } from '@/contexts/FeedbackContext';
+import { RatingProvider } from '@/contexts/RatingContext';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function RootLayout() {
@@ -17,7 +18,9 @@ export default function RootLayout() {
           <AuthProvider>
             <AppProvider>
               <FeedbackProvider>
-                <RootNavigator />
+                <RatingProvider>
+                  <RootNavigator />
+                </RatingProvider>
               </FeedbackProvider>
             </AppProvider>
           </AuthProvider>

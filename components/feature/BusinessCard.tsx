@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-import React, { useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,7 +16,7 @@ interface BusinessCardProps {
   business: Business;
 }
 
-export function BusinessCard({ business }: BusinessCardProps) {
+export const BusinessCard = memo(function BusinessCard({ business }: BusinessCardProps) {
   const router = useRouter();
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -26,6 +26,7 @@ export function BusinessCard({ business }: BusinessCardProps) {
   const cat = getSubCategory(business.category);
   const status = getOpenStatus(business);
   const closed = !status.open;
+  const isDemo = !/^[0-9a-f-]{36}$/i.test(business.id);
 
   return (
     <Pressable
@@ -71,7 +72,7 @@ export function BusinessCard({ business }: BusinessCardProps) {
           <Text style={styles.meta}>{cat?.label}</Text>
           <Text style={styles.dot}>·</Text>
           <MaterialCommunityIcons name="star" size={14} color={colors.warning} />
-          <Text style={styles.meta}>{business.rating.toFixed(1)}</Text>
+          <Text style={styles.meta}>{isDemo ? `${business.rating.toFixed(1)} · Demo` : business.reviewCount ? `${business.rating.toFixed(1)} (${business.reviewCount})` : 'Henüz puan yok'}</Text>
           <Text style={styles.dot}>·</Text>
           <Text style={styles.meta}>{business.distanceKm} km</Text>
         </View>
@@ -83,7 +84,7 @@ export function BusinessCard({ business }: BusinessCardProps) {
       </View>
     </Pressable>
   );
-}
+});
 
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
@@ -129,7 +130,7 @@ const createStyles = (colors: ThemeColors) =>
     topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     name: { flex: 1, fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.text, marginRight: spacing.sm },
     nameClosed: { color: colors.textSubtle },
-    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginVertical: 4 },
+    metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 4, marginVertical: 4 },
     meta: { fontSize: fontSize.xs, color: colors.textSubtle, fontWeight: fontWeight.medium },
     dot: { color: colors.textFaint, marginHorizontal: 2 },
     bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

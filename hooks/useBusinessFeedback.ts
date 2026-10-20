@@ -2,12 +2,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './useAuth';
 import { useFeedback } from './useFeedback';
+import { useRatings } from './useRatings';
 import { BusinessFeedback, CriteriaRatings, FeedbackTopic, feedbackTopics, reviewCriteria, summarizeCriteria, removeUnusedEvidence, uploadFeedbackEvidence } from '@/services/feedbackService';
 
 export type FeedbackTab = 'review' | 'suggestion' | 'complaint';
 export function useBusinessFeedback(id: string, enabled = true, startWriting = false) {
   const { authUser } = useAuth();
   const { read, mutate, revision, invalidate } = useFeedback();
+  const { experienceEnabled, experienceLoading } = useRatings();
+  const allowed = enabled && experienceEnabled && !experienceLoading;
   const [data, setData] = useState<BusinessFeedback | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -44,7 +47,7 @@ export function useBusinessFeedback(id: string, enabled = true, startWriting = f
   useEffect(() => {
     let active = true;
     const generation = ++epoch.current;
-    if (!enabled || !id) { setLoading(false); return; }
+    if (!allowed || !id) { setLoading(false); setData(null); return; }
     setLoading(true);
     read(id, sort, offset).then(result => {
       if (!active || generation !== epoch.current) return;
@@ -56,8 +59,9 @@ export function useBusinessFeedback(id: string, enabled = true, startWriting = f
       }
     }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Veriler alınamadı.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [enabled, id, read, sort, offset, revision]);
-  const canCustomer = !!authUser && authUser.role === 'user' && authUser.status === 'active' && !data?.owner;
+  }, [allowed, id, read, sort, offset, revision]);
+  useEffect(() => { if (!allowed) setFormOpen(false); }, [allowed]);
+  const canCustomer = allowed && !!authUser && authUser.role === 'user' && authUser.status === 'active' && !data?.owner;
   const commentPreview = useMemo(() => (data?.reviews ?? []).filter(review => review.comment.trim().length > 0).slice(0, 2), [data?.reviews]);
   useEffect(() => {
     if (startWriting && canCustomer && data && !loading && !openedOnEntry.current) {
@@ -116,5 +120,5 @@ export function useBusinessFeedback(id: string, enabled = true, startWriting = f
   const changeSort = useCallback((next: string) => { setOffset(0); setSort(next); }, []);
   return { data, commentPreview, loading, busy, error, notice, sort, setSort: changeSort, offset, setOffset, tab, setTab: changeTab, formOpen, setFormOpen,
     criteriaRatings, criteriaSummary, setCriteriaRating, comment, setComment, suggestionTopic, setSuggestionTopic, description, setDescription, category, setCategory,
-    target, evidence, setEvidence, pickEvidence, submit, report, run, canCustomer, signedIn: !!authUser, refresh: invalidate };
+    target, evidence, setEvidence, pickEvidence, submit, report, run, canCustomer, experienceEnabled, experienceLoading, signedIn: !!authUser, refresh: invalidate };
 }

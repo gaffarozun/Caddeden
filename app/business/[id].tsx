@@ -28,6 +28,7 @@ import * as Location from 'expo-location';
 import { Badge, Button } from '@/components';
 import { PhotoViewer } from '@/components/feature/PhotoViewer';
 import { BusinessFeedbackSummary } from '@/components/feature/BusinessFeedbackSummary';
+import { BusinessStarRating } from '@/components/feature/BusinessStarRating';
 import { fetchBusinessDetail, getBusinessById } from '@/services/businessService';
 import { categoryLabel, getSubCategory } from '@/services/categories';
 import { getOpenStatus } from '@/services/businessStatus';
@@ -445,7 +446,8 @@ export default function BusinessDetailScreen() {
 
         <View style={styles.body}>
           <Text style={styles.desc}>{business.description}</Text>
-          <BusinessFeedbackSummary businessId={business.id} isDemo={isMock} onRatingsChange={handleFeedbackRatings} />
+          <BusinessStarRating businessId={business.id} isDemo={isMock} onRatingsChange={handleFeedbackRatings} />
+          <BusinessFeedbackSummary businessId={business.id} isDemo={isMock} />
 
           {isOwner ? (
             <View style={styles.ownerCard}>

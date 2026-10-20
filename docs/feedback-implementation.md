@@ -1,5 +1,31 @@
 # Caddeden müşteri deneyimleri ve hesap silme
 
+## 20 Ekim 2026: bağımsız yarım yıldız puanlama ve deneyim onayı
+
+Bu bölüm, aşağıdaki önceki sürümdeki işletme yıldızı/yorum kartı davranışlarının yerine geçer.
+
+- Yorumlar ve müşteri deneyimleri kutucuğu **şimdilik kapalıdır** (`experience_feature_settings.enabled=false`). İşletme profilinde ve işletme yönetiminde kilitli görünür; doğrudan deneyim URL'si açıldığında da kapalı ekranı gösterilir. Deneyim okuma/yazma RPC'leri sunucuda aynı anahtarı denetler. Mevcut moderasyon, şikâyet ve hesap silme işlemleri korunur.
+- Yönetici Paneli → Müşteri Deneyimleri → **Onayla ve kullanıma aç** anahtarı bu bölümü açar. Tek yetkili yönetici, doğrulanmış oturum ve mevcut rol/e-posta koşulları korunmuştur. Kapatma mevcut yorumları silmez. Özellik değişikliği ve yönetici logu tek transaction'da yazılır.
+- İşletme profilinde **Müşteri puanı** kartı bağımsızdır: 0,5; 1; 1,5 … 5 seçenekleri, yarım yıldız önizlemesi ve tek gönderim. E-posta doğrulaması, aktif müşteri rolü, kısıtlama, işletme sahipliği ve hesap silme isteği sunucuda denetlenir. İşletme/yönetici/anonim hesaplar puan veremez.
+- Yeni `business_star_ratings` tablosunda müşteri–işletme başına tek kayıt vardır. Puan güncellemesi aynı kaydı değiştirir; oy sayısını artırmaz. Kullanıcı başına 2 saniyelik yazma aralığı transaction kilidiyle korunur. Her müşteri eşit ağırlıktadır: ortalama = bütün güncel kullanıcı puanlarının toplamı / oy sayısı; gösterim bir ondalığa yuvarlanır. Hesap silme isteği bulunan kullanıcıların oyları kamu ortalamasına dahil edilmez.
+- İşletme profilindeki başlık yıldızı, işletme kartları ve Keşfet yeni `business_star_stats` sonuçlarını kullanır. Eski `businesses.rating/review_count` alanları ve altı özellikli deneyim kayıtları değiştirilmez; altı özellik değerlendirmesi bağımsız yıldız ortalamasına karışmaz.
+- Keşfet: Önerilen / En yüksek puan / En düşük puan seçenekleri. Puan sıralamasında gerçek ve puanlanmış işletmeler önce; puanı olmayanlar sonra; demo işletmeler en sonda. Eşit puanda oy sayısı, ardından ad kullanılır. Kategori, arama ve sadece açık filtresi korunur. Gerçek işletme kartında oy sayısı veya “Henüz puan yok”; örnek kartlarda “Demo” etiketi gösterilir.
+- `RatingProvider` ortak durum paylaşır; gönderimden sonra profil ve Keşfet yenilenir. Aktif uygulamada 30 saniyelik polling kullanılır. İstemciye service-role anahtarı veya kullanıcı kimliği seçme yetkisi verilmez. RLS iki yeni tabloda da açıktır; doğrudan yazımlar kapalıdır, kişisel oylara yalnızca sahibi erişebilir.
+
+### Bu oturumda doğrulananlar
+
+- Gerçek anon rolüyle puan/özellik okuma: başarılı; `canRate=false`, `mine=null`.
+- Gerçek authenticated veritabanı rolüyle service-only puan RPC'si ve özellik onay RPC'si: reddedildi.
+- Kapalı deneyim RPC'sinin yorum gönderimi: 42501 ile, yazıma ulaşmadan reddedildi.
+- 3,25 puan ve kimliksiz müşteri işlemi: reddedildi; gerçek oy eklenmedi.
+- Salt okunur aritmetik fixture: 3,5 + 4 + 5 için ortalama 4,2. Yarım puan kısıtı, RLS, doğrudan INSERT/UPDATE yasağı, benzersiz anahtar ve kapalı varsayılan doğrulandı.
+- 11 yayımlanmış işletmede yeni toplu puan okuması başarılı. Son envanter: 4 profil, 11 işletme, 3 sipariş, 2 rezervasyon, 1 yönetici; 0 eski değerlendirme ve 0 yeni oy. Mevcut kullanıcı/işletme/işlem kayıtlarına veri güncellemesi veya silme uygulanmadı. Yedek alındığı iddia edilmez.
+
+**Henüz test edilmedi:** gerçek müşteri JWT'siyle Edge Function üzerinden başarılı puan gönderme/güncelleme, çok müşterili gerçek ortalama, yönetici oturumuyla açma/kapatma, Edge dağıtım sonrası HTTP invocation, Expo/TypeScript build, iOS/Android ve Keşfet regresyon testleri. Eski deneyim yazımındaki önceki HTTP 500'ün çözüldüğü iddia edilmez; deneyim alanı talep doğrultusunda kapatılmıştır. Kullanıma açmadan önce o akış ayrıca gerçek oturumla doğrulanmalıdır.
+
+Dosyalar: `supabase/migrations/20261020_independent_stars.sql`, `supabase/tests/independent_stars_read_only.sql`, `supabase/functions/rating-api/index.ts`, `services/ratingService.ts`, `services/discoveryRatingService.ts`, `contexts/RatingContext.tsx`, `hooks/useRatings.ts`, `hooks/useBusinessRating.ts`, `hooks/useExperienceApproval.ts`, `BusinessStarRating`, `ExperienceAccessCard`, `ExperienceApprovalControl` ve ilgili profil/Keşfet/yönetici ekranları.
+
+
 ## Uygulanan kapsam
 
 - Mevcut OnSpace Cloud, kullanıcı/işletme kimlik doğrulaması ve ana yönetici korunmuştur. Yönetici e-postası, mevcut rol sistemi ve `admin-api` kimlik doğrulama akışı değiştirilmemiştir.

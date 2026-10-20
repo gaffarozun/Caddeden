@@ -23,6 +23,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { Button } from '@/components';
 import { StatusPill } from '@/components/admin/ui';
+import { ExperienceAccessCard } from '@/components/feature/ExperienceAccessCard';
 import { useAuth } from '@/hooks/useAuth';
 import {
   MenuItemRow,
@@ -463,7 +464,7 @@ export default function BusinessManage() {
         </View>
 
         <Button label="İşletme Sayfamı Önizle" icon="eye-outline" variant="secondary" onPress={() => router.push(`/business/${bizId}`)} />
-        <Button label="Müşteri Yorumları ve Öneriler" icon="comment-text-outline" variant="secondary" onPress={() => router.push(`/business/feedback/${bizId}`)} />
+        <ExperienceAccessCard businessId={bizId} />
 
         <Text style={styles.sectionTitle}>Durum & Çalışma Saatleri</Text>
         <View style={styles.card}>

@@ -3,7 +3,7 @@ import { getSupabaseClient } from '@/template';
 import { BUSINESSES } from './mockData';
 import { Business } from './types';
 import { MainCategoryId, getSubCategory } from './categories';
-import { attachFeedbackRatings } from './feedbackService';
+import { attachStarRatings } from './ratingService';
 
 export function getBusinessById(id?: string): Business | undefined {
   return BUSINESSES.find(b => b.id === id);
@@ -45,8 +45,8 @@ function mapBusinessRow(row: Record<string, any>, includeMenu = false): Business
   };
 }
 async function withRatings(items: Business[]): Promise<Business[]> {
-  try { return await attachFeedbackRatings(items); }
-  catch { return items; } // Preserve existing discovery if feedback transport is temporarily unavailable.
+  try { return await attachStarRatings(items); }
+  catch { return items; } // Preserve discovery if the independent rating transport is temporarily unavailable.
 }
 export async function fetchBusinessDetail(id?: string): Promise<Business | null> {
   if (!id) return null;

@@ -18,6 +18,9 @@ import { Business } from '@/services/types';
 import { MainCategoryId, getMainCategory, getSubCategory } from '@/services/categories';
 import { getOpenStatus } from '@/services/businessStatus';
 import { useTheme } from '@/hooks/useTheme';
+import { useRatings } from '@/hooks/useRatings';
+import { DiscoveryRatingSort, discoveryRatingSorts, sortDiscoveryBusinesses } from '@/services/discoveryRatingService';
+import { FeedbackChips } from '@/components/feature/FeedbackControls';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
@@ -28,6 +31,8 @@ export default function DiscoverScreen() {
   const [allBusinesses, setAllBusinesses] = useState<Business[]>(BUSINESSES);
   const [realCampaigns, setRealCampaigns] = useState<DiscoverCampaign[]>([]);
   const [onlyOpen, setOnlyOpen] = useState(false);
+  const [ratingSort, setRatingSort] = useState<DiscoveryRatingSort>('recommended');
+  const { revision } = useRatings();
 
   // Load approved+published businesses and approved campaigns from the database
   // on each focus, then merge with demo data so real listings appear instantly.
@@ -43,16 +48,15 @@ export default function DiscoverScreen() {
       return () => {
         active = false;
       };
-    }, [])
+    }, [revision])
   );
 
   const businesses = useMemo(() => {
     const base = filterBusinessList(allBusinesses, main, sub, query);
     const withOpen = base.map((b) => ({ b, open: getOpenStatus(b).open }));
     const visible = onlyOpen ? withOpen.filter((x) => x.open) : withOpen;
-    visible.sort((a, z) => Number(z.open) - Number(a.open));
-    return visible.map((x) => x.b);
-  }, [allBusinesses, main, sub, query, onlyOpen]);
+    return sortDiscoveryBusinesses(visible.map((x) => x.b), ratingSort);
+  }, [allBusinesses, main, sub, query, onlyOpen, ratingSort]);
 
   const campaigns = useMemo(() => {
     const mockItems: DiscoverCampaign[] = getCampaignBusinesses().map((b) => ({
@@ -141,7 +145,7 @@ export default function DiscoverScreen() {
             <View style={styles.sectionHead}>
               <View>
                 <Text style={styles.sectionTitle}>{activeMain?.label ?? 'İşletmeler'}</Text>
-                <Text style={styles.count}>{businesses.length} işletme</Text>
+                <Text style={styles.count}>{businesses.length} işletme · {discoveryRatingSorts.find(item => item.id === ratingSort)?.label}</Text>
               </View>
               <Pressable
                 onPress={() => setOnlyOpen((v) => !v)}
@@ -154,6 +158,10 @@ export default function DiscoverScreen() {
                 />
                 <Text style={[styles.openFilterText, onlyOpen && { color: colors.white }]}>Sadece Açık</Text>
               </Pressable>
+            </View>
+            <View style={styles.ratingSort}>
+              <FeedbackChips label="Müşteri puanına göre sırala" items={discoveryRatingSorts} selected={ratingSort} onSelect={value => setRatingSort(value as DiscoveryRatingSort)} />
+              {ratingSort !== 'recommended' ? <Text style={styles.count}>Puanı olmayan işletmeler ve demo içerikler sonda gösterilir.</Text> : null}
             </View>
           </View>
         }
@@ -206,6 +214,7 @@ const createStyles = (colors: ThemeColors) =>
   },
   sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
   count: { fontSize: fontSize.sm, color: colors.textSubtle },
+  ratingSort: { marginBottom: spacing.lg, gap: spacing.sm },
   openFilter: {
     flexDirection: 'row',
     alignItems: 'center',
