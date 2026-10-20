@@ -14,7 +14,7 @@ export async function loadBusinessProfile(id: string): Promise<BusinessProfileDa
   const sb = getSupabaseClient();
   const [owner, campaigns, events] = await Promise.all([
     sb.from('businesses').select('owner_id').eq('id', id).maybeSingle(),
-    sb.from('campaigns').select('id,title,description').eq('business_id', id).eq('status', 'approved').or(`start_date.is.null,start_date.lte.${today}`).or(`end_date.is.null,end_date.gte.${today}`).order('created_at', { ascending: false }).limit(10),
+    sb.from('campaigns').select('id,title,description').eq('business_id', id).eq('status', 'approved').eq('payment_status', 'paid').gt('price', 0).lte('start_date', today).gte('end_date', today).order('created_at', { ascending: false }).limit(10),
     sb.from('business_posts').select('id,caption,image_url,created_at').eq('business_id', id).eq('status', 'approved').or(`start_date.is.null,start_date.lte.${today}`).or(`end_date.is.null,end_date.gte.${today}`).order('created_at', { ascending: false }).limit(20),
   ]);
   if (owner.error) throw new Error(owner.error.message);

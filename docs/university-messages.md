@@ -1,7 +1,8 @@
 # Üniversiteden: yönetici onaylı LED yazı bandı
 
 ## Yerleşim ve görünüm
-- Keşfet ekranında Caddeden başlığının altında, arama çubuğunun hemen üstünde yer alır.
+- Keşfet ekranında arama çubuğunun üstündeki sabit konumundan eski içerik alanına taşındı: Güncel Kampanyalar bandının altında, Yeme İçme/Eğlence ve Güzellik/Bakım kategorilerinin üstünde yer alır; listeyle birlikte kaydırılır.
+- Güncel Kampanyalar ve Üniversiteden aynı `NeonTicker` görünümünü ve hareket altyapısını kullanır. Üniversiteden yazıları kendi ücretsiz müşteri/yönetici onayı akışını korur; ücretli işletme kampanyalarıyla karışmaz.
 - Referans görsel `assets/images/university-reference.png` olarak korunur; dekoratif ışıklar gradyan ve noktalı LED çizgileriyle, başlık ve kullanıcı yazıları erişilebilir React Native Text bileşenleriyle çizilir.
 - Eski neon pembe, turkuaz, altın ve menekşe görünüm korunur. Üstte 32 px Üniversiteden başlığı; altında 48 px kayan yazı satırı bulunur (toplam 80 px, dış boşluklar hariç). Başlıktaki taç/okul işaretleri korunur; Caddeden ayraçlarındaki taç kaldırılmıştır. Duraklat/oynat başlığın solunda, kendi yazını paylaşma düğmesi sağındadır; kayan yazı satırı bu düğmelerden arındırılmıştır.
 - İki özdeş ölçülmüş içerik döngüsü 48 piksel/saniye hızında yalnızca sola kayar. Döngü sınırında özdeş kopyaya geçiş olduğundan boşluk veya sağa geri kayma oluşmaz.

@@ -53,11 +53,11 @@ export default function AdminPackages() {
   const save = async (p: Pkg) => {
     const price = Number(p.price);
     const duration = Number(p.duration_days);
-    if (isNaN(price) || price < 0) {
-      showAlert('Geçersiz fiyat', 'Fiyat 0 veya daha büyük olmalı.', [{ text: 'Tamam' }]);
+    if (!Number.isFinite(price) || price < 0 || (p.type === 'content_campaign' && p.active && price <= 0)) {
+      showAlert('Geçersiz fiyat', p.type === 'content_campaign' ? 'Aktif kampanya bandı paketinde fiyat sıfırdan büyük olmalı.' : 'Fiyat 0 veya daha büyük olmalı.', [{ text: 'Tamam' }]);
       return;
     }
-    if (isNaN(duration) || duration < 1) {
+    if (!Number.isInteger(duration) || duration < 1) {
       showAlert('Geçersiz süre', 'Süre en az 1 gün olmalı.', [{ text: 'Tamam' }]);
       return;
     }
@@ -94,8 +94,10 @@ export default function AdminPackages() {
                 <Text style={styles.name}>{p.name}</Text>
                 <Text style={styles.type}>{AD_TYPE_LABELS[p.type] ?? p.type}</Text>
               </View>
-              <StatusPill label={p.active ? 'Aktif' : 'Pasif'} tone={p.active ? 'success' : 'neutral'} />
+              <StatusPill label={p.type === 'content_campaign' && Number(p.price) <= 0 ? 'Ücret belirle' : p.active ? 'Aktif' : 'Pasif'} tone={p.type === 'content_campaign' && Number(p.price) <= 0 ? 'warning' : p.active ? 'success' : 'neutral'} />
             </View>
+
+            {p.type === 'content_campaign' ? <Text style={styles.note}>Güncel Kampanyalar LED bandı · Sıfırdan büyük bir fiyat belirleyip kaydet. İşletme başvurusu bu ücreti kullanır; ödeme manuel doğrulanır ve ayrıca yayın onayı gerekir. Yeni fiyat mevcut başvuruların ücretini değiştirmez.</Text> : null}
 
             <View style={styles.fieldRow}>
               <View style={styles.field}>
@@ -134,6 +136,7 @@ export default function AdminPackages() {
               label={savingId === p.id ? 'Kaydediliyor...' : 'Kaydet'}
               icon="content-save-outline"
               onPress={() => save(p)}
+              disabled={savingId !== null}
             />
           </View>
         ))}

@@ -62,12 +62,12 @@ export const adminApi = {
     call('update_content_status', { contentId, status, rejection_reason }),
 
   listCampaigns: (status?: string) => call('list_campaigns', { status }),
-  updateCampaignStatus: (campaignId: string, status: string, rejection_reason?: string) =>
-    call('update_campaign_status', { campaignId, status, rejection_reason }),
+  updateCampaignStatus: (campaignId: string, status: string, rejection_reason?: string, expectedStatus?: string, expectedPayment?: string) =>
+    call('update_campaign_status', { campaignId, status, rejection_reason, expectedStatus, expectedPayment }),
   setContentPaid: (contentId: string, payment_status: string) =>
     call('set_content_paid', { contentId, payment_status }),
-  setCampaignPaid: (campaignId: string, payment_status: string) =>
-    call('set_campaign_paid', { campaignId, payment_status }),
+  setCampaignPaid: (campaignId: string, payment_status: string, expectedStatus?: string, expectedPayment?: string) =>
+    call('set_campaign_paid', { campaignId, payment_status, expectedStatus, expectedPayment }),
 
   listNotificationRequests: (status?: string) => call('list_notification_requests', { status }),
   updateNotificationRequest: (id: string, status: string, rejection_reason?: string) =>
