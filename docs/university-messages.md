@@ -3,7 +3,7 @@
 ## Yerleşim ve görünüm
 - Keşfet ekranında ana kategori seçimi (Yeme İçme / Eğlence, Güzellik / Bakım) ile Güncel Kampanyalar arasında yer alır.
 - Referans görsel `assets/images/university-reference.png` olarak korunur; dekoratif ışıklar gradyan ve noktalı LED çizgileriyle, başlık ve kullanıcı yazıları erişilebilir React Native Text bileşenleriyle çizilir.
-- Eski neon pembe, turkuaz, altın ve menekşe görünüm korunur. Üstte 32 px Üniversiteden başlığı; altında 48 px kayan yazı satırı bulunur (toplam 80 px, dış boşluklar hariç). Taç/okul işaretleri ve Caddeden ayraçları korunur.
+- Eski neon pembe, turkuaz, altın ve menekşe görünüm korunur. Üstte 32 px Üniversiteden başlığı; altında 48 px kayan yazı satırı bulunur (toplam 80 px, dış boşluklar hariç). Başlıktaki taç/okul işaretleri korunur; Caddeden ayraçlarındaki taç kaldırılmıştır. Duraklat/oynat başlığın solunda, kendi yazını paylaşma düğmesi sağındadır; kayan yazı satırı bu düğmelerden arındırılmıştır.
 - İki özdeş ölçülmüş içerik döngüsü 40 piksel/saniye hızında yalnızca sola kayar. Döngü sınırında özdeş kopyaya geçiş olduğundan boşluk veya sağa geri kayma oluşmaz.
 - Arka planda ve başka ekranda animasyon durur. Duraklat/oynat düğmesi ve sistemin hareket azaltma tercihi desteklenir; hareket azaltmada metinler elle kaydırılabilen bir satırda da gösterilir.
 
