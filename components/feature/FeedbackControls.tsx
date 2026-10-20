@@ -30,8 +30,8 @@ export const FeedbackError = memo(function FeedbackError({ message }: { message:
   if (!message) return null;
   return <View style={styles.error} accessibilityRole="alert"><MaterialCommunityIcons name="alert-circle-outline" size={22} color={colors.text} /><Text style={styles.errorText}>{message}</Text></View>;
 });
-interface FeedbackStarsProps { rating: number; onChange: (rating: number) => void; disabled?: boolean }
-export const FeedbackStars = memo(function FeedbackStars({ rating, onChange, disabled }: FeedbackStarsProps) {
+interface FeedbackStarsProps { rating: number; onChange: (rating: number) => void; disabled?: boolean; label?: string }
+export const FeedbackStars = memo(function FeedbackStars({ rating, onChange, disabled, label = 'Puanınız' }: FeedbackStarsProps) {
   const { colors } = useTheme(); const styles = useMemo(() => createFeedbackStyles(colors), [colors]);
-  return <View style={styles.section}><Text style={styles.label}>Puanınız · {rating ? `${rating} / 5` : 'Yıldız seçin'}</Text><View style={styles.row}>{[1, 2, 3, 4, 5].map(value => <Pressable key={value} disabled={disabled} accessibilityRole="button" accessibilityLabel={`${value} yıldız`} accessibilityState={{ selected: rating === value }} onPress={() => onChange(value)} style={({ pressed }) => [styles.starButton, pressed ? styles.pressed : null]}><MaterialCommunityIcons name={value <= rating ? 'star' : 'star-outline'} size={32} color={value <= rating ? colors.primaryDark : colors.textSubtle} /></Pressable>)}</View></View>;
+  return <View style={styles.criteriaField}><View style={styles.criteriaLabelRow}><Text style={styles.label}>{label}</Text><Text style={styles.criteriaCount}>{rating ? `${rating} / 5` : 'Seçin'}</Text></View><View style={styles.starRow}>{[1, 2, 3, 4, 5].map(value => <Pressable key={value} disabled={disabled} accessibilityRole="button" accessibilityLabel={`${label}: ${value} yıldız`} accessibilityState={{ selected: rating === value, disabled: !!disabled }} onPress={() => onChange(value)} style={({ pressed }) => [styles.starButton, disabled ? styles.disabled : null, pressed ? styles.pressed : null]}><MaterialCommunityIcons name={value <= rating ? 'star' : 'star-outline'} size={24} color={value <= rating ? colors.primaryDark : colors.textSubtle} /></Pressable>)}</View></View>;
 });

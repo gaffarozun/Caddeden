@@ -8,6 +8,18 @@ export const feedbackTopics = [
   { id: 'staff', label: 'Personel' }, { id: 'service', label: 'Hizmet kalitesi' },
   { id: 'environment', label: 'Ortam' }, { id: 'variety', label: 'Ürün çeşitliliği' },
 ] as const;
+export type FeedbackTopic = (typeof feedbackTopics)[number]['id'];
+export type CriteriaRatings = Partial<Record<FeedbackTopic, number>>;
+export function summarizeCriteria(scores: CriteriaRatings) {
+  const values = feedbackTopics.map(topic => scores[topic.id] ?? 0).filter(value => Number.isInteger(value) && value >= 1 && value <= 5);
+  return { selected: values.length, average: values.length ? Math.round(values.reduce((total, value) => total + value, 0) / values.length * 10) / 10 : 0 };
+}
+export function reviewCriteria(review: FeedbackReview | null): CriteriaRatings {
+  if (!review) return {};
+  if (review.criteria_ratings && Object.keys(review.criteria_ratings).length) return { ...review.criteria_ratings };
+  const legacyTopic = feedbackTopics.find(topic => topic.id === review.topic);
+  return legacyTopic ? { [legacyTopic.id]: review.rating } : {};
+}
 export const suggestionTopics = [
   { id: 'price', label: 'Fiyatların iyileştirilmesi' }, { id: 'student_discount', label: 'Öğrenci indirimi' },
   { id: 'variety', label: 'Ürün çeşitliliği' }, { id: 'service', label: 'Hizmet kalitesi' },
@@ -28,7 +40,7 @@ export function feedbackStatusLabel(status?: string): string {
 }
 export interface FeedbackReview {
   id: string; rating: number; comment: string; topic: string; created_at: string; updated_at: string;
-  author?: string; status?: string; moderation_reason?: string | null; reply?: string | null; reply_status?: string;
+  author?: string; status?: string; criteria_ratings?: CriteriaRatings; moderation_reason?: string | null; reply?: string | null; reply_status?: string;
 }
 export interface FeedbackSuggestion {
   id: string; topic: string; description: string; supports: number; supported: boolean; status: string;

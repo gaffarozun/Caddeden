@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from './useAuth';
 import { useFeedback } from './useFeedback';
-import { BusinessFeedback, removeUnusedEvidence, uploadFeedbackEvidence } from '@/services/feedbackService';
+import { BusinessFeedback, CriteriaRatings, FeedbackTopic, feedbackTopics, reviewCriteria, summarizeCriteria, removeUnusedEvidence, uploadFeedbackEvidence } from '@/services/feedbackService';
 
 export type FeedbackTab = 'review' | 'suggestion' | 'complaint';
 export function useBusinessFeedback(id: string, enabled = true) {
@@ -17,9 +17,15 @@ export function useBusinessFeedback(id: string, enabled = true) {
   const [offset, setOffset] = useState(0);
   const [tab, setTab] = useState<FeedbackTab>('review');
   const [formOpen, setFormOpen] = useState(false);
-  const [rating, setRating] = useState(0);
+  const [criteriaRatings, setCriteriaRatings] = useState<CriteriaRatings>({});
+  const criteriaSummary = useMemo(() => summarizeCriteria(criteriaRatings), [criteriaRatings]);
   const [comment, setComment] = useState('');
-  const [topic, setTopic] = useState('service');
+  const actionLock = useRef(false);
+  const setCriteriaRating = useCallback((topic: FeedbackTopic, stars: number) => {
+    if (actionLock.current || !Number.isInteger(stars) || stars < 1 || stars > 5) return;
+    setCriteriaRatings(previous => ({ ...previous, [topic]: stars }));
+    setError('');
+  }, []);
   const [suggestionTopic, setSuggestionTopic] = useState('student_discount');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('price');
@@ -30,7 +36,7 @@ export function useBusinessFeedback(id: string, enabled = true) {
   const lastMine = useRef('');
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
-    lastMine.current = ''; setData(null); setFormOpen(false); setTarget({ type: 'business', id }); setOffset(0); setError(''); setEvidence(null);
+    lastMine.current = ''; setData(null); setFormOpen(false); setTarget({ type: 'business', id }); setOffset(0); setError(''); setEvidence(null); setCriteriaRatings({}); setComment(''); setNotice('');
   }, [id, authUser?.id]);
   useEffect(() => {
     let active = true;
@@ -43,24 +49,25 @@ export function useBusinessFeedback(id: string, enabled = true) {
       const mineKey = `${result.mine?.id ?? ''}:${result.mine?.updated_at ?? ''}`;
       if (mineKey !== lastMine.current) {
         lastMine.current = mineKey;
-        setRating(result.mine?.rating ?? 0); setComment(result.mine?.comment ?? ''); setTopic(result.mine?.topic ?? 'service');
+        setCriteriaRatings(reviewCriteria(result.mine)); setComment(result.mine?.comment ?? '');
       }
     }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Veriler alınamadı.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [enabled, id, read, sort, offset, revision]);
   const canCustomer = !!authUser && authUser.role === 'user' && authUser.status === 'active' && !data?.owner;
   const run = useCallback(async (action: string, params: Record<string, unknown>) => {
-    if (busy) return false;
+    if (busy || actionLock.current) return false;
+    actionLock.current = true;
     setBusy(true); setError(''); setNotice('');
     try {
       await mutate(action, params);
-      if (mounted.current) setNotice(action === 'delete_review' ? 'Değerlendirmeniz kaldırıldı.' : action === 'support' ? 'Destek tercihiniz güncellendi.' : 'Kaydınız alındı. İçerik ve cevaplar yönetici incelemesinden sonra yayımlanır.');
+      if (mounted.current) setNotice(action === 'delete_review' ? 'Değerlendirmeniz kaldırıldı.' : action === 'support' ? 'Destek tercihiniz güncellendi.' : action === 'review' ? data?.mine?.status === 'hidden' ? 'Güncellemeniz alındı. Yönetici tarafından gizlenen yorum yeniden incelenecek.' : 'Özellik puanlarınız ve yorumunuz tek değerlendirme olarak yayımlandı.' : 'Kaydınız alındı. Öneriler yönetici incelemesinden sonra yayımlanır.');
       return true;
     } catch (reason) {
       if (mounted.current) setError(reason instanceof Error ? reason.message : 'İşlem tamamlanamadı.');
       return false;
-    } finally { if (mounted.current) setBusy(false); }
-  }, [busy, mutate]);
+    } finally { actionLock.current = false; if (mounted.current) setBusy(false); }
+  }, [busy, mutate, data?.mine?.status]);
   const pickEvidence = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) { setError('Kanıt seçmek için galeri izni gerekli.'); return; }
@@ -68,18 +75,19 @@ export function useBusinessFeedback(id: string, enabled = true) {
     if (!result.canceled && result.assets[0]) setEvidence(result.assets[0]);
   }, []);
   const submit = useCallback(async () => {
-    if (!canCustomer || busy) return;
+    if (!canCustomer || busy || actionLock.current) return;
     if (tab === 'review') {
-      if (rating < 1 || rating > 5) { setError('1–5 arasında yıldız seçin.'); return; }
-      const ok = await run('review', { business_id: id, rating, comment, topic });
-      if (ok) setFormOpen(false);
+      const missing = feedbackTopics.filter(feature => !criteriaRatings[feature.id]);
+      if (criteriaSummary.selected !== feedbackTopics.length) { setError(`Her özellik için yıldız seçin. Eksik: ${missing.map(feature => feature.label).join(', ')}.`); return; }
+      const ok = await run('review', { business_id: id, criteria_ratings: criteriaRatings, comment });
+      if (ok) { setFormOpen(false); setOffset(0); }
     } else if (tab === 'suggestion') {
       if (description.trim().length < 5) { setError('Öneri açıklaması en az 5 karakter olmalı.'); return; }
       const ok = await run('suggest', { business_id: id, description, topic: suggestionTopic });
       if (ok) { setFormOpen(false); setDescription(''); }
     } else {
       if (description.trim().length < 10) { setError('Şikâyet açıklaması en az 10 karakter olmalı.'); return; }
-      setBusy(true); setError(''); let path: string | null = null;
+      actionLock.current = true; setBusy(true); setError(''); let path: string | null = null;
       try {
         if (evidence) path = await uploadFeedbackEvidence(evidence);
         await mutate('complaint', { target_type: target.type, target_id: target.id, category, description, evidence_path: path });
@@ -87,15 +95,15 @@ export function useBusinessFeedback(id: string, enabled = true) {
       } catch (reason) {
         if (path) await removeUnusedEvidence(path).catch(() => {});
         if (mounted.current) setError(reason instanceof Error ? reason.message : 'Şikâyet gönderilemedi.');
-      } finally { if (mounted.current) setBusy(false); }
+      } finally { actionLock.current = false; if (mounted.current) setBusy(false); }
     }
-  }, [canCustomer, busy, tab, rating, run, id, comment, topic, description, suggestionTopic, evidence, mutate, target, category]);
+  }, [canCustomer, busy, tab, criteriaRatings, criteriaSummary.selected, run, id, comment, description, suggestionTopic, evidence, mutate, target, category]);
   const report = useCallback((type: string, itemId: string) => {
     setTarget({ type, id: itemId }); setTab('complaint'); setCategory('abuse'); setDescription(''); setFormOpen(true); setNotice('');
   }, []);
   const changeTab = useCallback((next: FeedbackTab) => { setTab(next); setFormOpen(false); setDescription(''); setTarget({ type: 'business', id }); setNotice(''); }, [id]);
   const changeSort = useCallback((next: string) => { setOffset(0); setSort(next); }, []);
   return { data, loading, busy, error, notice, sort, setSort: changeSort, offset, setOffset, tab, setTab: changeTab, formOpen, setFormOpen,
-    rating, setRating, comment, setComment, topic, setTopic, suggestionTopic, setSuggestionTopic, description, setDescription, category, setCategory,
+    criteriaRatings, criteriaSummary, setCriteriaRating, comment, setComment, suggestionTopic, setSuggestionTopic, description, setDescription, category, setCategory,
     target, evidence, setEvidence, pickEvidence, submit, report, run, canCustomer, signedIn: !!authUser, refresh: invalidate };
 }

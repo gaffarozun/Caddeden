@@ -3,14 +3,14 @@
 ## Uygulanan kapsam
 
 - Mevcut OnSpace Cloud, kullanıcı/işletme kimlik doğrulaması ve ana yönetici korunmuştur. Yönetici e-postası, mevcut rol sistemi ve `admin-api` kimlik doğrulama akışı değiştirilmemiştir.
-- Gerçek işletmelerin profilinde müşteri deneyimleri ve üç otomatik öne çıkan alan; ayrı değerlendirme/öneri/özel şikâyet ekranı.
-- Müşteri–işletme başına benzersiz, 1–5 yıldızlı değerlendirme. Yorum isteğe bağlıdır; kendi yorumunu düzenleme ve görünürlükten kaldırma vardır. Yorum tarihleri ve puana göre sıralama bulunur. Yorumlar 20'li sayfalarda görüntülenir.
-- İlk değerlendirme ve her düzenleme `pending` olur. Yalnızca yönetici tarafından yayımlanmış değerlendirmeler ortalamaya katılır. Mevcut `businesses.rating/review_count` değerleri silinmemiştir; yeni gerçek ortalama, uygulamada sunucunun `feedback_ratings` sonucundan alınır. Feedback servisine erişilemezse eski keşif verisi korunur ve deneyim paneli hata gösterir.
-- İşletme sahibi yalnızca kendi işletmesinin yayımlanmış yorum/önerilerine cevap verebilir. Cevaplar da incelemeye alınır. İşletme hesapları ve başka işletmenin sahibi olan eski müşteri hesapları müşteri değerlendirmesi oluşturamaz; kontrol yalnızca istemci rolüne dayanmaz.
+- Gerçek işletmelerin profilinde kompakt müşteri deneyimleri kartı: başlık, genel puan, değerlendirme sayısı ve yorumlara bağlantı. Ayrı deneyim ekranında küçük özet ve yalnızca yeterli verisi olan öne çıkan satırlar gösterilir; boş üç büyük kart kaldırıldı.
+- Müşteri–işletme başına benzersiz değerlendirme. Fiyat, hijyen, personel, hizmet kalitesi, ortam ve ürün çeşitliliği için ayrı 1–5 yıldız seçilir. Altı puan ve isteğe bağlı yorum tek RPC/transaction ile gönderilir. Genel puan özelliklerin bir ondalığa yuvarlanmış ortalamasıdır; bir müşteri tek değerlendirme sayılır. Kendi yorumunu düzenleme/kaldırma, 20'li sayfalama ve gerçek ortalamaya göre sıralama korunur. Eksik/geçersiz puanlar sunucuda reddedilir; çift gönderim istemcide kilitlenir.
+- Yeni değerlendirmeler ve normal güncellemeler doğrudan `published` olur; yorumlar herkese açıktır. Yönetici tarafından `hidden` yapılan yorum güncellenirse `pending` olur, böylece gizleme denetimi aşılamaz. Önceden bekleyen veya gizlenen kayıtlar topluca yayımlanmadı. Yalnızca `published` değerlendirmeler ortalamaya katılır. `criteria_ratings` sütunu eklenmiştir; eski kayıtların boş özellik nesnesi eski genel puanına geri döner. `businesses.rating/review_count` değerleri değiştirilmedi; uygulama sunucunun `feedback_ratings` sonucunu kullanır.
+- İşletme sahibi yalnızca kendi işletmesinin yayımlanmış yorum/önerilerine cevap verebilir. Yeni yorum cevapları doğrudan yorumun altında yayımlanır; yönetici tarafından gizlenen cevap güncellemeleri yeniden incelenir. Öneri cevapları önceki inceleme akışında kalır. İşletme hesapları ve işletme sahibi eski müşteri hesapları müşteri değerlendirmesi oluşturamaz; sahiplik ve rol sunucuda denetlenir. Yorum güncellemeleri mevcut işletme cevabını silmez.
 - İstenen 7 işletme şikâyet kategorisi; yorum/öneri/işletme cevabı için uygunsuz içerik, spam ve kişisel bilgi bildirimleri.
 - Şikâyet açıklamaları ve kimlikler public RPC'de yer almaz. Kanıt fotoğrafları özel, 5 MB sınırına sahip Storage alanına yüklenir. Yönetici görüntüleme bağlantıları 60 saniyeliktir, görüntüleyici disk önbelleği kullanmaz.
 - Öneriler işletme + standart konu bazında birleştirilir. Tek kullanıcı aynı öneriye bir aktif destek verebilir veya desteğini geri çekebilir. Destek sayısı ve sıralama sunucuda hesaplanır.
-- En beğenilen özellik: yayımlanmış 4–5 puanlardan konu başına en az 3 farklı müşteri. En çok bildirilen konu: açık/incelenen/sonuçlanan bildirimlerde konu başına en az 3 farklı aktif bildiren. En çok talep: yayımlanmış önerilerde en az 3 farklı aktif destekleyen. Bu üç hesap birbirinden ayrıdır. Şikâyetler doğrulanmış bulgu olarak sunulmaz.
+- En beğenilen özellik: ilgili özelliğe 4–5 yıldız veren yayımlanmış değerlendirmelerden en az 3 farklı müşteri; eski tek-konulu değerlendirmeler geriye uyumlu olarak dahil edilir. En çok bildirilen konu: açık/incelenen/sonuçlanan bildirimlerde konu başına en az 3 farklı aktif bildiren. En çok talep: yayımlanmış önerilerde en az 3 farklı aktif destekleyen. Bu üç hesap birbirinden ayrıdır. Şikâyetler doğrulanmış bulgu olarak sunulmaz.
 - Yeni yönetici ekranında yorumlar, şikâyetler, öneriler, işletme özeti ve yarım kalan hesap silme işlemleri yer alır. Yayımlama/gizleme/durum değişiklikleri en az 5 karakterlik gerekçeyle, `admin_logs` kaydıyla aynı transaction içinde uygulanır.
 - Eski `/admin/complaints` bağlantısı korunur ve yeni gerekçeli şikâyet ekranına yönlenir.
 - Ortak FeedbackProvider değişiklikleri ekranlar arasında paylaşır. Aktif uygulamada 30 saniyelik polling ve öne gelişte yenileme kullanılır; Realtime kullanılmaz.
@@ -64,11 +64,11 @@ Gerçek üretim hesaplarını test verisi olarak silmeyin. Ayrı kontrollü test
 | Senaryo | Beklenen sonuç | Durum |
 |---|---|---|
 | Mevcut kullanıcı/işletme/ana yönetici giriş ve OTP kayıt | Mevcut akışlar çalışır, rol değişmez | Cihazda bekliyor |
-| Müşteri 1–5 puan gönderir/günceller | Tek kayıt; pending; admin yayımlayınca ortalama/sayı güncellenir | Uçtan uca bekliyor |
+| Müşteri altı özellik puanı ve yorum gönderir/günceller | Tek kayıt; doğrudan yayında; gizlenen yorum güncellemesi pending; ortalama/sayı güncellenir | SQL hesap ve sözleşme doğrulandı; gerçek JWT/cihaz bekliyor |
 | 0/6 puan veya başka kullanıcı adına doğrudan yazma | Reddedilir, veri değişmez | Rol izinleri doğrulandı; gerçek JWT bekliyor |
 | Kullanıcı kendi yorumunu siler | Yorum ve puan public ortalamadan çıkar | Test hesabıyla bekliyor |
 | İşletme başka işletmeye cevap yazar / puan verir | Sunucuda reddedilir | Gerçek JWT bekliyor |
-| İşletme kendi yorumuna cevap verir | Pending cevap; yönetici yayımlayana kadar public değildir | Bekliyor |
+| İşletme kendi işletmesinin yorumuna cevap verir | Doğrudan yorum altında görünür; gizlenen cevap güncellemesi yeniden incelenir | SQL sözleşme doğrulandı; gerçek JWT/cihaz bekliyor |
 | Anonim/normal kullanıcı moderasyon | 42501/403; kayıt değişmez | Kimliksiz okuma denetimi doğrulandı; normal JWT bekliyor |
 | Aynı öneriye tekrar destek/geri çekme | Tek benzersiz destek, gerçek sayı/sıra | Constraint doğrulandı; uçtan uca bekliyor |
 | Aynı şikâyeti 7 günde tekrar / günlük dördüncü | Sunucuda reddedilir | Bekliyor |
@@ -94,6 +94,14 @@ Gerçek üretim hesaplarını test verisi olarak silmeyin. Ayrı kontrollü test
 - `components/feature/FeedbackControls.tsx`, `BusinessFeedbackSummary.tsx`, `FeedbackReply.tsx`, `FeedbackForm.tsx`
 - `supabase/functions/feedback-api/index.ts`
 - `supabase/tests/feedback_read_only_checks.sql`, bu rapor
+
+## 20 Ekim 2026 özellik puanları güncellemesi
+
+Migration: `supabase/migrations/20261020_feedback_criteria.sql`. Yalnızca ek sütun/kısıt ve fonksiyon tanımları uygulandı; mevcut müşteri kayıtları üzerinde UPDATE/DELETE veya toplu yayımlama yapılmadı. Fonksiyon değişiklikleri bilinen kuralları kontrol ederek transaction içinde uygulanır. Mevcut rol, işletme sahipliği, hız sınırları, şikâyet gizliliği, moderasyon ve hesap silme akışları korunur.
+
+Salt okunur testler başarılı: altı geçerli puan, eksik/bilinmeyen özellik, 0/6/kesirli/metin/null/dizi reddi, 4.0 ve 4.2 ortalamalar, eski puan geri dönüşü, üç public sıralama sorgusu, anonim yorum/cevap yazımının reddi, RLS ve doğrudan yazma yasağı. Kontrol sırasında 4 profil, 11 işletme ve 0 değerlendirme korunmuştur; PostgreSQL hata kaydı görülmedi. Tekrar çalıştırılabilir kontroller `supabase/tests/feedback_criteria_checks.sql` dosyasındadır. Cihaz/build ve gerçek oturumlu gönderme-cevaplama testleri bu oturumda çalıştırılmadı.
+
+Ek/değişen UI: `FeedbackCriteria.tsx`, `FeedbackControls.tsx`, `FeedbackForm.tsx`, `FeedbackReply.tsx`, `BusinessFeedbackSummary.tsx`, deneyim ve yönetici ekranları. `useBusinessFeedback` bağımsız puan taslağını ve tek gönderim kilidini yönetir; `useFeedbackReply` cevap gönderim kilidini ve sonucu yönetir. Ortak FeedbackProvider değişiklikten sonra bütün deneyim ekranlarını yeniler.
 
 ## Güvenli geri çekme
 
