@@ -11,5 +11,15 @@ export function useCaddeTvStage() {
   const tvHeight = Math.max(1, tvWidth * caddeTvStage.cabinetHeight / caddeTvLayout.canvasWidth);
   const tvLeft = (width - tvWidth) / 2;
   const tvTop = height * caddeTvStage.tvTop;
-  return { width, height, tvWidth, tvHeight, tvLeft, tvTop, measure };
+  // Zoom the entire source scene with the cabinet so there is no second TV behind it.
+  // Only the outer room/cabinet edges are cropped; the whole live glass stays visible.
+  const scale = tvWidth / caddeTvLayout.canvasWidth;
+  const roomPosition = {
+    position: 'absolute' as const,
+    left: tvLeft,
+    top: tvTop - caddeTvStage.sourceCropTop * scale,
+    width: tvWidth,
+    height: Math.max(1, caddeTvLayout.canvasHeight * scale),
+  };
+  return { width, height, tvWidth, tvHeight, tvLeft, tvTop, roomPosition, measure };
 }

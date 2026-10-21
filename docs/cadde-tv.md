@@ -2,7 +2,7 @@
 
 ## Güncel sahne
 - Arka plan kullanıcı tarafından sağlanan neon oda görselidir: `assets/images/cadde-tv-neon-room.png`. Yerel görsel kullanılır; Unsplash veya uzaktan görsel yüklenmesine bağımlılık yoktur. Görselin özgün renkleri korunur.
-- Sahne, kaynak görselin 941 × 1672 oranını korur. TV kasası aynı görselden aynı ölçekte yerleştirilir; ikinci bir TV veya farklı oda katmanı oluşmaz. Cam alanı (137, 432, 660, 376), LED alanı (56, 817, 848, 63) kaynak piksel koordinatlarına göre hesaplanır. İşletme ön izlemesi de aynı yeni kasayı kullanır.
+- Sahne, kaynak görselin 941 × 1672 oranını korur. Oda ve TV birlikte %34 yakınlaştırılır; cam alanı sahne genişliğinin yaklaşık %94’ünü kaplar. Dış oda/kasa kenarları kırpılır, canlı camın tamamı görünür kalır. TV kasası arka planla aynı konum ve ölçekte yerleştirilir; ikinci bir TV veya farklı oda katmanı oluşmaz. Cam alanı (137, 432, 660, 376), LED alanı (56, 817, 848, 63) kaynak piksel koordinatlarına göre hesaplanır. İşletme ön izlemesi de aynı yeni kasayı kullanır.
 - Pembe, camgöbeği, altın ve mor parlayan öğrenci yazıları, çok renkli ince ışık rayları ve LED noktaları korunur. Fotoğraftaki örnek reklamın ve örnek altyazının üzerine gerçek yayın/boş durum ve onaylı öğrenci yazıları yerleştirilir.
 - Fiziksel kumanda arayüzü, beğenme, kaydetme, paylaşma ve işletme açıklaması Cadde TV ekranından kaldırıldı. Eski kayıtlı içerikler ve diğer Gönderiler özellikleri silinmedi.
 - Ekran `overflow: hidden` ve `expo-image contentFit="contain"` ile sınırlandırılır. Yeni oda görselinin cam geometrisi mevcut gönderim oranını değiştirmez; eski ve yeni fotoğraflar esnetilmeden, gerektiğinde kenar boşluklarıyla gösterilir.
@@ -13,7 +13,7 @@
 - Görseller yönüne uygun, 260 ms süren yatay bant geçişiyle değişir. Azaltılmış hareket tercihinde geçiş animasyonu uygulanmaz.
 - Sekme odağı kaybolunca veya uygulama arka plana gidince otomatik geçiş durur; odak/ön plan geri geldiğinde yeni süre başlar. Zamanlayıcılar ve abonelikler temizlenir.
 - 30 saniyelik sunucu sorgulaması aynı listeyi getirirse otomatik geçiş zamanlayıcısı sıfırlanmaz. Kategori filtreleri görünür yayın listesini değiştirir. Tek yayında önceki/sonraki oklar pasiftir.
-- Görselin ait olduğu işletmenin adı doğrudan `/business/{businessId}` profilini açar. Profil erişimi o anda gösterilen yayınla eşleşir.
+- Görselin ait olduğu işletmenin adı doğrudan `/business/{businessId}` profilini açar. Profil erişimi o anda gösterilen yayınla eşleşir. Profil bağlantısı ve ileri/geri okları, sayfanın altına sabitlenmiş çok saydam bir yüzeydedir; oda arkadan görünür ve bağlantı kaydırma sırasında da erişilebilir kalır.
 
 ## Öğrenci yazıları
 - Sadece mevcut yönetici onaylı yazılar LED kanalında gösterilir; Üniversiteden başlığı yoktur.
