@@ -19,7 +19,7 @@ export const SavedItemsView = memo(function SavedItemsView(_props: SavedItemsVie
   const m = useSavedItems();
   const renderItem = useCallback(({ item }: { item: SavedLibraryItem }) => {
     if (item.kind === 'business') return <BusinessCard business={item.business} />;
-    const label = item.kind === 'post' ? 'Gönderi' : item.kind === 'reel' ? 'Reels' : 'Kampanya';
+    const label = item.kind === 'post' ? 'Gönderi' : item.kind === 'reel' ? 'Cadde TV' : 'Kampanya';
     const icon = item.kind === 'post' ? 'image-outline' : item.kind === 'reel' ? 'play-box-outline' : 'tag-outline';
     return <Pressable accessibilityRole="button" accessibilityLabel={`${item.media.businessName}, ${label}`} onPress={() => m.openViewer(item.media, item.kind)} style={({ pressed }) => [styles.mediaCard, pressed ? styles.pressed : null]}>
       {item.media.image ? <Image source={{ uri: item.media.image }} style={styles.image} contentFit="cover" transition={200} /> : <View style={[styles.image, styles.imageEmpty]}><MaterialCommunityIcons name={icon} size={28} color={colors.primary} /></View>}

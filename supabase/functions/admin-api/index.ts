@@ -482,22 +482,14 @@ Deno.serve(async (req) => {
       }
 
       case 'update_campaign_status': {
-        const patch: Record<string, unknown> = { status: body.status };
-        patch.rejection_reason = body.status === 'rejected' ? (body.rejection_reason ?? null) : null;
-        if (body.status === 'approved') {
-          const { data: row } = await admin.from('campaigns').select('package_id').eq('id', body.campaignId).single();
-          let days = 0;
-          if (row?.package_id) {
-            const { data: pkg } = await admin.from('ad_packages').select('duration_days').eq('id', row.package_id).single();
-            days = Number(pkg?.duration_days ?? 0);
-          }
-          patch.start_date = new Date().toISOString().slice(0, 10);
-          patch.end_date = days > 0 ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : null;
-        }
-        const { error } = await admin.from('campaigns').update(patch).eq('id', body.campaignId);
-        if (error) return json({ error: error.message }, 400);
-        await log('update_campaign_status', { campaignId: body.campaignId, status: body.status });
-        return json({ ok: true });
+        if (typeof body.campaignId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.campaignId) || !['approved','rejected'].includes(body.status)) return json({ error: 'Geçersiz kampanya kararı.' }, 400);
+        const { data, error } = await admin.rpc('admin_campaign_decision', {
+          p_admin: caller.id, p_id: body.campaignId, p_action: 'status', p_value: body.status,
+          p_reason: typeof body.rejection_reason === 'string' ? body.rejection_reason : null,
+          p_expected_status: body.expectedStatus ?? null, p_expected_payment: body.expectedPayment ?? null,
+        });
+        if (error) { console.error('campaign status failed', error.code); return json({ error: error.message }, error.code === '42501' ? 403 : error.code === '40001' ? 409 : 400); }
+        return json(data);
       }
 
       case 'set_content_paid': {
@@ -517,19 +509,13 @@ Deno.serve(async (req) => {
       }
 
       case 'set_campaign_paid': {
-        const paid = body.payment_status === 'paid';
-        const { error } = await admin.from('campaigns').update({ payment_status: body.payment_status }).eq('id', body.campaignId);
-        if (error) return json({ error: error.message }, 400);
-        if (paid) {
-          const ref = `campaign:${body.campaignId}`;
-          const { data: row } = await admin.from('campaigns').select('business_id, price').eq('id', body.campaignId).single();
-          const { count } = await admin.from('payments').select('*', { count: 'exact', head: true }).eq('note', ref);
-          if (row && (count ?? 0) === 0) {
-            await admin.from('payments').insert({ business_id: row.business_id, amount: row.price, status: 'paid', method: 'manual', note: ref });
-          }
-        }
-        await log('set_campaign_paid', { campaignId: body.campaignId, payment_status: body.payment_status });
-        return json({ ok: true });
+        if (typeof body.campaignId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.campaignId) || !['paid','unpaid'].includes(body.payment_status)) return json({ error: 'Geçersiz kampanya ödemesi.' }, 400);
+        const { data, error } = await admin.rpc('admin_campaign_decision', {
+          p_admin: caller.id, p_id: body.campaignId, p_action: 'payment', p_value: body.payment_status,
+          p_expected_status: body.expectedStatus ?? null, p_expected_payment: body.expectedPayment ?? null,
+        });
+        if (error) { console.error('campaign payment failed', error.code); return json({ error: error.message }, error.code === '42501' ? 403 : error.code === '40001' ? 409 : 400); }
+        return json(data);
       }
 
       case 'list_notification_requests': {

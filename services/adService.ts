@@ -126,7 +126,8 @@ export async function applyForAd(params: {
     business_id: params.business_id,
     package_id: params.package_id,
     type: params.type,
-    title: params.title,
+    // TV is a photo-only channel. Preserve text for every other advertising type.
+    title: params.type === 'reels_sponsored' ? null : params.title,
     image_url: params.image_url ?? null,
   });
   return { error: error?.message ?? null };

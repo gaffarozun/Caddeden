@@ -4,24 +4,22 @@ import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
-import { BusinessCard, CampaignCard, MainCategoryTabs, SearchBar, SubCategoryBar } from '@/components';
+import { BusinessCard, MainCategoryTabs, SearchBar, SubCategoryBar } from '@/components';
 import {
   countMainIn,
   fetchApprovedBusinesses,
   filterBusinessList,
-  getCampaignBusinesses,
   mergeBusinesses,
 } from '@/services/businessService';
-import { DiscoverCampaign, fetchDiscoverCampaigns } from '@/services/campaignService';
 import { BUSINESSES } from '@/services/mockData';
 import { Business } from '@/services/types';
-import { MainCategoryId, getMainCategory, getSubCategory } from '@/services/categories';
+import { MainCategoryId, getMainCategory } from '@/services/categories';
 import { getOpenStatus } from '@/services/businessStatus';
 import { useTheme } from '@/hooks/useTheme';
 import { useRatings } from '@/hooks/useRatings';
 import { DiscoveryRatingSort, discoveryRatingSorts, sortDiscoveryBusinesses } from '@/services/discoveryRatingService';
 import { FeedbackChips } from '@/components/feature/FeedbackControls';
-import { UniversityBanner } from '@/components/feature/UniversityBanner';
+import { CampaignBanner } from '@/components/feature/CampaignBanner';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
@@ -30,21 +28,19 @@ export default function DiscoverScreen() {
   const [main, setMain] = useState<MainCategoryId>('yeme_icme');
   const [sub, setSub] = useState<string>('all');
   const [allBusinesses, setAllBusinesses] = useState<Business[]>(BUSINESSES);
-  const [realCampaigns, setRealCampaigns] = useState<DiscoverCampaign[]>([]);
   const [onlyOpen, setOnlyOpen] = useState(false);
   const [ratingSort, setRatingSort] = useState<DiscoveryRatingSort>('recommended');
   const { revision } = useRatings();
 
-  // Load approved+published businesses and approved campaigns from the database
-  // on each focus, then merge with demo data so real listings appear instantly.
+  // Business discovery preserves existing demo listings; paid campaigns are loaded
+  // separately through the shared campaign hook and never merged with demo offers.
   useFocusEffect(
     useCallback(() => {
       let active = true;
       (async () => {
-        const [real, camps] = await Promise.all([fetchApprovedBusinesses(), fetchDiscoverCampaigns()]);
+        const real = await fetchApprovedBusinesses();
         if (!active) return;
         setAllBusinesses(mergeBusinesses(real, BUSINESSES));
-        setRealCampaigns(camps);
       })();
       return () => {
         active = false;
@@ -58,19 +54,6 @@ export default function DiscoverScreen() {
     const visible = onlyOpen ? withOpen.filter((x) => x.open) : withOpen;
     return sortDiscoveryBusinesses(visible.map((x) => x.b), ratingSort);
   }, [allBusinesses, main, sub, query, onlyOpen, ratingSort]);
-
-  const campaigns = useMemo(() => {
-    const mockItems: DiscoverCampaign[] = getCampaignBusinesses().map((b) => ({
-      id: `mock-${b.id}`,
-      businessId: b.id,
-      title: b.campaign ?? 'Kampanya',
-      name: b.name,
-      category: b.category,
-      cover: b.cover,
-      main: getSubCategory(b.category)?.main,
-    }));
-    return [...realCampaigns, ...mockItems].filter((c) => c.main === main);
-  }, [realCampaigns, main]);
 
   const counts = useMemo(
     () => ({
@@ -97,8 +80,6 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      <UniversityBanner />
-
       <View style={styles.searchWrap}>
         <SearchBar value={query} onChangeText={setQuery} />
       </View>
@@ -112,22 +93,13 @@ export default function DiscoverScreen() {
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={
           <View>
+            <View style={styles.bleed}>
+              <CampaignBanner main={main} />
+            </View>
             <Text style={styles.pickTitle}>Ne keşfetmek istersin?</Text>
             <View style={styles.bleed}>
               <MainCategoryTabs selected={main} onSelect={handleMain} counts={counts} />
             </View>
-
-            {campaigns.length > 0 ? (
-              <View style={styles.bleed}>
-                <View style={styles.sectionHeadPad}>
-                  <Text style={styles.sectionTitle}>Güncel Kampanyalar</Text>
-                  <MaterialCommunityIcons name="fire" size={18} color={colors.primary} />
-                </View>
-                <View style={styles.campaignRail}>
-                  <FlatList horizontal data={campaigns} keyExtractor={item => item.id} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.campaignRow} renderItem={({ item: c }) => <CampaignCard id={c.id} businessId={c.businessId} title={c.title} description={c.description} name={c.name} category={c.category} cover={c.cover} />} />
-                </View>
-              </View>
-            ) : null}
 
             <View style={styles.bleed}>
               <SubCategoryBar main={main} selected={sub} onSelect={setSub} />
@@ -201,14 +173,6 @@ const createStyles = (colors: ThemeColors) =>
     marginBottom: spacing.md,
     marginTop: spacing.lg,
   },
-  sectionHeadPad: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: spacing.md,
-    marginTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
-  },
   sectionTitle: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.text },
   count: { fontSize: fontSize.sm, color: colors.textSubtle },
   ratingSort: { marginBottom: spacing.lg, gap: spacing.sm },
@@ -226,8 +190,6 @@ const createStyles = (colors: ThemeColors) =>
   },
   openFilterActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   openFilterText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.textSubtle },
-  campaignRail: { minHeight: 76 },
-  campaignRow: { gap: spacing.md, paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, alignItems: 'center' },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },
   emptyText: { fontSize: fontSize.md, color: colors.textSubtle },
 });

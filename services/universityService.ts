@@ -19,7 +19,7 @@ export function normalizeUniversityText(value: string): string {
   return value.replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 export async function fetchUniversityPublicMessages(): Promise<UniversityPublicMessage[]> {
-  const { data, error } = await withRequestTimeout(getSupabaseClient().rpc('university_public_messages'), 'Üniversiteden yazıları yüklenemedi.');
+  const { data, error } = await withRequestTimeout(getSupabaseClient().rpc('university_public_messages'), 'Cadde TV yazıları yüklenemedi.');
   if (error) throw new Error(error.message);
   return (data ?? []) as UniversityPublicMessage[];
 }

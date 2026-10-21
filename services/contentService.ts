@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-// Business content service: Reels & Gönderiler (photo + caption only, no video).
+// Business photos: Cadde TV has no caption; regular posts preserve their caption flow.
 // Images upload to the business-media bucket under {business_id}/content/.
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
@@ -77,7 +77,7 @@ export async function createContent(params: {
       business_id: params.business_id,
       kind: params.kind,
       image_url: pub.publicUrl,
-      caption: params.caption || null,
+      caption: params.kind === 'reel' ? null : params.caption || null,
       package_id: params.package_id ?? null,
       price: params.price ?? 0,
     });

@@ -3,31 +3,41 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { caddeTvColors as c, caddeTvLayout as frame } from '@/constants/caddeTvTheme';
+import Animated from 'react-native-reanimated';
+import { useCaddeTvTransition } from '@/hooks/useCaddeTvTransition';
+import { caddeTvColors as c, caddeTvLayout as frame, caddeTvStage } from '@/constants/caddeTvTheme';
 import { fontSize, fontWeight, spacing } from '@/constants/theme';
 
 interface CaddeTvFrameProps {
   width: number; image?: string | null; onPress?: () => void; loading?: boolean;
-  error?: string; emptyText?: string; preview?: boolean;
+  error?: string; emptyText?: string; preview?: boolean; direction?: number; reduced?: boolean;
 }
-export const CaddeTvFrame = memo(function CaddeTvFrame({ width, image, onPress, loading, error, emptyText = 'Bu kategoride henüz yayın yok.', preview = false }: CaddeTvFrameProps) {
-  const height = width * frame.canvasHeight / frame.canvasWidth;
+export const CaddeTvFrame = memo(function CaddeTvFrame({ width, image, onPress, loading, error, emptyText = 'Bu kategoride henüz yayın yok.', preview = false, direction = 1, reduced = false }: CaddeTvFrameProps) {
+  const scale = Math.max(1, width) / frame.canvasWidth;
+  const height = Math.max(1, scale * caddeTvStage.cabinetHeight);
+  const screenWidth = Math.max(1, width * frame.screen.width);
+  const screenPosition = {
+    left: width * frame.screen.left,
+    top: (frame.canvasHeight * frame.screen.top - caddeTvStage.sourceCropTop) * scale,
+    width: screenWidth, height: Math.max(1, frame.canvasHeight * frame.screen.height * scale),
+    borderRadius: width * frame.screenCorner,
+  };
+  const transition = useCaddeTvTransition(image, screenWidth, direction, reduced || preview);
   return <View style={[styles.canvas, { width, height }]}>
-    <Image source={require('@/assets/images/cadde-tv-room.png')} style={StyleSheet.absoluteFillObject} contentFit="fill" transition={200} accessibilityLabel="Sıcak ışıklı, bitkilerle çevrili retro televizyon odası" />
-    <Pressable disabled={!onPress} onPress={onPress} accessibilityRole={onPress ? 'button' : 'image'} accessibilityLabel={onPress ? 'Cadde TV ekranı. Sonraki işletme yayınına geç.' : 'Görselin televizyon ekranındaki ön izlemesi'} style={({ pressed }) => [styles.screen, {
-      left: width * frame.screen.left, top: height * frame.screen.top,
-      width: width * frame.screen.width, height: height * frame.screen.height,
-      borderRadius: width * frame.screenCorner,
-    }, pressed ? styles.pressed : null]}>
-      {image ? <Image key={image} source={{ uri: image }} style={StyleSheet.absoluteFillObject} contentFit="contain" transition={200} accessibilityLabel="İşletmenin yayın görseli" /> : <View style={styles.empty}>
+    <Image source={require('@/assets/images/cadde-tv-room.png')} style={{ position: 'absolute', left: 0, top: -caddeTvStage.sourceCropTop * scale, width, height: frame.canvasHeight * scale }} contentFit="fill" accessibilityLabel="Retro ahşap Cadde TV kasası" />
+    <Pressable disabled={!onPress} onPress={onPress} accessibilityRole={onPress ? 'button' : 'image'} accessibilityLabel={onPress ? 'Cadde TV ekranı. Sonraki işletme görseline geç.' : 'İşletme görselinin TV ekranındaki ön izlemesi'} style={({ pressed }) => [styles.screen, screenPosition, pressed ? styles.pressed : null]}>
+      {transition.layers.current ? <>
+        {transition.layers.previous ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, transition.outgoingStyle]}><Image source={{ uri: transition.layers.previous }} style={StyleSheet.absoluteFillObject} contentFit="contain" /></Animated.View> : null}
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, transition.incomingStyle]}><Image source={{ uri: transition.layers.current }} style={StyleSheet.absoluteFillObject} contentFit="contain" accessibilityLabel="İşletmenin yayın görseli" /></Animated.View>
+      </> : <View style={styles.empty}>
         {loading ? <ActivityIndicator color={c.amber} /> : <MaterialCommunityIcons name="television-classic" size={preview ? 24 : 36} color={c.amber} />}
         <Text style={[styles.emptyTitle, preview ? styles.previewText : null]}>{preview ? 'Görselini burada gör' : 'Cadde TV'}</Text>
-        {!preview ? <Text style={styles.emptyText}>{error ? 'Yayınlar yüklenemedi. Kumandadan yenile.' : loading ? 'Yayınlar hazırlanıyor…' : emptyText}</Text> : null}
+        {!preview ? <Text style={styles.emptyText}>{error ? 'Yayınlar yüklenemedi. Yenile düğmesiyle tekrar dene.' : loading ? 'Yayınlar hazırlanıyor…' : emptyText}</Text> : null}
       </View>}
-      <LinearGradient pointerEvents="none" colors={[c.glass, 'transparent', 'transparent']} locations={[0, 0.09, 1]} style={StyleSheet.absoluteFillObject} />
+      <LinearGradient pointerEvents="none" colors={[c.glass, c.transparent, c.transparent]} locations={[0, 0.09, 1]} style={StyleSheet.absoluteFillObject} />
       <View pointerEvents="none" style={[styles.glassEdge, { borderRadius: width * frame.screenCorner }]} />
     </Pressable>
-    {preview ? <View style={[styles.previewSubtitle, { left: width * frame.subtitle.left, top: height * frame.subtitle.top, width: width * frame.subtitle.width, height: height * frame.subtitle.height }]}><Text numberOfLines={1} style={styles.previewText}>CADDE TV · EKRANA TAM UYUMLU ÖN İZLEME</Text></View> : null}
+    {preview ? <View style={[styles.previewSubtitle, { left: width * frame.subtitle.left, top: (caddeTvStage.subtitleSourceTop - caddeTvStage.sourceCropTop) * scale, width: width * frame.subtitle.width, height: caddeTvStage.subtitleSourceHeight * scale }]}><Text numberOfLines={1} style={styles.previewText}>CADDE TV · EKRANA TAM UYUMLU</Text></View> : null}
   </View>;
 });
 const styles = StyleSheet.create({

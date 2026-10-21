@@ -12,7 +12,7 @@ export async function fetchCaddeTvChannels(): Promise<Reel[]> {
   if (error) throw new Error(error.message);
   return ((data ?? []) as TvChannelRow[]).map(row => ({
     id: row.id, businessId: row.business_id, businessName: row.business_name,
-    category: row.category as CategoryId, image: row.image_url, caption: row.caption,
+    category: row.category as CategoryId, image: row.image_url, caption: '',
     sponsored: row.sponsored, likes: 0,
   }));
 }

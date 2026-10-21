@@ -8,6 +8,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { Button } from '@/components';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { CROP_PRESETS, ImageCropper } from '@/components/feature/ImageCropper';
+import { caddeTvCreative, caddeTvCropRatios } from '@/constants/caddeTvTheme';
+import { caddeTvDisplayName, caddeTvCreativeError } from '@/services/caddeTvService';
+import { CaddeTvCreativePreview } from '@/components/feature/CaddeTvCreativePreview';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -41,7 +44,7 @@ function BusinessAds() {
   const [bizId, setBizId] = useState('');
   const [pkgId, setPkgId] = useState('');
   const [title, setTitle] = useState('');
-  const [picked, setPicked] = useState<{ uri: string; base64: string } | null>(null);
+  const [picked, setPicked] = useState<{ uri: string; base64: string; width: number; height: number } | null>(null);
   const [cropUri, setCropUri] = useState<string | null>(null);
   const [cropVisible, setCropVisible] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -71,10 +74,8 @@ function BusinessAds() {
   );
 
   const selectedPkg = useMemo(() => packages.find((p) => p.id === pkgId), [packages, pkgId]);
-  const isReelsAd = selectedPkg?.type === 'reels_sponsored';
-  const adRatios = isReelsAd
-    ? [CROP_PRESETS['9:3']]
-    : [CROP_PRESETS['16:9'], CROP_PRESETS['1:1'], CROP_PRESETS['4:5']];
+  const isTvAd = selectedPkg?.type === 'reels_sponsored';
+  const adRatios = useMemo(() => isTvAd ? caddeTvCropRatios : [CROP_PRESETS['16:9'], CROP_PRESETS['1:1'], CROP_PRESETS['4:5']], [isTvAd]);
 
   const pickAdImage = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -124,13 +125,13 @@ function BusinessAds() {
       showAlert('Eksik bilgi', 'Reklam paketi seç.', [{ text: 'Tamam' }]);
       return;
     }
-    if (!title.trim()) {
+    if (!isTvAd && !title.trim()) {
       showAlert('Eksik bilgi', 'Reklam metnini yaz.', [{ text: 'Tamam' }]);
       return;
     }
-    if (isReelsAd && !picked) {
-      showAlert('Görsel gerekli', 'Reels reklamı için 9:3 oranında bir görsel ekle.', [{ text: 'Tamam' }]);
-      return;
+    if (isTvAd) {
+      const invalid = caddeTvCreativeError(picked?.width, picked?.height);
+      if (invalid) { showAlert('TV görseli gerekli', invalid, [{ text: 'Tamam' }]); return; }
     }
     setSaving(true);
     let imageUrl: string | null = null;
@@ -147,8 +148,10 @@ function BusinessAds() {
       business_id: bizId,
       package_id: selectedPkg.id,
       type: selectedPkg.type,
-      title: title.trim(),
+      title: isTvAd ? '' : title.trim(),
       image_url: imageUrl,
+      image_width: picked?.width,
+      image_height: picked?.height,
     });
     setSaving(false);
     if (error) {
@@ -195,10 +198,10 @@ function BusinessAds() {
             {packages.map((p) => {
               const active = pkgId === p.id;
               return (
-                <Pressable key={p.id} onPress={() => setPkgId(p.id)} style={[styles.pkgCard, active && styles.pkgCardActive]}>
+                <Pressable key={p.id} onPress={() => { if (p.type !== selectedPkg?.type) setPicked(null); setPkgId(p.id); }} style={[styles.pkgCard, active && styles.pkgCardActive]}>
                   <MaterialCommunityIcons name={active ? 'radiobox-marked' : 'radiobox-blank'} size={20} color={active ? colors.primary : colors.textFaint} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.pkgName}>{p.name}</Text>
+                    <Text style={styles.pkgName}>{caddeTvDisplayName(p.name)}</Text>
                     <Text style={styles.pkgMeta}>{AD_TYPE_LABELS[p.type] ?? p.type} · {p.duration_days} gün</Text>
                   </View>
                   <Text style={styles.pkgPrice}>{Number(p.price).toLocaleString('tr-TR')} ₺</Text>
@@ -210,15 +213,16 @@ function BusinessAds() {
           {selectedPkg ? (
             <>
               <Text style={styles.label}>
-                {isReelsAd ? 'Reels Görseli · 9:3 (zorunlu)' : 'Görsel · 16:9 (opsiyonel)'}
+                {isTvAd ? 'Cadde TV Görseli · Ekran oranı zorunlu' : 'Görsel · 16:9 (opsiyonel)'}
               </Text>
-              <Pressable style={[styles.adPicker, { aspectRatio: isReelsAd ? 3 : 16 / 9 }]} onPress={pickAdImage}>
-                {picked ? (
+              {isTvAd ? <Text style={styles.pickerText}>Önerilen ölçü: 1584 × 1008 px. Zorunlu TV kırpma çerçevesi; görsel ekrandan taşmaz ve esnetilmez.</Text> : null}
+              <Pressable accessibilityRole="button" accessibilityLabel="Reklam görseli seç ve kırp" disabled={saving} style={({ pressed }) => [styles.adPicker, isTvAd ? null : { aspectRatio: 16 / 9 }, pressed ? styles.pressed : null]} onPress={pickAdImage}>
+                {isTvAd ? <CaddeTvCreativePreview image={picked?.uri ?? null} /> : picked ? (
                   <Image source={{ uri: picked.uri }} style={styles.adPreview} contentFit="cover" />
                 ) : (
                   <View style={styles.adPickerEmpty}>
                     <MaterialCommunityIcons name="image-plus" size={28} color={colors.textFaint} />
-                    <Text style={styles.pickerText}>{isReelsAd ? '9:3 oranında görsel seç' : 'Görsel seç'}</Text>
+                    <Text style={styles.pickerText}>Görsel seç</Text>
                   </View>
                 )}
               </Pressable>
@@ -231,16 +235,18 @@ function BusinessAds() {
             </>
           ) : null}
 
-          <Text style={styles.label}>Reklam Metni</Text>
-          <TextInput
-            value={title}
-            onChangeText={setTitle}
-            placeholder="Reklamında görünecek kısa metin"
-            placeholderTextColor={colors.textFaint}
-            style={[styles.input, styles.textArea]}
-            multiline
-            accessibilityLabel="Reklam metni"
-          />
+          {!isTvAd ? <>
+            <Text style={styles.label}>Reklam Metni</Text>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="Reklamında görünecek kısa metin"
+              placeholderTextColor={colors.textFaint}
+              style={[styles.input, styles.textArea]}
+              multiline
+              accessibilityLabel="Reklam metni"
+            />
+          </> : <Text style={styles.noteText}>Cadde TV reklamında yalnızca fotoğraf yayınlanır; açıklama veya reklam metni eklenmez. İzleyiciler görselden sonraki yayına, işletme adından profiline ulaşır.</Text>}
 
           <View style={styles.note}>
             <MaterialCommunityIcons name="information-outline" size={16} color={colors.textSubtle} />
@@ -269,12 +275,12 @@ function BusinessAds() {
                     </View>
                     <StatusPill label={st.label} tone={st.tone} />
                   </View>
-                  {a.title ? <Text style={styles.adTitle} numberOfLines={2}>{a.title}</Text> : null}
+                  {a.type !== 'reels_sponsored' && a.title ? <Text style={styles.adTitle} numberOfLines={2}>{a.title}</Text> : null}
                   {a.image_url ? (
                     <Image
                       source={{ uri: a.image_url }}
-                      style={[styles.adImage, { aspectRatio: a.type === 'reels_sponsored' ? 3 : 16 / 9 }]}
-                      contentFit="cover"
+                      style={[styles.adImage, { aspectRatio: a.type === 'reels_sponsored' ? caddeTvCreative.value : 16 / 9 }]}
+                      contentFit="contain"
                       transition={150}
                     />
                   ) : null}
@@ -299,7 +305,7 @@ function BusinessAds() {
         initialRatioId={adRatios[0].id}
         onCancel={() => setCropVisible(false)}
         onDone={(r) => {
-          setPicked({ uri: r.uri, base64: r.base64 });
+          setPicked({ uri: r.uri, base64: r.base64, width: r.width, height: r.height });
           setCropVisible(false);
         }}
       />
@@ -337,6 +343,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   adBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   adPrice: { fontSize: fontSize.md, fontWeight: fontWeight.bold, color: colors.primary },
   reason: { fontSize: fontSize.xs, color: colors.danger },
+  pressed: { opacity: 0.75 },
   adPicker: { width: '100%', borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceAlt, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
   adPickerEmpty: { alignItems: 'center', gap: 6, padding: spacing.md },
   adPreview: { width: '100%', height: '100%' },
