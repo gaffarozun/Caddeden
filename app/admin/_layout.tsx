@@ -35,7 +35,7 @@ export default function AdminLayout() {
       <Stack.Screen name="index" options={{ title: 'Yönetici Paneli' }} />
       <Stack.Screen name="businesses" options={{ title: 'İşletme Yönetimi' }} />
       <Stack.Screen name="content" options={{ title: 'İçerik Onayı' }} />
-      <Stack.Screen name="university" options={{ title: 'Üniversiteden · Yazı Onayları' }} />
+      <Stack.Screen name="university" options={{ title: 'Cadde TV · Yazı Onayları' }} />
       <Stack.Screen name="alerts" options={{ title: 'Başvuru Bildirimleri' }} />
       <Stack.Screen name="ads" options={{ title: 'Reklam Yönetimi' }} />
       <Stack.Screen name="packages" options={{ title: 'Reklam Fiyatları' }} />

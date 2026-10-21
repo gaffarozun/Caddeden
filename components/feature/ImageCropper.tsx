@@ -109,6 +109,8 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
   const liveTx = useRef(0);
   const liveTy = useRef(0);
   const geomRef = useRef<Geom | null>(null);
+  const [geometry, setGeometry] = useState<Geom | null>(null);
+  const [cropError, setCropError] = useState('');
 
   // Gesture bookkeeping (incremental deltas handle pan<->pinch transitions).
   const lastDist = useRef<number | null>(null);
@@ -148,6 +150,9 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
     if (!visible || !uri) return;
     setLoadingSize(true);
     setImgSize(null);
+    setGeometry(null);
+    setCropError('');
+    geomRef.current = null;
     setRatioId(initialRatioId ?? ratioList[0].id);
     (async () => {
       try {
@@ -155,7 +160,7 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
         if (!active) return;
         setImgSize({ w: info.width, h: info.height });
       } catch {
-        if (active) setImgSize(null);
+        if (active) { setImgSize(null); setCropError('Görsel açılamadı. Kapatıp başka bir fotoğraf seçin.'); }
       } finally {
         if (active) setLoadingSize(false);
       }
@@ -177,6 +182,7 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
   useEffect(() => {
     if (!imgSize || area.w < 2 || area.h < 2) {
       geomRef.current = null;
+      setGeometry(null);
       return;
     }
     const ratioValue = currentRatio.value ?? imgSize.w / imgSize.h;
@@ -192,13 +198,15 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
       frameH = availW / ratioValue;
     }
     const coverScale = Math.max(frameW / imgSize.w, frameH / imgSize.h);
-    geomRef.current = {
+    const nextGeometry = {
       frameW,
       frameH,
       coverScale,
       baseW: imgSize.w * coverScale,
       baseH: imgSize.h * coverScale,
     };
+    geomRef.current = nextGeometry;
+    setGeometry(nextGeometry);
     resetTransform();
   }, [imgSize, area.w, area.h, currentRatio, resetTransform]);
 
@@ -268,6 +276,7 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
     const g = geomRef.current;
     if (!uri || !imgSize || !g) return;
     setBusy(true);
+    setCropError('');
     try {
       const totalScale = g.coverScale * liveScale.current;
       const dispW = imgSize.w * totalScale;
@@ -282,10 +291,10 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
       cropX = clamp(cropX, 0, imgSize.w - cropW);
       cropY = clamp(cropY, 0, imgSize.h - cropH);
 
-      const originX = Math.max(0, Math.round(cropX));
-      const originY = Math.max(0, Math.round(cropY));
-      const width = Math.max(1, Math.round(cropW));
-      const height = Math.max(1, Math.round(cropH));
+      const width = Math.max(1, Math.min(imgSize.w, Math.round(cropW)));
+      const height = Math.max(1, Math.min(imgSize.h, Math.round(cropH)));
+      const originX = clamp(Math.round(cropX), 0, imgSize.w - width);
+      const originY = clamp(Math.round(cropY), 0, imgSize.h - height);
 
       const actions: ImageManipulator.Action[] = [
         { crop: { originX, originY, width, height } },
@@ -313,13 +322,13 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
         ratioId: currentRatio.id,
       });
     } catch {
-      // On failure keep the cropper open so the user can retry.
+      setCropError('Görsel kırpılamadı. Çerçeveyi yeniden konumlandırıp Uygula düğmesine basın.');
     } finally {
       setBusy(false);
     }
   };
 
-  const g = geomRef.current;
+  const g = geometry;
   const ready = !!imgSize && !!g && !loadingSize;
 
   return (
@@ -381,6 +390,7 @@ export function ImageCropper({ visible, uri, ratios, initialRatioId, onCancel, o
             <MaterialCommunityIcons name="gesture-spread" size={16} color={colors.textSubtle} />
             <Text style={styles.hint}>Yakınlaştır, kaydır ve çerçeveyi konumlandır · çerçeve içindeki alan paylaşılır</Text>
           </View>
+          {cropError ? <Text accessibilityRole="alert" style={styles.errorText}>{cropError}</Text> : null}
           <View style={styles.ratioRow}>
             {ratioList.map((r) => {
               const active = r.id === ratioId;
@@ -435,6 +445,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   loader: { alignItems: 'center', gap: spacing.md },
   loaderText: { color: 'rgba(255,255,255,0.7)', fontSize: fontSize.sm },
 
+  errorText: { color: colors.danger, fontSize: fontSize.md, lineHeight: fontSize.md * 1.6 },
   controls: { backgroundColor: colors.surface, paddingHorizontal: spacing.lg, paddingTop: spacing.md, gap: spacing.md },
   hintRow: { flexDirection: 'row', alignItems: 'center', gap: 6, justifyContent: 'center' },
   hint: { color: colors.textSubtle, fontSize: fontSize.xs, flexShrink: 1, textAlign: 'center' },

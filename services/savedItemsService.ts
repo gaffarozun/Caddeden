@@ -11,7 +11,7 @@ export const savedCategories: { id: SavedCategory; label: string }[] = [
   { id: 'all', label: 'Tümü' },
   { id: 'business', label: 'İşletmeler' },
   { id: 'post', label: 'Gönderiler' },
-  { id: 'reel', label: 'Reels' },
+  { id: 'reel', label: 'Cadde TV' },
   { id: 'campaign', label: 'Kampanyalar' },
 ];
 

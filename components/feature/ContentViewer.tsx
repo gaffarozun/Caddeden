@@ -15,7 +15,7 @@ import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/
 export type ContentKind = 'reel' | 'post' | 'campaign';
 
 const KIND_META: Record<ContentKind, { label: string; icon: string }> = {
-  reel: { label: 'Reels', icon: 'play-box-outline' },
+  reel: { label: 'Cadde TV', icon: 'television-classic' },
   post: { label: 'Gönderi', icon: 'image-outline' },
   campaign: { label: 'Kampanya', icon: 'sale' },
 };

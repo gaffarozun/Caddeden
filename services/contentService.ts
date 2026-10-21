@@ -4,6 +4,7 @@
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
 import { businessAccessError, ownedRowAccessError } from './accountAccessService';
+import { caddeTvCreativeError } from './caddeTvService';
 
 const sb = () => getSupabaseClient();
 const BUCKET = 'business-media';
@@ -53,10 +54,16 @@ export async function createContent(params: {
   kind: ContentKind;
   caption: string;
   base64: string;
+  image_width?: number;
+  image_height?: number;
   package_id?: string | null;
   price?: number;
 }): Promise<{ error: string | null }> {
   try {
+    if (params.kind === 'reel') {
+      const invalid = caddeTvCreativeError(params.image_width, params.image_height);
+      if (invalid) return { error: invalid };
+    }
     const denied = await businessAccessError(params.business_id); if (denied) return { error: denied };
     const path = `${params.business_id}/content/${Date.now()}.jpg`;
     const { error: upErr } = await sb()

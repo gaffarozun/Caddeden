@@ -5,19 +5,20 @@
 import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
 import { businessAccessError } from './accountAccessService';
+import { caddeTvCreativeError, caddeTvDisplayName } from './caddeTvService';
 
 const sb = () => getSupabaseClient();
 const BUCKET = 'business-media';
 
 export const AD_TYPE_LABELS: Record<string, string> = {
   discover_featured: 'Keşfet Öne Çıkarma',
-  reels_sponsored: 'Reels Sponsorlu',
+  reels_sponsored: 'Cadde TV Sponsorlu',
   posts_sponsored: 'Gönderi Sponsorlu',
   category_featured: 'Kategori Öne Çıkarma',
   map_featured: 'Harita Öne Çıkarma',
   home_promo: 'Ana Sayfa Tanıtım',
   notification_promo: 'Bildirim Reklamı',
-  content_reel: 'Reels Paylaşımı',
+  content_reel: 'Cadde TV Paylaşımı',
   content_post: 'Gönderi Paylaşımı',
   content_campaign: 'Kampanya Paylaşımı',
   business_notification: 'İşletme Bildirimi',
@@ -67,7 +68,7 @@ export interface MyAd {
 
 export async function listActivePackages(): Promise<{ data: AdPackage[]; error: string | null }> {
   const { data, error } = await sb().from('ad_packages').select('*').eq('active', true).order('price');
-  return { data: (data as AdPackage[]) ?? [], error: error?.message ?? null };
+  return { data: ((data as AdPackage[]) ?? []).map(item => ({ ...item, name: caddeTvDisplayName(item.name) })), error: error?.message ?? null };
 }
 
 // Active packages filtered to specific types (e.g. ad types only, or a single
@@ -82,7 +83,7 @@ export async function listActivePackagesByTypes(
     .in('type', types)
     .order('duration_days')
     .order('price');
-  return { data: (data as AdPackage[]) ?? [], error: error?.message ?? null };
+  return { data: ((data as AdPackage[]) ?? []).map(item => ({ ...item, name: caddeTvDisplayName(item.name) })), error: error?.message ?? null };
 }
 
 export async function listMyBusinesses(ownerId: string): Promise<{ data: MyBusiness[]; error: string | null }> {
@@ -111,7 +112,13 @@ export async function applyForAd(params: {
   type: string;
   title: string;
   image_url?: string | null;
+  image_width?: number;
+  image_height?: number;
 }): Promise<{ error: string | null }> {
+  if (params.type === 'reels_sponsored') {
+    const invalid = caddeTvCreativeError(params.image_width, params.image_height);
+    if (invalid || !params.image_url) return { error: invalid ?? 'Cadde TV reklamı için bir görsel gerekli.' };
+  }
   const denied = await businessAccessError(params.business_id); if (denied) return { error: denied };
   // price/status/payment_status are intentionally omitted: the DB trigger sets
   // them authoritatively (price from the package, status=pending, unpaid).

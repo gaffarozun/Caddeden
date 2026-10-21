@@ -49,9 +49,9 @@ export default function TabLayout() {
       <Tabs.Screen
         name="reels"
         options={{
-          title: 'Reels',
+          title: 'Cadde TV',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="play-box-multiple-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="television-classic" size={size} color={color} />
           ),
         }}
       />

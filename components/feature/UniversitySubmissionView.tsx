@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUniversitySubmission } from '@/hooks/useUniversitySubmission';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
-import { UniversityNeonHeader } from '@/components/feature/UniversityBanner';
 import { FeedbackButton, FeedbackError, FeedbackInput } from '@/components/feature/FeedbackControls';
 import { StatusPill } from '@/components/admin/ui';
 import { universityMessageLimit, universityStatusLabels, UniversityMessage } from '@/services/universityService';
@@ -32,8 +31,8 @@ export function UniversitySubmissionView(_: UniversitySubmissionViewProps) {
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={state.refreshing} onRefresh={state.refresh} tintColor={colors.primary} />}
         ListHeaderComponent={<View style={styles.form}>
-          <View style={styles.neonHero}><UniversityNeonHeader /></View>
-          <View style={styles.intro}><Text style={styles.title}>Kampüsten bir ses bırak.</Text><Text style={styles.body}>Kısa bir not, güzel bir söz ya da kampüsten bir duyuru. Yazın yönetici onayından sonra herkesin gördüğü LED bantta sola doğru akacak.</Text></View>
+          <View style={styles.neonHero}><MaterialCommunityIcons name="television-classic" size={28} color={colors.primary} /><Text style={styles.sectionTitle}>Cadde TV · Kampüsün sesi</Text></View>
+          <View style={styles.intro}><Text style={styles.title}>Kampüsten bir ses bırak.</Text><Text style={styles.body}>Kısa bir not, güzel bir söz ya da kampüsten bir duyuru. Yazın yönetici onayından sonra Cadde TV ekranının altındaki yazı akışında yayınlanacak.</Text></View>
           <FeedbackError message={state.error} />
           {state.authLoading ? <ActivityIndicator color={colors.primary} /> : state.customer ? <View style={styles.card}>
             <FeedbackInput label="Bantta yayınlanmasını istediğin yazı" value={state.text} onChange={state.changeText} maxLength={universityMessageLimit} disabled={state.busy || state.operationLoading} placeholder="Kampüste bugün güzel bir şey oldu…" />
@@ -41,7 +40,7 @@ export function UniversitySubmissionView(_: UniversitySubmissionViewProps) {
             <View style={styles.info}><MaterialCommunityIcons name="shield-check-outline" size={21} color={colors.primary} /><Text style={styles.infoText}>Onaylanmadan yayınlanmaz. Telefon, adres veya başka kişilerin özel bilgilerini paylaşma.</Text></View>
             <FeedbackButton label={state.busy ? 'Gönderiliyor…' : 'Yayın isteği gönder'} icon="send-outline" busy={state.busy} disabled={!state.valid || state.operationLoading} onPress={state.submit} />
           </View> : <View style={styles.card}><Text style={styles.body}>{state.guest ? 'Yazı göndermek için kullanıcı hesabınla giriş yap.' : 'Yazı gönderme alanı aktif kullanıcı hesaplarına açıktır. İşletme ve yönetici hesapları buradan yazı gönderemez.'}</Text>{state.guest ? <FeedbackButton label="Kullanıcı girişi yap" icon="login" onPress={state.login} /> : null}</View>}
-          {state.success ? <View style={styles.success} accessibilityLiveRegion="polite"><MaterialCommunityIcons name="check-circle-outline" size={24} color={colors.success} /><View style={styles.successCopy}><Text style={styles.successTitle}>Yazı isteğin yöneticiye gönderildi.</Text><Text style={styles.infoText}>Onaylandığında Üniversiteden bandında yayınlanacak.</Text></View></View> : null}
+          {state.success ? <View style={styles.success} accessibilityLiveRegion="polite"><MaterialCommunityIcons name="check-circle-outline" size={24} color={colors.success} /><View style={styles.successCopy}><Text style={styles.successTitle}>Yazı isteğin yöneticiye gönderildi.</Text><Text style={styles.infoText}>Onaylandığında Cadde TV altyazı akışında yayınlanacak.</Text></View></View> : null}
           {state.guest ? null : <View style={styles.historyHead}><Text style={styles.sectionTitle}>Yazı isteklerin</Text><Text style={styles.helper}>Onay durumunu aşağıdan takip et.</Text>{state.loading ? <ActivityIndicator color={colors.primary} /> : null}</View>}
         </View>}
         ListEmptyComponent={!state.guest && !state.loading ? <View style={styles.empty}><MaterialCommunityIcons name="message-text-outline" size={30} color={colors.textFaint} /><Text style={styles.body}>Henüz bir yazı isteğin yok.</Text></View> : null}
@@ -53,7 +52,7 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.lg, paddingBottom: spacing.xxl },
   form: { gap: spacing.lg, paddingBottom: spacing.lg },
-  neonHero: { backgroundColor: colors.primarySoft, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
+  neonHero: { padding: spacing.lg, flexDirection: 'row', gap: spacing.md, alignItems: 'center', backgroundColor: colors.primarySoft, borderRadius: radius.lg, borderWidth: 1, borderColor: colors.border, overflow: 'hidden' },
   intro: { gap: spacing.sm },
   title: { fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.text, includeFontPadding: false },
   body: { color: colors.textSubtle, fontSize: fontSize.md, lineHeight: fontSize.md * 1.6, includeFontPadding: false },

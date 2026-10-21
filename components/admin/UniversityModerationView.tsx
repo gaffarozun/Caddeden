@@ -37,7 +37,7 @@ export function UniversityModerationView(_: UniversityModerationViewProps) {
       ItemSeparatorComponent={() => <View style={styles.separator} />}
       renderItem={({ item }) => <ModerationCard item={item} busy={!!state.busyId} busyId={state.busyId} onApprove={approve} onReject={state.openRejection} />}
       ListHeaderComponent={<View style={styles.header}>
-        <View style={styles.overview}><Text style={styles.title}>Kampüsün sesi, senin onayınla.</Text><Text style={styles.body}>Kullanıcı yazılarını incele. Onayladığın yazılar Üniversiteden LED bandında yayınlanır; yayından kaldırdığın yazılar banttan çıkar.</Text></View>
+        <View style={styles.overview}><Text style={styles.title}>Kampüsün sesi, senin onayınla.</Text><Text style={styles.body}>Kullanıcı yazılarını incele. Onayladığın yazılar Cadde TV altyazı akışında yayınlanır; yayından kaldırdığın yazılar akıştan çıkar.</Text></View>
         <FeedbackChips label="Yazı istekleri" items={filters} selected={state.status} onSelect={value => state.changeStatus(value as UniversityMessageStatus)} disabled={!!state.busyId} />
         <FeedbackError message={state.error} />
         <Text style={styles.counter}>{universityStatusLabels[state.status]} · {state.items.length} yazı</Text>

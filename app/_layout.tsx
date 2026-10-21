@@ -11,6 +11,7 @@ import { RatingProvider } from '@/contexts/RatingContext';
 import { BusinessCartProvider } from '@/contexts/BusinessCartContext';
 import { AccountAccessProvider } from '@/contexts/AccountAccessContext';
 import { UniversityProvider } from '@/contexts/UniversityContext';
+import { CampaignProvider } from '@/contexts/CampaignContext';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { BusinessApprovalView } from '@/components/feature/BusinessApprovalView';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,6 +26,7 @@ export default function RootLayout() {
         <AuthProvider>
           <ThemeProvider>
             <AccountAccessProvider>
+            <CampaignProvider>
             <UniversityProvider>
             <AppProvider>
               <FeedbackProvider>
@@ -36,6 +38,7 @@ export default function RootLayout() {
               </FeedbackProvider>
             </AppProvider>
             </UniversityProvider>
+            </CampaignProvider>
             </AccountAccessProvider>
           </ThemeProvider>
         </AuthProvider>
@@ -85,7 +88,7 @@ function RootNavigator() {
         <Stack.Screen name="business/requests" options={{ headerShown: true, title: 'Gelen Talepler', ...header }} />
         <Stack.Screen name="business/notifications" options={{ headerShown: true, title: 'Bildirim Gönder', ...header }} />
         <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Hesap Bilgilerim', ...header }} />
-        <Stack.Screen name="university" options={{ headerShown: true, title: 'Üniversiteden · Yazı Gönder', ...header }} />
+        <Stack.Screen name="university" options={{ headerShown: true, title: 'Cadde TV · Yazı Gönder', ...header }} />
         <Stack.Screen name="history" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="saved" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="auth" options={{ headerShown: true, title: '', presentation: 'modal', ...header }} />

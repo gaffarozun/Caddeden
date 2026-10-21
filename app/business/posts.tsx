@@ -14,6 +14,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { Button } from '@/components';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { CROP_PRESETS, ImageCropper } from '@/components/feature/ImageCropper';
+import { caddeTvCropRatios } from '@/constants/caddeTvTheme';
+import { caddeTvDisplayName } from '@/services/caddeTvService';
+import { CaddeTvCreativePreview } from '@/components/feature/CaddeTvCreativePreview';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { AdPackage, MyBusiness, listActivePackagesByTypes, listMyBusinesses } from '@/services/adService';
@@ -25,6 +28,8 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
 interface PickedImage {
   uri: string;
   base64: string;
+  width: number;
+  height: number;
 }
 
 function contentStatusMeta(status?: string): { label: string; tone: 'success' | 'warning' | 'danger' } {
@@ -82,10 +87,9 @@ function BusinessPosts() {
   );
   const selectedPlan = useMemo(() => kindPlans.find((p) => p.id === planId), [kindPlans, planId]);
 
-  const cropRatios =
-    kind === 'reel'
-      ? [CROP_PRESETS['9:16'], CROP_PRESETS['4:5'], CROP_PRESETS['1:1'], CROP_PRESETS['16:9'], CROP_PRESETS.free]
-      : [CROP_PRESETS['4:5'], CROP_PRESETS['1:1'], CROP_PRESETS['9:16'], CROP_PRESETS['16:9'], CROP_PRESETS.free];
+  const cropRatios = useMemo(() => kind === 'reel'
+    ? caddeTvCropRatios
+    : [CROP_PRESETS['4:5'], CROP_PRESETS['1:1'], CROP_PRESETS['9:16'], CROP_PRESETS['16:9'], CROP_PRESETS.free], [kind]);
 
   if (!authUser) {
     return (
@@ -149,6 +153,8 @@ function BusinessPosts() {
       kind,
       caption: caption.trim(),
       base64: picked.base64,
+      image_width: picked.width,
+      image_height: picked.height,
       package_id: selectedPlan?.id ?? null,
       price: selectedPlan?.price ?? 0,
     });
@@ -186,8 +192,8 @@ function BusinessPosts() {
 
           <Text style={styles.label}>Tür</Text>
           <View style={styles.kindRow}>
-            <KindBtn label="Gönderi" icon="image-outline" active={kind === 'post'} onPress={() => { setKind('post'); setPlanId(''); }} />
-            <KindBtn label="Reels" icon="play-box-outline" active={kind === 'reel'} onPress={() => { setKind('reel'); setPlanId(''); }} />
+            <KindBtn label="Gönderi" icon="image-outline" active={kind === 'post'} onPress={() => { setKind('post'); setPlanId(''); setPicked(null); }} />
+            <KindBtn label="Cadde TV" icon="television-classic" active={kind === 'reel'} onPress={() => { setKind('reel'); setPlanId(''); setPicked(null); }} />
           </View>
 
           <Text style={styles.label}>İşletme</Text>
@@ -202,9 +208,10 @@ function BusinessPosts() {
             })}
           </ScrollView>
 
-          <Text style={styles.label}>Fotoğraf</Text>
-          <Pressable style={styles.picker} onPress={pickImage}>
-            {picked ? (
+          <Text style={styles.label}>{kind === 'reel' ? 'Cadde TV görseli · Ekran oranı zorunlu' : 'Fotoğraf'}</Text>
+          {kind === 'reel' ? <Text style={styles.pickerText}>Önerilen ölçü: 1584 × 1008 px. Görseli TV çerçevesinde konumlandır; ekrana taşmadan ve esnetilmeden yerleşir.</Text> : null}
+          <Pressable accessibilityRole="button" accessibilityLabel="Görsel seç ve kırp" disabled={saving} style={({ pressed }) => [styles.picker, kind === 'reel' ? styles.tvPicker : null, pressed ? styles.pressed : null]} onPress={pickImage}>
+            {kind === 'reel' ? <CaddeTvCreativePreview image={picked?.uri ?? null} /> : picked ? (
               <Image source={{ uri: picked.uri }} style={styles.preview} contentFit="cover" />
             ) : (
               <View style={styles.pickerEmpty}>
@@ -223,7 +230,7 @@ function BusinessPosts() {
 
           {kindPlans.length > 0 ? (
             <>
-              <Text style={styles.label}>{kind === 'reel' ? 'Reels Planı' : 'Gönderi Planı'} (yönetici fiyatı)</Text>
+              <Text style={styles.label}>{kind === 'reel' ? 'Cadde TV Planı' : 'Gönderi Planı'} (yönetici fiyatı)</Text>
               <View style={{ gap: spacing.sm }}>
                 {kindPlans.map((p) => {
                   const active = planId === p.id;
@@ -231,7 +238,7 @@ function BusinessPosts() {
                     <Pressable key={p.id} onPress={() => setPlanId(p.id)} style={[styles.planCard, active && styles.planCardActive]}>
                       <MaterialCommunityIcons name={active ? 'radiobox-marked' : 'radiobox-blank'} size={20} color={active ? colors.primary : colors.textFaint} />
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.planName}>{p.name}</Text>
+                        <Text style={styles.planName}>{caddeTvDisplayName(p.name)}</Text>
                         <Text style={styles.planMeta}>{p.duration_days} gün yayında kalır</Text>
                       </View>
                       <Text style={styles.planPrice}>{Number(p.price).toLocaleString('tr-TR')} ₺</Text>
@@ -273,7 +280,7 @@ function BusinessPosts() {
                 <Image source={{ uri: it.image_url }} style={styles.itemImg} contentFit="cover" transition={150} />
                 <View style={{ flex: 1, gap: 4 }}>
                   <View style={styles.itemTop}>
-                    <StatusPill label={it.kind === 'reel' ? 'Reels' : 'Gönderi'} tone={it.kind === 'reel' ? 'primary' : 'info'} />
+                    <StatusPill label={it.kind === 'reel' ? 'Cadde TV' : 'Gönderi'} tone={it.kind === 'reel' ? 'primary' : 'info'} />
                     <StatusPill label={contentStatusMeta(it.status).label} tone={contentStatusMeta(it.status).tone} />
                     <Text style={styles.itemTime}>{timeAgo(it.created_at)}</Text>
                   </View>
@@ -298,7 +305,7 @@ function BusinessPosts() {
         initialRatioId={cropRatios[0].id}
         onCancel={() => setCropVisible(false)}
         onDone={(r) => {
-          setPicked({ uri: r.uri, base64: r.base64 });
+          setPicked({ uri: r.uri, base64: r.base64, width: r.width, height: r.height });
           setCropVisible(false);
         }}
       />
@@ -337,6 +344,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   pickerText: { fontSize: fontSize.sm, color: colors.textSubtle, fontWeight: fontWeight.medium },
   pickerHint: { fontSize: fontSize.xs, color: colors.textFaint },
   preview: { width: '100%', height: '100%' },
+  tvPicker: { height: undefined, minHeight: 1, backgroundColor: colors.black },
+  pressed: { opacity: 0.75 },
   changeBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', paddingVertical: 4 },
   changeText: { fontSize: fontSize.sm, color: colors.primary, fontWeight: fontWeight.medium },
   planCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceAlt },

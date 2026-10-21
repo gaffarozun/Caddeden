@@ -7,6 +7,7 @@ import { AD_TYPE_LABELS } from '@/services/adService';
 import { useAlert } from '@/template';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { caddeTvDisplayName } from '@/services/caddeTvService';
 
 interface Pkg {
   id: string;
@@ -84,14 +85,14 @@ export default function AdminPackages() {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.note}>
-          Reklam, Reels/Gönderi, kampanya ve bildirim paketlerinin fiyatını yalnızca sen belirlersin. İşletmeler bu fiyatları görerek başvurur; hiçbir içerik sen onaylamadan yayınlanmaz.
+          Reklam, Cadde TV/Gönderi, kampanya ve bildirim paketlerinin fiyatını yalnızca sen belirlersin. İşletmeler bu fiyatları görerek başvurur; hiçbir içerik sen onaylamadan yayınlanmaz.
         </Text>
 
         {items.map((p) => (
           <View key={p.id} style={styles.card}>
             <View style={styles.rowTop}>
               <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{p.name}</Text>
+                <Text style={styles.name}>{caddeTvDisplayName(p.name)}</Text>
                 <Text style={styles.type}>{AD_TYPE_LABELS[p.type] ?? p.type}</Text>
               </View>
               <StatusPill label={p.type === 'content_campaign' && Number(p.price) <= 0 ? 'Ücret belirle' : p.active ? 'Aktif' : 'Pasif'} tone={p.type === 'content_campaign' && Number(p.price) <= 0 ? 'warning' : p.active ? 'success' : 'neutral'} />
