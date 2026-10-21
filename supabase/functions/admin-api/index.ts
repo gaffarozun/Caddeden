@@ -3,6 +3,7 @@
 // The client can never grant itself admin rights; role is checked against the DB.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
+import { caddeTvPublicationDates } from '../_shared/caddeTvPublication.ts';
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -266,6 +267,22 @@ Deno.serve(async (req) => {
         for (const k of ['status', 'price', 'payment_status', 'start_date', 'end_date', 'rejection_reason']) {
           if (k in body) patch[k] = body[k];
         }
+        const { data: existingAd, error: adReadError } = await admin.from('ads')
+          .select('type,package_id,image_url').eq('id', body.adId).single();
+        if (adReadError || !existingAd) return json({ error: adReadError?.message ?? 'Reklam bulunamadı.' }, 400);
+        if (existingAd.type === 'reels_sponsored' && patch.status === 'active') {
+          if (!String(existingAd.image_url ?? '').trim()) return json({ error: 'Cadde TV reklamında görsel yok. İşletme, görselle yeniden başvurmalıdır.' }, 400);
+          let days = 30;
+          if (existingAd.package_id) {
+            const { data: pkg, error: packageError } = await admin.from('ad_packages')
+              .select('duration_days').eq('id', existingAd.package_id).single();
+            if (packageError || !pkg) return json({ error: packageError?.message ?? 'Reklam paketi bulunamadı.' }, 400);
+            days = Number(pkg.duration_days);
+          }
+          if (!Number.isFinite(days) || days <= 0) return json({ error: 'Cadde TV paketinin yayın süresi pozitif olmalıdır.' }, 400);
+          // TV dates come from the server and package, not UTC device dates or a fixed 30 days.
+          Object.assign(patch, caddeTvPublicationDates(days));
+        }
         const { error } = await admin.from('ads').update(patch).eq('id', body.adId);
         if (error) return json({ error: error.message }, 400);
         // Manual payment tracking only (no real gateway). Record a paid entry once.
@@ -455,14 +472,20 @@ Deno.serve(async (req) => {
         const patch: Record<string, unknown> = { status: body.status };
         patch.rejection_reason = body.status === 'rejected' ? (body.rejection_reason ?? null) : null;
         if (body.status === 'approved') {
-          const { data: row } = await admin.from('business_posts').select('package_id').eq('id', body.contentId).single();
+          const { data: row, error: contentReadError } = await admin.from('business_posts').select('package_id,kind').eq('id', body.contentId).single();
+          if (contentReadError || !row) return json({ error: contentReadError?.message ?? 'İçerik bulunamadı.' }, 400);
           let days = 0;
-          if (row?.package_id) {
-            const { data: pkg } = await admin.from('ad_packages').select('duration_days').eq('id', row.package_id).single();
-            days = Number(pkg?.duration_days ?? 0);
+          if (row.package_id) {
+            const { data: pkg, error: packageError } = await admin.from('ad_packages').select('duration_days').eq('id', row.package_id).single();
+            if (packageError || !pkg) return json({ error: packageError?.message ?? 'İçerik paketi bulunamadı.' }, 400);
+            days = Number(pkg.duration_days ?? 0);
           }
-          patch.start_date = new Date().toISOString().slice(0, 10);
-          patch.end_date = days > 0 ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : null;
+          if (row.kind === 'reel') {
+            Object.assign(patch, caddeTvPublicationDates(days));
+          } else {
+            patch.start_date = new Date().toISOString().slice(0, 10);
+            patch.end_date = days > 0 ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : null;
+          }
         }
         const { error } = await admin.from('business_posts').update(patch).eq('id', body.contentId);
         if (error) return json({ error: error.message }, 400);

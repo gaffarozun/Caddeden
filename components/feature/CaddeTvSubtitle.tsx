@@ -43,13 +43,13 @@ export const CaddeTvSubtitle = memo(function CaddeTvSubtitle({ items, motion, on
   </View>;
 });
 const styles = StyleSheet.create({
-  subtitle: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: neon.surface, borderLeftWidth: 2, borderRightWidth: 2, borderLeftColor: neon.pink, borderRightColor: neon.cyan },
+  subtitle: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: neon.surface },
   marquee: { flex: 1, minWidth: 1, height: '100%', overflow: 'hidden' },
   track: { position: 'absolute', top: 0, bottom: 0, left: 0, flexDirection: 'row', alignItems: 'center' },
   cycle: { flexShrink: 0, height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md },
   message: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginRight: spacing.lg },
   text: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, includeFontPadding: false, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 0 } },
-  write: { width: spacing.xxl, height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: neon.surfaceTint },
+  write: { width: spacing.xxxl, height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: neon.surfaceTint },
   pauseIcon: { marginHorizontal: spacing.xs }, rail: { position: 'absolute', left: 0, right: 0, height: 2 }, topRail: { top: 0 }, bottomRail: { bottom: 0 },
   dots: { position: 'absolute', left: 0, right: 0, height: 2, borderTopWidth: 1, borderStyle: 'dotted', borderColor: neon.white },
   pressed: { opacity: 0.72 },

@@ -41,7 +41,7 @@ export function useCaddeTv() {
     setFocused(true);
     setForeground(AppState.currentState !== 'background' && AppState.currentState !== 'inactive');
     void refresh(); void university.refresh();
-    const poll = setInterval(() => { if (AppState.currentState === 'active') void refresh(); }, 30000);
+    const poll = setInterval(() => { if (AppState.currentState === 'active') void refresh(); }, caddeTvStage.pollMs);
     const subscription = AppState.addEventListener('change', state => {
       setForeground(state === 'active');
       if (state === 'active') { void refresh(); void university.refresh(); }

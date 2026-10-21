@@ -2,7 +2,7 @@
 
 ## Güncel sahne
 - Arka plan kullanıcı tarafından sağlanan neon oda görselidir: `assets/images/cadde-tv-neon-room.png`. Yerel görsel kullanılır; Unsplash veya uzaktan görsel yüklenmesine bağımlılık yoktur. Görselin özgün renkleri korunur.
-- Sahne, kaynak görselin 941 × 1672 oranını korur. Oda ve TV birlikte %34 yakınlaştırılır; cam alanı sahne genişliğinin yaklaşık %94’ünü kaplar. Dış oda/kasa kenarları kırpılır, canlı camın tamamı görünür kalır. TV kasası arka planla aynı konum ve ölçekte yerleştirilir; ikinci bir TV veya farklı oda katmanı oluşmaz. Cam alanı (137, 432, 660, 376), LED alanı (56, 817, 848, 63) kaynak piksel koordinatlarına göre hesaplanır. İşletme ön izlemesi de aynı yeni kasayı kullanır.
+- Sahne, kaynak görselin 941 × 1672 oranını korur. Oda ve TV birlikte %34 yakınlaştırılır; cam alanı sahne genişliğinin yaklaşık %94’ünü kaplar. Dış oda/kasa kenarları kırpılır, canlı camın tamamı görünür kalır. TV kasası arka planla aynı konum ve ölçekte yerleştirilir; ikinci bir TV veya farklı oda katmanı oluşmaz. Cam alanı (137, 432, 660, 376), canlı LED alanı (137, 808, 660, 63) kaynak piksel koordinatlarına göre hesaplanır. Fotoğraf ile altyazı aynı genişlikte, arada boşluk olmadan tek yuvarlatılmış cam yüzeyde kırpılır. Referanstaki daha geniş örnek altyazı (56, 817, 848, 63) maskelenir; örnek yazılar görünmez. Yakınlaştırılmış sahnede canlı yazılar ve yazma simgesi kenarlardan kesilmez. İşletme ön izlemesi de aynı yeni kasayı kullanır.
 - Pembe, camgöbeği, altın ve mor parlayan öğrenci yazıları, çok renkli ince ışık rayları ve LED noktaları korunur. Fotoğraftaki örnek reklamın ve örnek altyazının üzerine gerçek yayın/boş durum ve onaylı öğrenci yazıları yerleştirilir.
 - Fiziksel kumanda arayüzü, beğenme, kaydetme, paylaşma ve işletme açıklaması Cadde TV ekranından kaldırıldı. Eski kayıtlı içerikler ve diğer Gönderiler özellikleri silinmedi.
 - Ekran `overflow: hidden` ve `expo-image contentFit="contain"` ile sınırlandırılır. Yeni oda görselinin cam geometrisi mevcut gönderim oranını değiştirmez; eski ve yeni fotoğraflar esnetilmeden, gerektiğinde kenar boşluklarıyla gösterilir.
@@ -12,20 +12,27 @@
 - TV ekranına dokunmak veya sağ ok sonraki görsele anında geçer; sol ok önceki görsele döner. Her manuel işlem yeni bir dört saniyelik süre başlatır. Hızlı art arda dokunuşlarda güncel liste üzerinden seçim yapılır.
 - Görseller yönüne uygun, 260 ms süren yatay bant geçişiyle değişir. Azaltılmış hareket tercihinde geçiş animasyonu uygulanmaz.
 - Sekme odağı kaybolunca veya uygulama arka plana gidince otomatik geçiş durur; odak/ön plan geri geldiğinde yeni süre başlar. Zamanlayıcılar ve abonelikler temizlenir.
-- 30 saniyelik sunucu sorgulaması aynı listeyi getirirse otomatik geçiş zamanlayıcısı sıfırlanmaz. Kategori filtreleri görünür yayın listesini değiştirir. Tek yayında önceki/sonraki oklar pasiftir.
+- Sekme açıkken 10 saniyelik sunucu sorgulaması yapılır. Aynı liste gelirse otomatik geçiş zamanlayıcısı sıfırlanmaz. Üstteki yenile düğmesi her zaman görünür; yayın ve yazılar beklemeden yeniden yüklenebilir. Kategori filtreleri görünür yayın listesini değiştirir. Tek yayında önceki/sonraki oklar pasiftir.
 - Görselin ait olduğu işletmenin adı doğrudan `/business/{businessId}` profilini açar. Profil erişimi o anda gösterilen yayınla eşleşir. Profil bağlantısı ve ileri/geri okları, sayfanın altına sabitlenmiş çok saydam bir yüzeydedir; oda arkadan görünür ve bağlantı kaydırma sırasında da erişilebilir kalır.
 
 ## Öğrenci yazıları
 - Sadece mevcut yönetici onaylı yazılar LED kanalında gösterilir; Üniversiteden başlığı yoktur.
 - İki aynı ölçülen döngü ile kesintisiz sola kayan renkli yazılar kullanılır. Azaltılmış hareket tercihinde metin elle yatay kaydırılabilir.
 - Yazı akışına dokunmak metni duraklatır/devam ettirir; bu, fotoğrafların dört saniyelik akışından bağımsızdır.
-- Altyazı içindeki kalem mevcut `/university` gönderim ekranını açar. Yazı yükleme hatasında kalem yerine yeniden yükleme görünür. Yönetici onayı, kullanıcı kontrolü ve gönderim sınırları korunur.
+- Sayfanın altındaki görünür, en az 48 px yüksekliğinde “Yazını TV’ye gönder” düğmesi mevcut `/university` gönderim ekranını açar; “Yönetici onayıyla altyazıda yayınlanır” açıklaması gösterilir. Altyazı içindeki kalem de aynı ekranı açar. Yazı yükleme hatasında kalem yerine yeniden yükleme görünür; ana yazı gönderme düğmesi erişilebilir kalır. Yönetici onayı, kullanıcı kontrolü ve gönderim sınırları korunur.
 
 ## İşletme gönderimi ve veri koruması
 - Cadde TV paylaşımı ve sponsorlu TV reklamında açıklama/reklam metni alanı gösterilmez ve zorunlu değildir. Hizmet katmanı TV içeriklerinde yeni `caption`/`title` değerini `null` gönderir.
 - Normal Gönderiler ve diğer reklam türlerinin açıklama/metin akışları değişmez. Eski TV açıklamaları veritabanından silinmez; TV görüntüsünde okunmaz/gösterilmez.
 - Fotoğraf kırpıcıda aynı zorunlu TV oranı korunur; önerilen ölçü 1584 × 1008 px. Ön izleme aynı TV kasasını ve cam geometri hesabını kullanır.
 - Paketler, ücret hesapları, yönetici onayı ve ödeme doğrulaması değişmedi. Mevcut `public_cadde_tv_channels()` ve öğrenci RPC'leri kullanılır; kayıt, hesap, RLS, veri veya yetki silinmez.
+
+## Yayınlanmama hatası ve düzeltme
+- Canlı şemada kesin neden doğrulandı: veritabanı saat dilimi `America/Bogota`, yayın tarihleri ise 21 Ekim idi. Türkiye’de 21 Ekim olmuşken veritabanı `current_date` hâlâ 20 Ekim döndürüyordu. Onaylı, ödenmiş, görselli ve yayınlanmış işletmeye ait bir kayıt bu nedenle başlangıç tarihi filtresinde eleniyordu.
+- `public_cadde_tv_channels()` tarih karşılaştırmaları açıkça `Europe/Istanbul` gününü kullanacak şekilde düzeltildi. Gelecekteki yayınlar ve süresi biten yayınlar yine filtrelenir. Ücretli TV içerikleri için ödeme doğrulaması gerekir; ücretsiz eski içerikler yalnızca onayla yayınlanabilir.
+- Yönetici API’si yeni TV yayın tarihlerini sunucuda Türkiye gününe göre hesaplar. Sponsorlu TV reklamının süresi cihazdan gelen sabit 30 gün yerine seçilmiş paketten alınır. Görselsiz TV reklamını yayınlama girişimi açık hata gösterir; eski kayıt otomatik değiştirilmez.
+- Canlı salt okunur kontroller başarıyla geçti: daha önce eksik olan onaylı ve ödenmiş görsel anonim TV sorgusunda görünür hale geldi (toplam 3 yayın). İşletme yayını, onay, ücretli ödeme, gelecek/bitiş tarihleri, boş görsel filtresi, RLS ve öğrenci yazma izinleri kontrol edildi.
+- Mevcut içerikler, ödeme kayıtları, tarih değerleri, kullanıcılar ve yönetici kararları değiştirilmedi; sadece güvenli okuma fonksiyonu ve yeni kararların tarih hesabı düzeltildi.
 
 ## Doğrulama sınırları
 - Canlı şema salt okunur kontrol edildi: TV açıklama/reklam başlığı alanları nullable, mevcut ekleme tetikleyicileri onay/ücret durumunu yönetir.
