@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { fetchCaddeTvChannels } from '@/services/caddeTvService';
+import { fetchCaddeTvChannels, prefetchCaddeTvImages, reconcileCaddeTvOrder } from '@/services/caddeTvService';
 import { MAIN_CATEGORIES, mainCategoryOf, MainCategoryId } from '@/services/categories';
 import { Reel } from '@/services/types';
 import { caddeTvStage } from '@/constants/caddeTvTheme';
@@ -14,7 +14,6 @@ export function useCaddeTv() {
   const [channels, setChannels] = useState<Reel[]>([]);
   const [main, setMain] = useState<'all' | MainCategoryId>('all');
   const [selectedId, setSelectedId] = useState('');
-  const [direction, setDirection] = useState(1);
   const [navigationRevision, setNavigationRevision] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,7 +29,7 @@ export function useCaddeTv() {
     const request = ++generation.current;
     try {
       const result = await fetchCaddeTvChannels();
-      if (alive.current && request === generation.current) { setChannels(result); setError(''); }
+      if (alive.current && request === generation.current) { setChannels(previous => reconcileCaddeTvOrder(previous, result)); setError(''); }
     } catch (reason) {
       if (alive.current && request === generation.current) setError(reason instanceof Error ? reason.message : 'Yayınlar yüklenemedi.');
     } finally {
@@ -51,18 +50,22 @@ export function useCaddeTv() {
   const visible = useMemo(() => channels.filter(item => main === 'all' || mainCategoryOf(item.category) === main), [channels, main]);
   const index = Math.max(0, visible.findIndex(item => item.id === selectedId));
   const current = visible[index] ?? null;
+  const nextImage = visible.length ? visible[(index + 1) % visible.length]?.image : undefined;
+  const previousImage = visible.length ? visible[(index + visible.length - 1) % visible.length]?.image : undefined;
+  useEffect(() => {
+    if (focused && foreground) void prefetchCaddeTvImages([current?.image ?? '', nextImage ?? '', previousImage ?? '']);
+  }, [focused, foreground, current?.image, nextImage, previousImage]);
   const visibleRef = useRef<Reel[]>([]);
   visibleRef.current = visible;
   const changeChannel = useCallback((step: number) => {
     if (visibleRef.current.length < 2) return;
-    setDirection(step);
     setSelectedId(previousId => {
       const available = visibleRef.current;
       if (available.length < 2) return previousId;
       const position = Math.max(0, available.findIndex(item => item.id === previousId));
       return available[(position + step + available.length) % available.length].id;
     });
-    // Every manual action starts a fresh four-second viewing window, including rapid taps.
+    // Every manual action starts a fresh seven-second viewing window, including rapid taps.
     setNavigationRevision(value => value + 1);
   }, []);
   const next = useCallback(() => changeChannel(1), [changeChannel]);
@@ -73,7 +76,7 @@ export function useCaddeTv() {
     return () => clearTimeout(timer);
   }, [focused, foreground, loading, visible.length, current?.id, navigationRevision, next]);
   const selectMain = useCallback((value: string) => {
-    setMain(value as 'all' | MainCategoryId); setSelectedId(''); setDirection(1);
+    setMain(value as 'all' | MainCategoryId); setSelectedId('');
     setNavigationRevision(value => value + 1);
   }, []);
   const categories = useMemo(() => [{ id: 'all', label: 'Tüm yayınlar' }, ...MAIN_CATEGORIES], []);
@@ -86,5 +89,5 @@ export function useCaddeTv() {
   const openBusiness = useCallback(() => { if (current) router.push(`/business/${current.businessId}`); }, [router, current]);
   const retry = useCallback(() => { void refresh(); void university.refresh(); }, [refresh, university.refresh]);
   return { current, total: visible.length, index, main, categories, selectMain, loading, error, next, previous,
-    direction, subtitleItems, subtitleText, motion, write, openBusiness, retry, subtitleError: university.error };
+    subtitleItems, subtitleText, motion, write, openBusiness, retry };
 }

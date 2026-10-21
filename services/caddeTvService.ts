@@ -1,3 +1,4 @@
+import { Image } from 'expo-image';
 import { getSupabaseClient } from '@/template';
 import { withRequestTimeout } from '@/services/requestTimeoutService';
 import { caddeTvCreative } from '@/constants/caddeTvTheme';
@@ -16,6 +17,30 @@ export async function fetchCaddeTvChannels(): Promise<Reel[]> {
     sponsored: row.sponsored, likes: 0,
   }));
 }
+// Viewer-local Fisher–Yates order. Polling updates data without rearranging the queue.
+// No user identifiers or publication decisions are written to the backend.
+export function reconcileCaddeTvOrder(previous: Reel[], incoming: Reel[], random: () => number = Math.random): Reel[] {
+  const latest = new Map(incoming.map(item => [item.id, item]));
+  const retained: Reel[] = [];
+  for (const item of previous) {
+    const updated = latest.get(item.id);
+    if (updated) { retained.push(updated); latest.delete(item.id); }
+  }
+  const added = Array.from(latest.values());
+  for (let position = added.length - 1; position > 0; position -= 1) {
+    const target = Math.min(position, Math.max(0, Math.floor(random() * (position + 1))));
+    [added[position], added[target]] = [added[target], added[position]];
+  }
+  return [...retained, ...added];
+}
+
+// Warm only the current and adjacent creatives, not the complete channel library.
+export async function prefetchCaddeTvImages(images: string[]): Promise<void> {
+  const urls = Array.from(new Set(images.filter(Boolean))).slice(0, 3);
+  if (!urls.length) return;
+  try { await Image.prefetch(urls, { cachePolicy: 'memory-disk' }); } catch { /* Display still loads images normally. */ }
+}
+
 // Rounded output dimensions may differ by one pixel. Invalid creatives never proceed to upload.
 export function caddeTvCreativeError(width?: number, height?: number): string | null {
   if (!width || !height || !Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1 || Math.abs(width / height - caddeTvCreative.value) > 0.015) {

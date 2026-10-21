@@ -22,12 +22,12 @@ export const CaddeTvView = memo(function CaddeTvView(_: CaddeTvViewProps) {
     <ScrollView style={styles.root} onLayout={stage.measure} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
       <View style={[styles.scene, { width: stage.width, height: stage.height }]}>
         <Image source={require('@/assets/images/cadde-tv-neon-room.png')} style={stage.roomPosition} contentFit="fill" transition={200} accessibilityLabel="Neon ışıklar, plaklar, bitkiler ve büyük retro televizyonla renkli Cadde TV odası" />
-        <View style={styles.heading}><View style={styles.liveDot} /><Text style={styles.title}>Cadde TV</Text><Text style={styles.onAir}>{tv.current ? `${tv.index + 1} / ${tv.total}${tv.current.sponsored ? ' · SPONSORLU' : ''}` : 'KAMPÜSÜN EKRANI'}</Text>
+        <View style={styles.heading}><View style={styles.liveDot} /><Text style={styles.title}>Cadde TV</Text><Text style={styles.onAir}>{tv.current?.sponsored ? 'SPONSORLU' : ''}</Text>
           <Pressable onPress={tv.retry} accessibilityRole="button" accessibilityLabel="Yayınları ve yazıları yeniden yükle" style={({ pressed }) => [styles.retry, pressed ? styles.pressed : null]}><MaterialCommunityIcons name="refresh" size={20} color={c.amber} /></Pressable>
         </View>
         <View style={styles.categoryOuter}><FlatList horizontal data={tv.categories} keyExtractor={item => item.id} showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories} renderItem={({ item }) => <Pressable onPress={() => tv.selectMain(item.id)} accessibilityRole="button" accessibilityState={{ selected: tv.main === item.id }} style={({ pressed }) => [styles.category, tv.main === item.id ? styles.categoryActive : null, pressed ? styles.pressed : null]}><Text style={[styles.categoryText, tv.main === item.id ? styles.categoryTextActive : null]}>{item.label}</Text></Pressable>} /></View>
-        <View style={[styles.tv, { left: stage.tvLeft, top: stage.tvTop }]}><CaddeTvFrame width={stage.tvWidth} image={tv.current?.image} onPress={tv.total > 1 ? tv.next : undefined} loading={tv.loading} error={tv.error} direction={tv.direction} reduced={tv.motion.reduced}
-          subtitle={<CaddeTvSubtitle items={tv.subtitleItems} motion={tv.motion} onWrite={tv.write} error={tv.subtitleError} onRetry={tv.retry} />} /></View>
+        <View style={[styles.tv, { left: stage.tvLeft, top: stage.tvTop }]}><CaddeTvFrame width={stage.tvWidth} image={tv.current?.image} onPress={tv.total > 1 ? tv.next : undefined} loading={tv.loading} error={tv.error} reduced={tv.motion.reduced}
+          subtitle={<CaddeTvSubtitle items={tv.subtitleItems} motion={tv.motion} />} /></View>
       </View>
     </ScrollView>
     <View pointerEvents="box-none" style={styles.bottomDock}>
@@ -36,7 +36,6 @@ export const CaddeTvView = memo(function CaddeTvView(_: CaddeTvViewProps) {
         <Text style={styles.writeLabel}>Yazını TV’ye gönder</Text>
         <MaterialCommunityIcons name="arrow-top-right" size={18} color={c.writeAccent} />
       </Pressable>
-      <Text style={styles.writeHint}>Yönetici onayıyla altyazıda yayınlanır</Text>
       {tv.current ? <View style={styles.channelInfo}>
         <ChannelButton direction="previous" onPress={tv.previous} disabled={tv.total < 2} />
         <Pressable onPress={tv.openBusiness} accessibilityRole="button" accessibilityLabel={`${tv.current.businessName} işletme profilini aç`} style={({ pressed }) => [styles.businessLink, pressed ? styles.pressed : null]}>
@@ -46,7 +45,6 @@ export const CaddeTvView = memo(function CaddeTvView(_: CaddeTvViewProps) {
         </Pressable>
         <ChannelButton direction="next" onPress={tv.next} disabled={tv.total < 2} />
       </View> : null}
-      <View pointerEvents="none" style={styles.hintWrap}><Text style={styles.hint}>{tv.total > 1 ? 'Her 4 saniyede yeni görsel · Dokunarak hemen geç' : 'İşletmelerden yeni görseller burada yayınlanır'}</Text></View>
     </View>
   </SafeAreaView>;
 });
@@ -60,10 +58,8 @@ const styles = StyleSheet.create({
   bottomDock: { position: 'absolute', bottom: spacing.lg, left: spacing.lg, right: spacing.lg, alignItems: 'center', gap: spacing.sm },
   writeAction: { minHeight: spacing.xxxl, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: radius.pill, backgroundColor: c.profileGlass, borderWidth: 1, borderColor: c.writeAccent },
   writeLabel: { color: c.writeAccent, fontSize: fontSize.md, fontWeight: fontWeight.semibold, includeFontPadding: false, textShadowColor: c.textShadow, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 1 } },
-  writeHint: { color: c.white, fontSize: fontSize.xs, textAlign: 'center', textShadowColor: c.textShadow, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 1 } },
   channelInfo: { width: '100%', maxWidth: frame.maxStageWidth, flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   channelButton: { width: spacing.xxxl, height: spacing.xxxl, alignItems: 'center', justifyContent: 'center', backgroundColor: c.profileGlass, borderWidth: 1, borderColor: c.profileBorder, borderRadius: radius.pill },
   businessLink: { minHeight: spacing.xxxl, flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.sm, backgroundColor: c.profileGlass, borderWidth: 1, borderColor: c.profileBorder, borderRadius: radius.lg, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, businessCopy: { flex: 1, minWidth: 0 }, businessName: { color: c.white, fontSize: fontSize.md, fontWeight: fontWeight.semibold, textShadowColor: c.textShadow, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 1 } }, profileHint: { color: c.amber, fontSize: fontSize.xs, marginTop: spacing.xs, textShadowColor: c.textShadow, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 1 } },
-  hintWrap: { alignItems: 'center' }, hint: { color: c.white, fontSize: fontSize.xs, lineHeight: fontSize.xs * 1.6, textAlign: 'center', textShadowColor: c.textShadow, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 1 } },
   disabled: { opacity: 0.35 }, pressed: { opacity: 0.7, transform: [{ scale: 0.97 }] },
 });
