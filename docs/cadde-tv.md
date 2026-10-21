@@ -1,11 +1,11 @@
 # Cadde TV
 
 ## Güncel sahne
-- TV kasası referans görselin yalnızca televizyon bölümü kırpılarak korunur; oda ayrı bir fotoğraf katmanıdır. Ekran, TV kasası ve LED kanalının koordinatları aynı piksel ölçeğiyle hesaplanır.
-- TV önceki genişliğine göre %6 büyütüldü. Altyazı kaynağındaki yükseklik 55 px yerine 64 px oldu; pembe, camgöbeği, altın ve mor parlayan metinler, çok renkli ince ışık rayları ve LED noktaları kullanılır.
-- Arka plan, bitkiler ve renkli sanat eserleriyle canlı bir oda fotoğrafıdır. Fotoğraf: Steph Wilson / Unsplash, https://unsplash.com/photos/MhsCRIaVQW0 . Görsel yüklenirken yerel referans fotoğrafı yer tutucu olarak kullanılır.
+- Arka plan kullanıcı tarafından sağlanan neon oda görselidir: `assets/images/cadde-tv-neon-room.png`. Yerel görsel kullanılır; Unsplash veya uzaktan görsel yüklenmesine bağımlılık yoktur. Görselin özgün renkleri korunur.
+- Sahne, kaynak görselin 941 × 1672 oranını korur. TV kasası aynı görselden aynı ölçekte yerleştirilir; ikinci bir TV veya farklı oda katmanı oluşmaz. Cam alanı (137, 432, 660, 376), LED alanı (56, 817, 848, 63) kaynak piksel koordinatlarına göre hesaplanır. İşletme ön izlemesi de aynı yeni kasayı kullanır.
+- Pembe, camgöbeği, altın ve mor parlayan öğrenci yazıları, çok renkli ince ışık rayları ve LED noktaları korunur. Fotoğraftaki örnek reklamın ve örnek altyazının üzerine gerçek yayın/boş durum ve onaylı öğrenci yazıları yerleştirilir.
 - Fiziksel kumanda arayüzü, beğenme, kaydetme, paylaşma ve işletme açıklaması Cadde TV ekranından kaldırıldı. Eski kayıtlı içerikler ve diğer Gönderiler özellikleri silinmedi.
-- Ekran `overflow: hidden`, aynı en-boy oranı ve `expo-image contentFit="contain"` ile sınırlandırılır. Eski dikey fotoğraflar da esnetilmeden, gerektiğinde kenar boşluklarıyla gösterilir.
+- Ekran `overflow: hidden` ve `expo-image contentFit="contain"` ile sınırlandırılır. Yeni oda görselinin cam geometrisi mevcut gönderim oranını değiştirmez; eski ve yeni fotoğraflar esnetilmeden, gerektiğinde kenar boşluklarıyla gösterilir.
 
 ## Fotoğraf akışı
 - İki veya daha fazla yayında dört saniye sonra otomatik sonraki görsele geçilir. Son görselden sonra ilk görselle döngü devam eder.

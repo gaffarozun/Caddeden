@@ -1,5 +1,5 @@
 // Powered by OnSpace.AI
-// Reels & Gönderi sharing for businesses.
+// Cadde TV photo-only publishing and captioned regular posts for businesses.
 // - Photos are cropped with the interactive ImageCropper (free / 1:1 / 9:16 /
 //   16:9 / 4:5) — pinch to zoom, drag to position, live frame preview. The chosen
 //   crop is applied exactly once; no silent re-cropping on submit.
@@ -139,7 +139,7 @@ function BusinessPosts() {
       showAlert('Eksik bilgi', 'Bir fotoğraf seç ve kırp.', [{ text: 'Tamam' }]);
       return;
     }
-    if (!caption.trim()) {
+    if (kind === 'post' && !caption.trim()) {
       showAlert('Eksik bilgi', 'Açıklama yaz.', [{ text: 'Tamam' }]);
       return;
     }
@@ -151,7 +151,7 @@ function BusinessPosts() {
     const { error } = await createContent({
       business_id: bizId,
       kind,
-      caption: caption.trim(),
+      caption: kind === 'reel' ? '' : caption.trim(),
       base64: picked.base64,
       image_width: picked.width,
       image_height: picked.height,
@@ -249,16 +249,18 @@ function BusinessPosts() {
             </>
           ) : null}
 
-          <Text style={styles.label}>Açıklama</Text>
-          <TextInput
-            value={caption}
-            onChangeText={setCaption}
-            placeholder="Kampanya, duyuru veya kısa açıklama"
-            placeholderTextColor={colors.textFaint}
-            style={[styles.input, styles.textArea]}
-            multiline
-            accessibilityLabel="Açıklama"
-          />
+          {kind === 'post' ? <>
+            <Text style={styles.label}>Açıklama</Text>
+            <TextInput
+              value={caption}
+              onChangeText={setCaption}
+              placeholder="Kampanya, duyuru veya kısa açıklama"
+              placeholderTextColor={colors.textFaint}
+              style={[styles.input, styles.textArea]}
+              multiline
+              accessibilityLabel="Açıklama"
+            />
+          </> : <Text style={styles.noteText}>Cadde TV yalnızca fotoğraf yayınlar; açıklama eklenmez. Görselin otomatik yayın akışında gösterilir ve işletme profiline bağlanır.</Text>}
 
           <View style={styles.note}>
             <MaterialCommunityIcons name="shield-check-outline" size={16} color={colors.textSubtle} />
@@ -284,7 +286,7 @@ function BusinessPosts() {
                     <StatusPill label={contentStatusMeta(it.status).label} tone={contentStatusMeta(it.status).tone} />
                     <Text style={styles.itemTime}>{timeAgo(it.created_at)}</Text>
                   </View>
-                  <Text style={styles.itemCaption} numberOfLines={2}>{it.caption}</Text>
+                  <Text style={styles.itemCaption} numberOfLines={2}>{it.kind === 'reel' ? it.businesses?.name ?? 'Cadde TV görseli' : it.caption}</Text>
                   {it.status === 'rejected' && it.rejection_reason ? (
                     <Text style={styles.rejected}>Ret: {it.rejection_reason}</Text>
                   ) : null}

@@ -24,7 +24,7 @@ export const CaddeTvFrame = memo(function CaddeTvFrame({ width, image, onPress, 
   };
   const transition = useCaddeTvTransition(image, screenWidth, direction, reduced || preview);
   return <View style={[styles.canvas, { width, height }]}>
-    <Image source={require('@/assets/images/cadde-tv-room.png')} style={{ position: 'absolute', left: 0, top: -caddeTvStage.sourceCropTop * scale, width, height: frame.canvasHeight * scale }} contentFit="fill" accessibilityLabel="Retro ahşap Cadde TV kasası" />
+    <Image source={require('@/assets/images/cadde-tv-neon-room.png')} style={{ position: 'absolute', left: 0, top: -caddeTvStage.sourceCropTop * scale, width, height: frame.canvasHeight * scale }} contentFit="fill" accessibilityLabel="Retro ahşap Cadde TV kasası" />
     <Pressable disabled={!onPress} onPress={onPress} accessibilityRole={onPress ? 'button' : 'image'} accessibilityLabel={onPress ? 'Cadde TV ekranı. Sonraki işletme görseline geç.' : 'İşletme görselinin TV ekranındaki ön izlemesi'} style={({ pressed }) => [styles.screen, screenPosition, pressed ? styles.pressed : null]}>
       {transition.layers.current ? <>
         {transition.layers.previous ? <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, transition.outgoingStyle]}><Image source={{ uri: transition.layers.previous }} style={StyleSheet.absoluteFillObject} contentFit="contain" /></Animated.View> : null}
