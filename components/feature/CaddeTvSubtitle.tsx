@@ -22,9 +22,8 @@ const SubtitleCycle = memo(function SubtitleCycle({ items, minWidth, onLayout, d
 });
 interface CaddeTvSubtitleProps {
   items: SubtitleItem[]; motion: ReturnType<typeof useUniversityMarquee>;
-  onWrite: () => void; error?: string; onRetry: () => void;
 }
-export const CaddeTvSubtitle = memo(function CaddeTvSubtitle({ items, motion, onWrite, error, onRetry }: CaddeTvSubtitleProps) {
+export const CaddeTvSubtitle = memo(function CaddeTvSubtitle({ items, motion }: CaddeTvSubtitleProps) {
   const label = items.map(item => item.text).join(' · ');
   return <View style={styles.subtitle}>
     <Pressable disabled={motion.reduced} onPress={motion.toggle} onLayout={motion.measureViewport} hitSlop={{ top: spacing.md, bottom: spacing.md }} accessibilityRole={motion.reduced ? 'text' : 'button'} accessibilityState={{ disabled: motion.reduced, selected: motion.paused }} accessibilityLabel={motion.reduced ? label : `${label}. ${motion.paused ? 'Yazı akışını devam ettir' : 'Yazı akışını durdur'}`} style={({ pressed }) => [styles.marquee, pressed ? styles.pressed : null]}>
@@ -34,7 +33,6 @@ export const CaddeTvSubtitle = memo(function CaddeTvSubtitle({ items, motion, on
       </Animated.View>}
     </Pressable>
     {motion.paused && !motion.reduced ? <MaterialCommunityIcons name="pause" size={16} color={neon.gold} style={styles.pauseIcon} /> : null}
-    <Pressable onPress={error ? onRetry : onWrite} accessibilityRole="button" accessibilityLabel={error ? 'Yazı akışını yeniden yükle' : 'Yazı yayınlama talebini yöneticiye gönder'} hitSlop={{ top: spacing.md, bottom: spacing.md, left: spacing.sm, right: spacing.sm }} style={({ pressed }) => [styles.write, pressed ? styles.pressed : null]}><MaterialCommunityIcons name={error ? 'refresh' : 'pencil-outline'} size={18} color={neon.cyan} /></Pressable>
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFillObject, motion.glowStyle]}>
       <LinearGradient colors={[neon.pink, neon.cyan, neon.gold, neon.violet, neon.pink]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.rail, styles.topRail]} />
       <LinearGradient colors={[neon.violet, neon.gold, neon.pink, neon.cyan]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.rail, styles.bottomRail]} />
@@ -49,7 +47,6 @@ const styles = StyleSheet.create({
   cycle: { flexShrink: 0, height: '100%', flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md },
   message: { flexShrink: 0, flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginRight: spacing.lg },
   text: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, includeFontPadding: false, textShadowRadius: spacing.sm, textShadowOffset: { width: 0, height: 0 } },
-  write: { width: spacing.xxxl, height: '100%', alignItems: 'center', justifyContent: 'center', backgroundColor: neon.surfaceTint },
   pauseIcon: { marginHorizontal: spacing.xs }, rail: { position: 'absolute', left: 0, right: 0, height: 2 }, topRail: { top: 0 }, bottomRail: { bottom: 0 },
   dots: { position: 'absolute', left: 0, right: 0, height: 2, borderTopWidth: 1, borderStyle: 'dotted', borderColor: neon.white },
   pressed: { opacity: 0.72 },
