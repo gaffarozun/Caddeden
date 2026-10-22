@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "onspace-app",
+    "name": "Caddeden",
     "slug": "onspace-app",
     "version": "1.0.0",
     "orientation": "default",
@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#07090A"
+        "backgroundColor": "#FFDF70"
       },
       "edgeToEdgeEnabled": true
     },
@@ -31,7 +31,7 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#07090A"
+          "backgroundColor": "#FFDF70"
         }
       ],
       "expo-web-browser",

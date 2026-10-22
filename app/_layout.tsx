@@ -14,6 +14,8 @@ import { UniversityProvider } from '@/contexts/UniversityContext';
 import { CampaignProvider } from '@/contexts/CampaignContext';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { BusinessApprovalView } from '@/components/feature/BusinessApprovalView';
+import { CaddedenIntro } from '@/components/feature/CaddedenIntro';
+import { useCaddedenIntro } from '@/hooks/useCaddedenIntro';
 import { useAuth } from '@/hooks/useAuth';
 import { businessProfileLayout, spacing, fontSize } from '@/constants/theme';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -48,6 +50,7 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
+  const intro = useCaddedenIntro();
   const { colors, isDark, ready } = useTheme();
   const { profileError, authUser, loading, operationLoading } = useAuth();
   const path = usePathname();
@@ -60,7 +63,8 @@ function RootNavigator() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+      <StatusBar style={intro.visible ? 'dark' : isDark ? 'light' : 'dark'} />
+      <View style={{ flex: 1 }} accessibilityElementsHidden={intro.visible} importantForAccessibility={intro.visible ? 'no-hide-descendants' : 'auto'}>
       <View accessibilityElementsHidden={approvalGate} importantForAccessibility={approvalGate ? 'no-hide-descendants' : 'auto'} style={{ flex: 1, width: '100%', maxWidth: businessProfileLayout.maxWidth, alignSelf: 'center' }}>
       <Stack
         screenOptions={{
@@ -97,6 +101,8 @@ function RootNavigator() {
       {approvalGate ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background }]}><BusinessApprovalView /></View> : null}
       {profileError && path !== '/auth' ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
+      </View>
+      <CaddedenIntro intro={intro} />
     </View>
   );
 }

@@ -10,6 +10,8 @@ import { getOpenStatus } from '@/services/businessStatus';
 import { DiscoveryRatingSort, sortDiscoveryBusinesses } from '@/services/discoveryRatingService';
 import { shuffleFeed } from '@/services/feedOrderService';
 import { useAlert } from '@/template';
+import { useMenuSearch } from './useMenuSearch';
+import { buildDiscoveryResults } from '@/services/discoveryResultsService';
 
 export function useDiscoveryFeed() {
   const { authUser } = useAuth();
@@ -42,12 +44,18 @@ export function useDiscoveryFeed() {
     const visible = onlyOpen ? base.filter(item => getOpenStatus(item).open) : base;
     return sortDiscoveryBusinesses(visible, ratingSort);
   }, [allBusinesses, main, sub, query, onlyOpen, ratingSort]);
+  const openBusinessIds = useMemo(() => onlyOpen ? allBusinesses
+    .filter(item => /^[0-9a-f-]{36}$/i.test(item.id) && getOpenStatus(item).open)
+    .map(item => item.id).sort() : null, [allBusinesses, onlyOpen]);
+  const menuSearch = useMenuSearch({ query, main, sub, openBusinessIds }, revision);
+  const searching = !!query.trim();
+  const results = useMemo(() => buildDiscoveryResults(businesses, menuSearch.items, searching), [businesses, menuSearch.items, searching]);
   const counts = useMemo(() => ({
     yeme_icme: countMainIn(allBusinesses, 'yeme_icme'),
     guzellik_bakim: countMainIn(allBusinesses, 'guzellik_bakim'),
   }), [allBusinesses]);
   const handleMain = useCallback((id: MainCategoryId) => { setMain(id); setSub('all'); }, []);
-  const refresh = useCallback(() => { void load(true); }, [load]);
+  const refresh = useCallback(() => { menuSearch.retry(); void load(true); }, [load, menuSearch.retry]);
   return { query, setQuery, main, sub, setSub, onlyOpen, setOnlyOpen, ratingSort, setRatingSort,
-    businesses, counts, activeMain: getMainCategory(main), handleMain, refreshing, refresh };
+    businesses, results, menuSearch, searching, counts, activeMain: getMainCategory(main), handleMain, refreshing, refresh };
 }
