@@ -136,10 +136,11 @@ Deno.serve(async (req) => {
 
     switch (action) {
       case 'list_university_messages': {
-        if (!['pending', 'approved', 'rejected'].includes(body.status)) return json({ error: 'Geçersiz yazı filtresi.' }, 400);
-        const { data, error } = await admin.from('university_messages')
-          .select('id,user_id,text,status,moderation_reason,created_at,published_at,decided_at,author:user_profiles!university_messages_user_id_fkey(username,email)')
-          .eq('status', body.status).order('created_at', { ascending: false });
+        if (!['pending', 'approved', 'rejected', 'withdrawn'].includes(body.status)) return json({ error: 'Geçersiz yazı filtresi.' }, 400);
+        let query = admin.from('university_messages')
+          .select('id,user_id,text,status,moderation_reason,created_at,published_at,decided_at,withdrawn_at,withdrawn_by,author:user_profiles!university_messages_user_id_fkey(username,email)');
+        query = body.status === 'withdrawn' ? query.not('withdrawn_at', 'is', null) : query.eq('status', body.status).is('withdrawn_at', null);
+        const { data, error } = await query.order('created_at', { ascending: false });
         if (error) { console.error('university list failed', error.code); return json({ error: error.message }, 400); }
         return json({ messages: data ?? [] });
       }
@@ -190,7 +191,7 @@ Deno.serve(async (req) => {
             admin.from('business_posts').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
             admin.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
             admin.from('notification_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-            admin.from('university_messages').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+            admin.from('university_messages').select('*', { count: 'exact', head: true }).eq('status', 'pending').is('withdrawn_at', null),
           ]);
         const { data: paid } = await admin.from('payments').select('amount').eq('status', 'paid');
         const revenue = (paid ?? []).reduce((s, p) => s + Number(p.amount || 0), 0);

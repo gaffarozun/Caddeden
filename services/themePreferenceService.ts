@@ -1,14 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { ThemeMode } from '@/constants/theme';
+import type { ResolvedThemeMode, ThemeMode } from '@/constants/theme';
 
 const prefix = 'caddeden-appearance-v2';
 export function isThemeMode(value: unknown): value is ThemeMode {
-  return value === 'auto' || value === 'light' || value === 'dark' || value === 'pink' || value === 'system';
+  return value === 'auto' || value === 'mustard' || value === 'light' || value === 'dark' || value === 'pink' || value === 'system';
 }
-export function defaultThemeForGender(gender?: string | null): 'pink' | 'dark' {
-  return gender === 'female' ? 'pink' : 'dark';
+// Keep the existing API, but gender no longer changes the default appearance.
+export function defaultThemeForGender(_gender?: string | null): 'mustard' {
+  return 'mustard';
 }
-export function resolveTheme(mode: ThemeMode, gender: string | null | undefined, systemDark: boolean): 'pink' | 'dark' | 'light' {
+export function resolveTheme(mode: ThemeMode, gender: string | null | undefined, systemDark: boolean): ResolvedThemeMode {
   if (mode === 'auto') return defaultThemeForGender(gender);
   if (mode === 'system') return systemDark ? 'dark' : 'light';
   return mode;

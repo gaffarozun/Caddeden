@@ -3,6 +3,7 @@ import { getSupabaseClient } from '@/template';
 import { withRequestTimeout } from '@/services/requestTimeoutService';
 import { caddeTvCreative } from '@/constants/caddeTvTheme';
 import { CategoryId, Reel } from '@/services/types';
+import { reconcileFeedOrder } from '@/services/feedOrderService';
 
 interface TvChannelRow {
   id: string; business_id: string; business_name: string; category: string;
@@ -20,18 +21,7 @@ export async function fetchCaddeTvChannels(): Promise<Reel[]> {
 // Viewer-local Fisher–Yates order. Polling updates data without rearranging the queue.
 // No user identifiers or publication decisions are written to the backend.
 export function reconcileCaddeTvOrder(previous: Reel[], incoming: Reel[], random: () => number = Math.random): Reel[] {
-  const latest = new Map(incoming.map(item => [item.id, item]));
-  const retained: Reel[] = [];
-  for (const item of previous) {
-    const updated = latest.get(item.id);
-    if (updated) { retained.push(updated); latest.delete(item.id); }
-  }
-  const added = Array.from(latest.values());
-  for (let position = added.length - 1; position > 0; position -= 1) {
-    const target = Math.min(position, Math.max(0, Math.floor(random() * (position + 1))));
-    [added[position], added[target]] = [added[target], added[position]];
-  }
-  return [...retained, ...added];
+  return reconcileFeedOrder(previous, incoming, random);
 }
 
 // Warm only the current and adjacent creatives, not the complete channel library.

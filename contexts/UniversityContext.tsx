@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 interface UniversityContextValue {
   messages: UniversityPublicMessage[]; loading: boolean; error: string; revision: number;
-  refresh: () => Promise<void>; invalidate: () => void;
+  refresh: () => Promise<void>; invalidate: () => void; removeFromFeed: (id: string) => void;
 }
 export const UniversityContext = createContext<UniversityContextValue | undefined>(undefined);
 export function UniversityProvider({ children }: { children: ReactNode }) {
@@ -16,13 +16,16 @@ export function UniversityProvider({ children }: { children: ReactNode }) {
   const [revision, setRevision] = useState(0);
   const alive = useRef(true);
   const pending = useRef<Promise<void> | null>(null);
+  const withdrawnIds = useRef(new Set<string>());
   const refresh = useCallback((): Promise<void> => {
     if (pending.current) return pending.current;
     const task = (async () => {
       try {
         const result = await fetchUniversityPublicMessages();
         if (!alive.current) return;
-        setMessages(previous => JSON.stringify(previous) === JSON.stringify(result) ? previous : result);
+        // A response started before withdrawal must not reintroduce a removed subtitle.
+        const visible = result.filter(item => !withdrawnIds.current.has(item.id));
+        setMessages(previous => JSON.stringify(previous) === JSON.stringify(visible) ? previous : visible);
         setError('');
       } catch (reason) {
         if (alive.current) setError(reason instanceof Error ? reason.message : 'Yazılar yüklenemedi.');
@@ -33,6 +36,11 @@ export function UniversityProvider({ children }: { children: ReactNode }) {
     return task;
   }, []);
   const invalidate = useCallback(() => { setRevision(value => value + 1); }, []);
+  const removeFromFeed = useCallback((id: string) => {
+    withdrawnIds.current.add(id);
+    setMessages(previous => previous.filter(item => item.id !== id));
+    setRevision(value => value + 1);
+  }, []);
   useEffect(() => {
     alive.current = true;
     const timer = setInterval(() => { if (AppState.currentState === 'active') void refresh(); }, 30000);
@@ -40,6 +48,6 @@ export function UniversityProvider({ children }: { children: ReactNode }) {
     return () => { alive.current = false; clearInterval(timer); subscription.remove(); };
   }, [refresh]);
   useEffect(() => { void refresh(); }, [refresh, revision, authUser?.id, authUser?.status]);
-  const value = useMemo(() => ({ messages, loading, error, revision, refresh, invalidate }), [messages, loading, error, revision, refresh, invalidate]);
+  const value = useMemo(() => ({ messages, loading, error, revision, refresh, invalidate, removeFromFeed }), [messages, loading, error, revision, refresh, invalidate, removeFromFeed]);
   return <UniversityContext.Provider value={value}>{children}</UniversityContext.Provider>;
 }

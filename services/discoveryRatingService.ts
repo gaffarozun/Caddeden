@@ -1,5 +1,4 @@
 import { Business } from './types';
-import { getOpenStatus } from './businessStatus';
 export type DiscoveryRatingSort = 'recommended' | 'highest' | 'lowest';
 export const discoveryRatingSorts = [
   { id: 'recommended', label: 'Önerilen' },
@@ -7,8 +6,9 @@ export const discoveryRatingSorts = [
   { id: 'lowest', label: 'En düşük puan' },
 ] as const;
 export function sortDiscoveryBusinesses(items: Business[], sort: DiscoveryRatingSort): Business[] {
+  // Recommended consumes the viewer's already shuffled discovery list without open/creation/name priority.
+  if (sort === 'recommended') return [...items];
   return [...items].sort((first, second) => {
-    if (sort === 'recommended') return Number(getOpenStatus(second).open) - Number(getOpenStatus(first).open);
     // Demo scores are not user votes. Rated real businesses lead; unrated ones follow; demos are last.
     const tier = (item: Business) => /^[0-9a-f-]{36}$/i.test(item.id) ? item.reviewCount > 0 ? 0 : 1 : 2;
     const rankDifference = tier(first) - tier(second);

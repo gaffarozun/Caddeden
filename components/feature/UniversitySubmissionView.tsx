@@ -9,14 +9,15 @@ import { StatusPill } from '@/components/admin/ui';
 import { universityMessageLimit, universityStatusLabels, UniversityMessage } from '@/services/universityService';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
-interface UniversityRequestCardProps { item: UniversityMessage }
-const UniversityRequestCard = memo(function UniversityRequestCard({ item }: UniversityRequestCardProps) {
+interface UniversityRequestCardProps { item: UniversityMessage; removing: boolean; disabled: boolean; onRemove: (item: UniversityMessage) => void }
+const UniversityRequestCard = memo(function UniversityRequestCard({ item, removing, disabled, onRemove }: UniversityRequestCardProps) {
   const { styles } = useThemeStyles(createStyles);
-  const tone = item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : 'warning';
+  const tone = item.withdrawn_at ? 'warning' : item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : 'warning';
   return <View style={styles.card}>
-    <View style={styles.requestHead}><StatusPill label={universityStatusLabels[item.status]} tone={tone} /><Text style={styles.date}>{new Date(item.created_at).toLocaleDateString('tr-TR')}</Text></View>
+    <View style={styles.requestHead}><StatusPill label={item.withdrawn_at ? 'Kaldırıldı' : universityStatusLabels[item.status]} tone={tone} /><Text style={styles.date}>{new Date(item.created_at).toLocaleDateString('tr-TR')}</Text></View>
     <Text style={styles.requestText}>{item.text}</Text>
     {item.moderation_reason ? <Text style={styles.reason}>Yönetici notu: {item.moderation_reason}</Text> : null}
+    {item.withdrawn_at ? <Text style={styles.helper}>Bu yazı artık Cadde TV akışında yayınlanmaz.</Text> : <FeedbackButton label={item.status === 'pending' ? 'Yazı isteğini kaldır' : 'Yazımı kaldır'} icon="trash-can-outline" secondary busy={removing} disabled={disabled} onPress={() => onRemove(item)} />}
   </View>;
 });
 
@@ -26,7 +27,7 @@ export function UniversitySubmissionView(_: UniversitySubmissionViewProps) {
   const { colors, styles } = useThemeStyles(createStyles);
   return <SafeAreaView style={styles.screen} edges={['bottom']}>
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <FlatList data={state.items} keyExtractor={item => item.id} renderItem={({ item }) => <UniversityRequestCard item={item} />}
+      <FlatList data={state.items} keyExtractor={item => item.id} renderItem={({ item }) => <UniversityRequestCard item={item} removing={state.removingId === item.id} disabled={state.busy || !!state.removingId || state.operationLoading} onRemove={state.confirmRemove} />}
         keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
         refreshControl={<RefreshControl refreshing={state.refreshing} onRefresh={state.refresh} tintColor={colors.primary} />}
@@ -35,13 +36,13 @@ export function UniversitySubmissionView(_: UniversitySubmissionViewProps) {
           <View style={styles.intro}><Text style={styles.title}>Kampüsten bir ses bırak.</Text><Text style={styles.body}>Kısa bir not, güzel bir söz ya da kampüsten bir duyuru. Yazın yönetici onayından sonra Cadde TV ekranının altındaki yazı akışında yayınlanacak.</Text></View>
           <FeedbackError message={state.error} />
           {state.authLoading ? <ActivityIndicator color={colors.primary} /> : state.customer ? <View style={styles.card}>
-            <FeedbackInput label="Bantta yayınlanmasını istediğin yazı" value={state.text} onChange={state.changeText} maxLength={universityMessageLimit} disabled={state.busy || state.operationLoading} placeholder="Kampüste bugün güzel bir şey oldu…" />
+            <FeedbackInput label="Bantta yayınlanmasını istediğin yazı" value={state.text} onChange={state.changeText} maxLength={universityMessageLimit} disabled={state.busy || !!state.removingId || state.operationLoading} placeholder="Kampüste bugün güzel bir şey oldu…" />
             <Text style={styles.helper}>4–160 karakter · En fazla 3 bekleyen istek · İstekler arasında 1 dakika</Text>
             <View style={styles.info}><MaterialCommunityIcons name="shield-check-outline" size={21} color={colors.primary} /><Text style={styles.infoText}>Onaylanmadan yayınlanmaz. Telefon, adres veya başka kişilerin özel bilgilerini paylaşma.</Text></View>
-            <FeedbackButton label={state.busy ? 'Gönderiliyor…' : 'Yayın isteği gönder'} icon="send-outline" busy={state.busy} disabled={!state.valid || state.operationLoading} onPress={state.submit} />
+            <FeedbackButton label={state.busy ? 'Gönderiliyor…' : 'Yayın isteği gönder'} icon="send-outline" busy={state.busy} disabled={!state.valid || !!state.removingId || state.operationLoading} onPress={state.submit} />
           </View> : <View style={styles.card}><Text style={styles.body}>{state.guest ? 'Yazı göndermek için kullanıcı hesabınla giriş yap.' : 'Yazı gönderme alanı aktif kullanıcı hesaplarına açıktır. İşletme ve yönetici hesapları buradan yazı gönderemez.'}</Text>{state.guest ? <FeedbackButton label="Kullanıcı girişi yap" icon="login" onPress={state.login} /> : null}</View>}
           {state.success ? <View style={styles.success} accessibilityLiveRegion="polite"><MaterialCommunityIcons name="check-circle-outline" size={24} color={colors.success} /><View style={styles.successCopy}><Text style={styles.successTitle}>Yazı isteğin yöneticiye gönderildi.</Text><Text style={styles.infoText}>Onaylandığında Cadde TV altyazı akışında yayınlanacak.</Text></View></View> : null}
-          {state.guest ? null : <View style={styles.historyHead}><Text style={styles.sectionTitle}>Yazı isteklerin</Text><Text style={styles.helper}>Onay durumunu aşağıdan takip et.</Text>{state.loading ? <ActivityIndicator color={colors.primary} /> : null}</View>}
+          {state.guest ? null : <View style={styles.historyHead}><Text style={styles.sectionTitle}>Yazı isteklerin</Text><Text style={styles.helper}>Durumu takip et; kendi yazını istediğin zaman kaldır.</Text>{state.loading ? <ActivityIndicator color={colors.primary} /> : null}</View>}
         </View>}
         ListEmptyComponent={!state.guest && !state.loading ? <View style={styles.empty}><MaterialCommunityIcons name="message-text-outline" size={30} color={colors.textFaint} /><Text style={styles.body}>Henüz bir yazı isteğin yok.</Text></View> : null}
       />
