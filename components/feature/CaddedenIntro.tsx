@@ -24,7 +24,7 @@ export const CaddedenIntro = memo(function CaddedenIntro({ intro }: CaddedenIntr
     >
       <Animated.View style={[StyleSheet.absoluteFillObject, intro.streetStyle]} pointerEvents="none">
         <Image
-          source={require('@/assets/images/caddeden-intro-street.webp')}
+          source={require('@/assets/images/caddeden-intro-night-street.webp')}
           style={StyleSheet.absoluteFillObject}
           contentFit="cover"
           transition={0}
@@ -33,7 +33,7 @@ export const CaddedenIntro = memo(function CaddedenIntro({ intro }: CaddedenIntr
       </Animated.View>
       <LinearGradient
         colors={[colors.transparent, colors.softOverlay, colors.background]}
-        locations={[0, 0.68, 1]}
+        locations={[0, 0.78, 1]}
         start={intro.landscape ? { x: 0.35, y: 0 } : { x: 0.5, y: 0.42 }}
         end={intro.landscape ? { x: 1, y: 0 } : { x: 0.5, y: 1 }}
         style={StyleSheet.absoluteFillObject}

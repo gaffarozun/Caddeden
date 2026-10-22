@@ -1,6 +1,7 @@
 import { getSupabaseClient } from '@/template';
 import { fetchBusinessDetail, getBusinessById } from './businessService';
 import { Business, MenuItem } from './types';
+import { shuffleFeed } from './feedOrderService';
 
 export interface ProfileCampaign { id: string; title: string; description: string }
 export interface ProfileEvent { id: string; title: string; image: string; createdAt: string }
@@ -21,7 +22,7 @@ export async function loadBusinessProfile(id: string): Promise<BusinessProfileDa
   if (campaigns.error) throw new Error(campaigns.error.message);
   if (events.error) throw new Error(events.error.message);
   return { business, ownerId: owner.data?.owner_id ?? null, isDemo: false,
-    campaigns: (campaigns.data ?? []).map(row => ({ id: row.id, title: row.title, description: row.description ?? '' })),
+    campaigns: shuffleFeed((campaigns.data ?? []).map(row => ({ id: row.id, title: row.title, description: row.description ?? '' }))),
     events: (events.data ?? []).map(row => ({ id: row.id, title: row.caption ?? 'İşletme duyurusu', image: row.image_url, createdAt: row.created_at })),
   };
 }

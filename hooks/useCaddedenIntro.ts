@@ -39,10 +39,10 @@ export function useCaddedenIntro() {
       reduced = reduce;
       if (reduce) { stopMotion(); return; }
       const remaining = Math.max(1, motion.totalMs - motion.exitMs - (Date.now() - startedAt));
-      street.value = withTiming(1, { duration: Math.min(motion.streetMs, remaining), easing: Easing.out(Easing.quad) });
+      street.value = withTiming(1, { duration: Math.min(motion.streetMs, remaining), easing: Easing.linear });
       title.value = withDelay(motion.titleDelayMs, withTiming(1, { duration: motion.titleMs, easing: Easing.out(Easing.cubic) }));
     };
-    // Fixed, brief duration even if accessibility or image decoding responds slowly.
+    // Fixed entrance duration: network and image decoding never extend the night-street animation.
     const exitTimer = setTimeout(() => {
       if (!active) return;
       exiting = true;

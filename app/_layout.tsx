@@ -63,7 +63,7 @@ function RootNavigator() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <StatusBar style={intro.visible ? 'dark' : isDark ? 'light' : 'dark'} />
+      <StatusBar style={intro.visible ? 'light' : isDark ? 'light' : 'dark'} />
       <View style={{ flex: 1 }} accessibilityElementsHidden={intro.visible} importantForAccessibility={intro.visible ? 'no-hide-descendants' : 'auto'}>
       <View accessibilityElementsHidden={approvalGate} importantForAccessibility={approvalGate ? 'no-hide-descendants' : 'auto'} style={{ flex: 1, width: '100%', maxWidth: businessProfileLayout.maxWidth, alignSelf: 'center' }}>
       <Stack
