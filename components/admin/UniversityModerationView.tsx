@@ -3,29 +3,30 @@ import { ActivityIndicator, FlatList, KeyboardAvoidingView, Modal, Platform, Pre
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUniversityAdmin } from '@/hooks/useUniversityAdmin';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
-import { UniversityAdminMessage, UniversityMessageStatus, universityStatusLabels } from '@/services/universityService';
+import { UniversityAdminMessage, UniversityAdminFilter, universityStatusLabels } from '@/services/universityService';
 import { FeedbackButton, FeedbackChips, FeedbackError, FeedbackInput } from '@/components/feature/FeedbackControls';
 import { StatusPill } from '@/components/admin/ui';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 interface ModerationCardProps {
   item: UniversityAdminMessage; busy: boolean; busyId: string;
-  onApprove: (item: UniversityAdminMessage) => void; onReject: (item: UniversityAdminMessage) => void;
+  onApprove: (item: UniversityAdminMessage) => void; onReject: (item: UniversityAdminMessage) => void; onRemove: (item: UniversityAdminMessage) => void;
 }
-const ModerationCard = memo(function ModerationCard({ item, busy, busyId, onApprove, onReject }: ModerationCardProps) {
+const ModerationCard = memo(function ModerationCard({ item, busy, busyId, onApprove, onReject, onRemove }: ModerationCardProps) {
   const { styles } = useThemeStyles(createStyles);
   return <View style={styles.card}>
-    <View style={styles.cardHeader}><StatusPill label={universityStatusLabels[item.status]} tone={item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : 'warning'} /><Text style={styles.date}>{new Date(item.created_at).toLocaleDateString('tr-TR')}</Text></View>
+    <View style={styles.cardHeader}><StatusPill label={item.withdrawn_at ? 'Kaldırıldı' : universityStatusLabels[item.status]} tone={item.withdrawn_at ? 'warning' : item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : 'warning'} /><Text style={styles.date}>{new Date(item.created_at).toLocaleDateString('tr-TR')}</Text></View>
     <Text style={styles.message}>{item.text}</Text>
     <Text style={styles.author}>{item.author?.username || 'Kullanıcı'} · {item.author?.email || 'Hesap bilgisi bulunamadı'}</Text>
     {item.moderation_reason ? <Text style={styles.reason}>Not: {item.moderation_reason}</Text> : null}
-    <View style={styles.actions}>
+    {item.withdrawn_at ? <Text style={styles.body}>{item.withdrawn_by === item.user_id ? 'Yazarı tarafından kaldırıldı.' : 'Yönetici tarafından kaldırıldı.'} Yeniden yayınlanamaz.</Text> : <View style={styles.actions}>
       {item.status !== 'approved' ? <View style={styles.action}><FeedbackButton label="Onayla ve yayınla" icon="check-outline" busy={busyId === item.id} disabled={busy} onPress={() => onApprove(item)} /></View> : null}
-      {item.status !== 'rejected' ? <View style={styles.action}><FeedbackButton label={item.status === 'approved' ? 'Yayından kaldır' : 'Reddet'} icon="close" secondary disabled={busy} onPress={() => onReject(item)} /></View> : null}
-    </View>
+      {item.status === 'pending' ? <View style={styles.action}><FeedbackButton label="Reddet" icon="close" secondary disabled={busy} onPress={() => onReject(item)} /></View> : null}
+      <View style={styles.action}><FeedbackButton label={item.status === 'approved' ? 'Yayından kaldır' : 'Yazıyı kaldır'} icon="trash-can-outline" secondary busy={busyId === item.id} disabled={busy} onPress={() => onRemove(item)} /></View>
+    </View>}
   </View>;
 });
-const filters = [{ id: 'pending', label: 'Bekleyen' }, { id: 'approved', label: 'Yayında' }, { id: 'rejected', label: 'Yayınlanmadı' }];
+const filters = [{ id: 'pending', label: 'Bekleyen' }, { id: 'approved', label: 'Yayında' }, { id: 'rejected', label: 'Yayınlanmadı' }, { id: 'withdrawn', label: 'Kaldırılan' }];
 interface UniversityModerationViewProps {}
 export function UniversityModerationView(_: UniversityModerationViewProps) {
   const state = useUniversityAdmin();
@@ -35,12 +36,12 @@ export function UniversityModerationView(_: UniversityModerationViewProps) {
     <FlatList data={state.items} keyExtractor={item => item.id} showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}
       refreshControl={<RefreshControl refreshing={state.refreshing} onRefresh={state.refresh} tintColor={colors.primary} />}
       ItemSeparatorComponent={() => <View style={styles.separator} />}
-      renderItem={({ item }) => <ModerationCard item={item} busy={!!state.busyId} busyId={state.busyId} onApprove={approve} onReject={state.openRejection} />}
+      renderItem={({ item }) => <ModerationCard item={item} busy={!!state.busyId} busyId={state.busyId} onApprove={approve} onReject={state.openRejection} onRemove={state.confirmRemove} />}
       ListHeaderComponent={<View style={styles.header}>
         <View style={styles.overview}><Text style={styles.title}>Kampüsün sesi, senin onayınla.</Text><Text style={styles.body}>Kullanıcı yazılarını incele. Onayladığın yazılar Cadde TV altyazı akışında yayınlanır; yayından kaldırdığın yazılar akıştan çıkar.</Text></View>
-        <FeedbackChips label="Yazı istekleri" items={filters} selected={state.status} onSelect={value => state.changeStatus(value as UniversityMessageStatus)} disabled={!!state.busyId} />
+        <FeedbackChips label="Yazı istekleri" items={filters} selected={state.status} onSelect={value => state.changeStatus(value as UniversityAdminFilter)} disabled={!!state.busyId} />
         <FeedbackError message={state.error} />
-        <Text style={styles.counter}>{universityStatusLabels[state.status]} · {state.items.length} yazı</Text>
+        <Text style={styles.counter}>{state.status === 'withdrawn' ? 'Kaldırılan' : universityStatusLabels[state.status]} · {state.items.length} yazı</Text>
       </View>}
       ListEmptyComponent={state.loading ? <ActivityIndicator style={styles.empty} color={colors.primary} /> : <View style={styles.empty}><Text style={styles.body}>{state.error ? 'Liste yüklenemedi.' : 'Bu durumda bir yazı yok.'}</Text>{state.error ? <FeedbackButton label="Yeniden dene" secondary onPress={state.refresh} /> : null}</View>}
     />

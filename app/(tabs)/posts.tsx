@@ -1,21 +1,24 @@
 // Powered by OnSpace.AI
 import React, { useMemo } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PostCard, ScreenHeader } from '@/components';
+import { MainCategoryTabs } from '@/components/ui/MainCategoryTabs';
 import { usePostsFeed } from '@/hooks/usePostsFeed';
 import { FeedbackButton, FeedbackError } from '@/components/feature/FeedbackControls';
 import { useTheme } from '@/hooks/useTheme';
-import { spacing, ThemeColors } from '@/constants/theme';
+import { fontSize, fontWeight, spacing, ThemeColors } from '@/constants/theme';
 
 export default function PostsScreen() {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { posts, error, refreshing, refresh } = usePostsFeed();
+  const { posts, main, setMain, categoryLabel, error, refreshing, refresh } = usePostsFeed();
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
       <ScreenHeader title="Gönderiler" subtitle="İşletmelerden kampanya ve duyurular" />
+      <View style={styles.categories}><MainCategoryTabs compact selected={main} onSelect={setMain} /></View>
+      <View style={styles.categorySummary}><Text style={styles.categoryTitle}>{categoryLabel}</Text><Text style={styles.count}>{posts.length} gönderi</Text></View>
       <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
@@ -25,6 +28,7 @@ export default function PostsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         ListHeaderComponent={error ? <View style={styles.error}><FeedbackError message={error} /><FeedbackButton label="Yeniden dene" secondary onPress={refresh} /></View> : null}
+        ListEmptyComponent={<View style={styles.empty}><Text style={styles.emptyText}>{error ? 'Gönderiler yüklenemedi.' : refreshing ? 'Gönderiler yükleniyor…' : 'Bu kategoride henüz gönderi yok.'}</Text></View>}
       />
     </SafeAreaView>
   );
@@ -33,6 +37,12 @@ export default function PostsScreen() {
 const createStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.background },
+    categories: { paddingBottom: spacing.md },
+    categorySummary: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, gap: spacing.xs },
+    categoryTitle: { fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.text },
+    count: { fontSize: fontSize.sm, color: colors.textSubtle },
+    empty: { paddingVertical: spacing.xxl, alignItems: 'center' },
+    emptyText: { fontSize: fontSize.md, color: colors.textSubtle, textAlign: 'center', lineHeight: fontSize.md * 1.6 },
     error: { gap: spacing.sm, marginBottom: spacing.lg },
     content: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl, width: '100%', maxWidth: 960, alignSelf: 'center' },
   });

@@ -3,6 +3,7 @@ import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'r
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { createFeedbackStyles } from '@/constants/feedbackStyles';
+import { spacing } from '@/constants/theme';
 
 interface FeedbackButtonProps { label: string; onPress: () => void; disabled?: boolean; busy?: boolean; secondary?: boolean; danger?: boolean; icon?: keyof typeof MaterialCommunityIcons.glyphMap }
 export const FeedbackButton = memo(function FeedbackButton({ label, onPress, disabled, busy, secondary, danger, icon }: FeedbackButtonProps) {
@@ -12,12 +13,12 @@ export const FeedbackButton = memo(function FeedbackButton({ label, onPress, dis
     <Text style={[styles.buttonText, secondary || danger ? styles.secondaryText : null]}>{label}</Text>
   </Pressable>;
 });
-interface FeedbackChipsProps { items: readonly { id: string; label: string }[]; selected: string; onSelect: (id: string) => void; label: string; disabled?: boolean }
-export const FeedbackChips = memo(function FeedbackChips({ items, selected, onSelect, label, disabled }: FeedbackChipsProps) {
+interface FeedbackChipsProps { items: readonly { id: string; label: string }[]; selected: string; onSelect: (id: string) => void; label: string; disabled?: boolean; compact?: boolean; hideLabel?: boolean }
+export const FeedbackChips = memo(function FeedbackChips({ items, selected, onSelect, label, disabled, compact = false, hideLabel = false }: FeedbackChipsProps) {
   const { colors } = useTheme(); const styles = useMemo(() => createFeedbackStyles(colors), [colors]);
   return <View style={styles.section}>
-    <Text style={styles.label}>{label}</Text>
-    <View style={styles.chipOuter}><FlatList horizontal data={items} keyExtractor={item => item.id} contentContainerStyle={styles.chipRow} showsHorizontalScrollIndicator={false} renderItem={({ item }) => <Pressable disabled={disabled} accessibilityRole="button" accessibilityState={{ selected: item.id === selected }} onPress={() => onSelect(item.id)} style={({ pressed }) => [styles.chip, item.id === selected ? styles.chipActive : null, pressed ? styles.pressed : null]}><Text style={[styles.chipText, item.id === selected ? styles.chipTextActive : null]}>{item.label}</Text></Pressable>} /></View>
+    {!hideLabel ? <Text style={styles.label}>{label}</Text> : null}
+    <View style={[styles.chipOuter, compact ? styles.compactChipOuter : null]}><FlatList horizontal accessibilityLabel={label} data={items} keyExtractor={item => item.id} contentContainerStyle={[styles.chipRow, compact ? styles.compactChipRow : null]} showsHorizontalScrollIndicator={false} renderItem={({ item }) => <Pressable disabled={disabled} hitSlop={compact ? { top: spacing.md / 2, bottom: spacing.md / 2 } : undefined} accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: item.id === selected, disabled: !!disabled }} onPress={() => onSelect(item.id)} style={({ pressed }) => [styles.chip, compact ? styles.compactChip : null, item.id === selected ? styles.chipActive : null, pressed ? styles.pressed : null]}><Text style={[styles.chipText, compact ? styles.compactChipText : null, item.id === selected ? styles.chipTextActive : null]}>{item.label}</Text></Pressable>} /></View>
   </View>;
 });
 interface FeedbackInputProps { label: string; value: string; onChange: (value: string) => void; maxLength?: number; secure?: boolean; multiline?: boolean; disabled?: boolean; placeholder?: string; autoFocus?: boolean }

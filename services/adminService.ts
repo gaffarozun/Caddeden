@@ -42,7 +42,7 @@ export const adminApi = {
   adminClaimStatus: () => call('admin_claim_status'),
   claimAdmin: () => call('claim_admin'),
   overview: () => call('overview'),
-  listUniversityMessages: (status: 'pending' | 'approved' | 'rejected') => call('list_university_messages', { status }),
+  listUniversityMessages: (status: 'pending' | 'approved' | 'rejected' | 'withdrawn') => call('list_university_messages', { status }),
   moderateUniversityMessage: (id: string, status: 'approved' | 'rejected', expectedStatus: 'pending' | 'approved' | 'rejected', reason = '') =>
     call('moderate_university_message', { id, status, expectedStatus, reason }),
 

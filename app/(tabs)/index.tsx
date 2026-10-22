@@ -1,74 +1,21 @@
 // Powered by OnSpace.AI
-import React, { useCallback, useMemo, useState } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { FlatList, KeyboardAvoidingView, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
 import { BusinessCard, MainCategoryTabs, SearchBar, SubCategoryBar } from '@/components';
-import {
-  countMainIn,
-  fetchApprovedBusinesses,
-  filterBusinessList,
-  mergeBusinesses,
-} from '@/services/businessService';
-import { BUSINESSES } from '@/services/mockData';
-import { Business } from '@/services/types';
-import { MainCategoryId, getMainCategory } from '@/services/categories';
-import { getOpenStatus } from '@/services/businessStatus';
+import { useDiscoveryFeed } from '@/hooks/useDiscoveryFeed';
 import { useTheme } from '@/hooks/useTheme';
-import { useRatings } from '@/hooks/useRatings';
-import { DiscoveryRatingSort, discoveryRatingSorts, sortDiscoveryBusinesses } from '@/services/discoveryRatingService';
+import { DiscoveryRatingSort, discoveryRatingSorts } from '@/services/discoveryRatingService';
 import { FeedbackChips } from '@/components/feature/FeedbackControls';
 import { CampaignBanner } from '@/components/feature/CampaignBanner';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
   const { colors } = useTheme();
-  const [query, setQuery] = useState('');
-  const [main, setMain] = useState<MainCategoryId>('yeme_icme');
-  const [sub, setSub] = useState<string>('all');
-  const [allBusinesses, setAllBusinesses] = useState<Business[]>(BUSINESSES);
-  const [onlyOpen, setOnlyOpen] = useState(false);
-  const [ratingSort, setRatingSort] = useState<DiscoveryRatingSort>('recommended');
-  const { revision } = useRatings();
-
-  // Business discovery preserves existing demo listings; paid campaigns are loaded
-  // separately through the shared campaign hook and never merged with demo offers.
-  useFocusEffect(
-    useCallback(() => {
-      let active = true;
-      (async () => {
-        const real = await fetchApprovedBusinesses();
-        if (!active) return;
-        setAllBusinesses(mergeBusinesses(real, BUSINESSES));
-      })();
-      return () => {
-        active = false;
-      };
-    }, [revision])
-  );
-
-  const businesses = useMemo(() => {
-    const base = filterBusinessList(allBusinesses, main, sub, query);
-    const withOpen = base.map((b) => ({ b, open: getOpenStatus(b).open }));
-    const visible = onlyOpen ? withOpen.filter((x) => x.open) : withOpen;
-    return sortDiscoveryBusinesses(visible.map((x) => x.b), ratingSort);
-  }, [allBusinesses, main, sub, query, onlyOpen, ratingSort]);
-
-  const counts = useMemo(
-    () => ({
-      yeme_icme: countMainIn(allBusinesses, 'yeme_icme'),
-      guzellik_bakim: countMainIn(allBusinesses, 'guzellik_bakim'),
-    }),
-    [allBusinesses]
-  );
-  const activeMain = getMainCategory(main);
+  const { query, setQuery, main, sub, setSub, onlyOpen, setOnlyOpen, ratingSort, setRatingSort,
+    businesses, counts, activeMain, handleMain, refreshing, refresh } = useDiscoveryFeed();
   const styles = useMemo(() => createStyles(colors), [colors]);
-
-  const handleMain = (id: MainCategoryId) => {
-    setMain(id);
-    setSub('all');
-  };
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -91,6 +38,7 @@ export default function DiscoverScreen() {
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
             <View style={styles.bleed}>
@@ -112,7 +60,10 @@ export default function DiscoverScreen() {
               </View>
               <Pressable
                 onPress={() => setOnlyOpen((v) => !v)}
-                style={[styles.openFilter, onlyOpen && styles.openFilterActive]}
+                accessibilityRole="button"
+                accessibilityLabel="Sadece açık işletmeleri göster"
+                accessibilityState={{ selected: onlyOpen }}
+                style={({ pressed }) => [styles.openFilter, onlyOpen ? styles.openFilterActive : null, pressed ? styles.pressed : null]}
               >
                 <MaterialCommunityIcons
                   name={onlyOpen ? 'door-open' : 'door-closed'}
@@ -123,7 +74,7 @@ export default function DiscoverScreen() {
               </Pressable>
             </View>
             <View style={styles.ratingSort}>
-              <FeedbackChips label="Müşteri puanına göre sırala" items={discoveryRatingSorts} selected={ratingSort} onSelect={value => setRatingSort(value as DiscoveryRatingSort)} />
+              <FeedbackChips label="İşletme sıralaması" hideLabel compact items={discoveryRatingSorts} selected={ratingSort} onSelect={value => setRatingSort(value as DiscoveryRatingSort)} />
               {ratingSort !== 'recommended' ? <Text style={styles.count}>Puanı olmayan işletmeler ve demo içerikler sonda gösterilir.</Text> : null}
             </View>
           </View>
@@ -188,6 +139,7 @@ const createStyles = (colors: ThemeColors) =>
     borderColor: colors.border,
     backgroundColor: colors.surface,
   },
+  pressed: { opacity: 0.72 },
   openFilterActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   openFilterText: { fontSize: fontSize.xs, fontWeight: fontWeight.semibold, color: colors.textSubtle },
   empty: { alignItems: 'center', paddingVertical: spacing.xxxl, gap: spacing.md },

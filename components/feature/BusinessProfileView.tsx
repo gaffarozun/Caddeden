@@ -11,7 +11,7 @@ import { categoryLabel } from '@/services/categories';
 import { money } from '@/services/businessProfileService';
 import { BusinessAction, BusinessError, BusinessLink } from './BusinessProfileControls';
 import { PhotoViewer } from './PhotoViewer';
-const tabs = [{ id: 'about', label: 'Hakkında' }, { id: 'photos', label: 'Fotoğraflar' }, { id: 'events', label: 'Etkinlikler' }, { id: 'reviews', label: 'Yorumlar' }];
+const tabs = [{ id: 'about', label: 'Hakkında' }, { id: 'photos', label: 'Fotoğraflar' }, { id: 'events', label: 'Etkinlikler' }, { id: 'reviews', label: 'Değerlendirin' }];
 interface BusinessProfileViewProps { businessId: string }
 export const BusinessProfileView = memo(function BusinessProfileView({ businessId }: BusinessProfileViewProps) {
   const { colors: c, styles: s, isDark } = useBusinessTheme();
@@ -34,8 +34,6 @@ export const BusinessProfileView = memo(function BusinessProfileView({ businessI
           {m.orderingEnabled ? <View style={s.delivery}><View style={s.meta}><MaterialCommunityIcons name="cart-outline" size={18} color={c.primary} /><Text style={s.subtle}>Min. {money(b.minOrder ?? 0)}</Text></View><View style={s.meta}><MaterialCommunityIcons name="bike-fast" size={18} color={c.primary} /><Text style={s.subtle}>{b.avgDeliveryMinutes ? `~${b.avgDeliveryMinutes} dk` : 'Teslim süresi belirtilmedi'}</Text></View></View> : null}
           {(b.allowMenu ?? b.hasMenu) ? <BusinessLink featured icon="book-open-page-variant-outline" label="Menü & Fiyatlar" onPress={() => m.router.push(`/business/menu/${b.id}`)} /> : null}
           {m.canReserve ? <BusinessLink icon="calendar-outline" label={m.sub?.hasAppointment ? 'Randevu al' : 'Rezervasyon yap'} onPress={() => m.router.push(`/business/reserve/${b.id}`)} /> : null}
-          {m.orderingEnabled && m.customer ? <View style={s.actions}><View style={s.spacer}><BusinessLink icon="receipt-text-outline" label="Aktif siparişler" onPress={() => m.history('active')} /></View><View style={s.spacer}><BusinessLink icon="history" label="Geçmiş siparişler" onPress={() => m.history('past')} /></View></View> : null}
-          {m.customer && m.historyLabel ? <BusinessLink icon={m.orderingEnabled ? 'receipt-text-outline' : 'calendar-outline'} label={m.historyLabel} onPress={() => m.history('all')} /> : null}
           {m.canManage ? <BusinessLink icon="store-cog-outline" label="İşletme sayfamı düzenle" onPress={() => m.router.push(`/business/manage/${b.id}`)} /> : null}
           {campaign ? <Pressable accessibilityRole="button" style={({ pressed }) => [s.campaign, pressed ? s.pressed : null]} onPress={() => m.setTab('events')}><View style={s.campaignIcon}><MaterialCommunityIcons name="percent-outline" size={24} color={c.danger} /></View><View style={s.info}><Text style={[s.productTitle]} numberOfLines={1}>{campaign.title}</Text>{campaign.description ? <Text style={s.subtle} numberOfLines={1}>{campaign.description}</Text> : null}</View><MaterialCommunityIcons name="chevron-right" size={22} color={c.textSubtle} /></Pressable> : null}
           <BusinessError message={m.error} />
