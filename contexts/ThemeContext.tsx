@@ -1,13 +1,13 @@
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { Appearance } from 'react-native';
-import { darkColors, lightColors, pinkColors, ThemeColors, ThemeMode } from '@/constants/theme';
+import { darkColors, lightColors, mustardColors, pinkColors, ResolvedThemeMode, ThemeColors, ThemeMode } from '@/constants/theme';
 import { useAuth } from '@/hooks/useAuth';
 import { readThemePreference, resolveTheme, saveThemePreference } from '@/services/themePreferenceService';
 export type { ThemeMode } from '@/constants/theme';
 
 export interface ThemeContextValue {
   mode: ThemeMode;
-  resolvedMode: 'light' | 'dark' | 'pink';
+  resolvedMode: ResolvedThemeMode;
   isDark: boolean;
   colors: ThemeColors;
   ready: boolean;
@@ -49,7 +49,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const mode = preference?.scope === scope ? preference.mode : 'auto';
   const resolvedMode = resolveTheme(mode, authUser?.gender, systemDark);
   const isDark = resolvedMode === 'dark';
-  const colors = isDark ? darkColors : resolvedMode === 'pink' ? pinkColors : lightColors;
+  const colors = resolvedMode === 'mustard' ? mustardColors : isDark ? darkColors : resolvedMode === 'pink' ? pinkColors : lightColors;
   const ready = !loading && preference?.scope === scope;
   const setMode = useCallback((next: ThemeMode) => {
     ++generation.current;

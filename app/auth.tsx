@@ -168,7 +168,7 @@ export default function AuthScreen() {
                   <Field label="Soyad" icon="account-outline" value={lastName} onChangeText={setLastName} placeholder="Soyadın" />
                   <View style={styles.fieldWrap}>
                     <Text style={styles.fieldLabel}>Cinsiyet</Text>
-                    <Text style={styles.subtitle}>İlk girişte kadınlar için pembe, erkekler için koyu tema seçilir. Profil ayarlarından istediğin zaman değiştirebilirsin.</Text>
+                    <Text style={styles.subtitle}>Tüm hesaplarda turuncu ve hardal tema kullanılır. Profil ayarlarından istediğin zaman değiştirebilirsin.</Text>
                     <View style={styles.genderRow}>
                       <Pressable
                         onPress={() => setGender('female')}
@@ -299,7 +299,7 @@ function Field({
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing.xl, paddingBottom: spacing.xxxl, width: '100%', maxWidth: 600, alignSelf: 'center' },
-  brand: { fontSize: fontSize.xxxl, fontWeight: fontWeight.bold, color: colors.text, letterSpacing: -1, marginTop: spacing.sm },
+  brand: { fontSize: fontSize.xxxl, fontWeight: fontWeight.bold, color: colors.primaryDark, letterSpacing: -1, marginTop: spacing.sm, includeFontPadding: false },
   subtitle: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: 4, marginBottom: spacing.xl },
   segment: { flexDirection: 'row', backgroundColor: colors.surfaceTint, borderRadius: radius.pill, padding: 4, marginBottom: spacing.lg },
   segmentBtn: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.pill },

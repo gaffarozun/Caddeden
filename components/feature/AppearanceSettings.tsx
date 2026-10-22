@@ -2,9 +2,10 @@ import React, { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
-import { darkColors, lightColors, pinkColors, fontSize, fontWeight, radius, spacing, ThemeColors, ThemeMode } from '@/constants/theme';
+import { darkColors, lightColors, mustardColors, pinkColors, fontSize, fontWeight, radius, spacing, ThemeColors, ThemeMode } from '@/constants/theme';
 
 const palettes = [
+  { id: 'mustard', label: 'Turuncu · Hardal', palette: mustardColors },
   { id: 'dark', label: 'Koyu', palette: darkColors },
   { id: 'light', label: 'Açık', palette: lightColors },
   { id: 'pink', label: 'Toz pembe', palette: pinkColors },
@@ -15,6 +16,7 @@ export const AppearanceSettings = memo(function AppearanceSettings(_props: Appea
   const choose = (next: ThemeMode) => setMode(next);
   return <View style={styles.card}>
     <View style={styles.row}><MaterialCommunityIcons name="palette-outline" size={22} color={colors.primary} /><View style={styles.info}><Text style={styles.title}>Görünüm</Text><Text style={styles.subtle}>Aktif tema: {palettes.find(item => item.id === resolvedMode)?.label}</Text></View></View>
+    <Text style={styles.subtle}>Kadın, erkek, kullanıcı, işletme ve yönetici hesaplarında varsayılan tema turuncu ve hardaldır.</Text>
     <View style={styles.previews}>{palettes.map(item => {
       const selected = mode === item.id;
       return <Pressable key={item.id} disabled={!ready} accessibilityRole="button" accessibilityLabel={`${item.label} tema`} accessibilityState={{ selected, disabled: !ready }} onPress={() => choose(item.id)} style={({ pressed }) => [styles.choice, selected ? styles.selected : null, pressed ? styles.pressed : null]}>
@@ -38,8 +40,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   title: { fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.text, includeFontPadding: false },
   body: { fontSize: fontSize.md, lineHeight: fontSize.md * 1.6, color: colors.textSubtle },
   subtle: { fontSize: fontSize.sm, lineHeight: fontSize.sm * 1.6, color: colors.textSubtle },
-  previews: { flexDirection: 'row', gap: spacing.sm },
-  choice: { flex: 1, alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
+  previews: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  choice: { flexGrow: 1, flexBasis: '45%', minHeight: spacing.xxxl, alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surfaceAlt },
   selected: { borderColor: colors.primary, backgroundColor: colors.primarySoft },
   preview: { width: '100%', height: 100, borderRadius: radius.sm, padding: spacing.sm, gap: spacing.sm, overflow: 'hidden' },
   previewCover: { height: 28, borderRadius: spacing.xs }, previewLine: { height: spacing.xs, width: '80%', borderRadius: spacing.xs }, previewLineShort: { height: spacing.xs, width: '55%', borderRadius: spacing.xs },
