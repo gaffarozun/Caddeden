@@ -1,21 +1,46 @@
 // Powered by OnSpace.AI
-import React, { useMemo } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useMemo } from 'react';
+import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BusinessCard, MainCategoryTabs, SearchBar, SubCategoryBar } from '@/components';
 import { useDiscoveryFeed } from '@/hooks/useDiscoveryFeed';
 import { useTheme } from '@/hooks/useTheme';
 import { DiscoveryRatingSort, discoveryRatingSorts } from '@/services/discoveryRatingService';
-import { FeedbackChips } from '@/components/feature/FeedbackControls';
+import { FeedbackButton, FeedbackChips, FeedbackError } from '@/components/feature/FeedbackControls';
+import { MenuSearchCard } from '@/components/feature/MenuSearchCard';
+import { DiscoveryResultRow } from '@/services/discoveryResultsService';
 import { CampaignBanner } from '@/components/feature/CampaignBanner';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
   const { colors } = useTheme();
   const { query, setQuery, main, sub, setSub, onlyOpen, setOnlyOpen, ratingSort, setRatingSort,
-    businesses, counts, activeMain, handleMain, refreshing, refresh } = useDiscoveryFeed();
+    businesses, results, menuSearch, searching, counts, activeMain, handleMain, refreshing, refresh } = useDiscoveryFeed();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const renderResult = useCallback(({ item: row }: { item: DiscoveryResultRow }) => {
+    switch (row.kind) {
+      case 'business': return <BusinessCard business={row.business} />;
+      case 'menu': return <MenuSearchCard item={row.item} />;
+      case 'menuHeader': return <View style={styles.resultHeader}>
+        <View style={styles.resultTitleRow}><MaterialCommunityIcons name="clipboard-text-outline" size={22} color={colors.primaryDark} /><Text style={styles.sectionTitle}>Menü & Fiyatlar</Text></View>
+        <Text style={styles.searchContext} numberOfLines={2}>“{query.trim()}” için ürün ve hizmetler</Text>
+        <View style={styles.resultTitleRow}><MaterialCommunityIcons name="sort-ascending" size={18} color={colors.primaryDark} /><Text style={styles.priceOrder}>Fiyat: düşükten yükseğe</Text></View>
+      </View>;
+      case 'menuStatus': return <View style={styles.menuStatus} accessibilityLiveRegion="polite">
+        {menuSearch.loading ? <View style={styles.resultTitleRow}><ActivityIndicator color={colors.primary} /><Text style={styles.searchContext}>Menüler ve fiyat listeleri aranıyor…</Text></View> : null}
+        {menuSearch.error ? <><FeedbackError message={menuSearch.error} /><FeedbackButton label="Ürün aramasını yeniden dene" secondary onPress={menuSearch.retry} /></> : null}
+        {!menuSearch.loading && !menuSearch.error && menuSearch.total === 0 ? <Text style={styles.searchContext}>Bu kategoride eşleşen ürün veya hizmet bulunamadı. İşletme adıyla eşleşen sonuçlar varsa aşağıda gösterilir.</Text> : null}
+        {menuSearch.moreError ? <FeedbackError message={menuSearch.moreError} /> : null}
+        {!menuSearch.loading && menuSearch.hasMore ? <FeedbackButton label={menuSearch.moreError ? 'Daha fazla sonucu yeniden yükle' : `Daha fazla ürün göster · ${menuSearch.items.length}/${menuSearch.total}`} secondary busy={menuSearch.loadingMore} onPress={menuSearch.loadMore} /> : null}
+      </View>;
+      case 'businessHeader': return <View style={styles.resultHeader}>
+        <Text style={styles.sectionTitle}>İşletmeler ve kategoriler</Text>
+        <Text style={styles.count}>{businesses.length} işletme</Text>
+        <FeedbackChips label="İşletme sıralaması" hideLabel compact items={discoveryRatingSorts} selected={ratingSort} onSelect={value => setRatingSort(value as DiscoveryRatingSort)} />
+      </View>;
+    }
+  }, [styles, colors, query, menuSearch, businesses.length, ratingSort, setRatingSort]);
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
@@ -28,25 +53,29 @@ export default function DiscoverScreen() {
       </View>
 
       <View style={styles.searchWrap}>
-        <SearchBar value={query} onChangeText={setQuery} />
+        <Text style={styles.searchLabel}>İşletme, kategori veya ürün ara</Text>
+        <SearchBar value={query} onChangeText={setQuery} placeholder="Örn. döner, kafe, saç kesimi" label="İşletme, kategori veya menüdeki ürün ve hizmet adını ara" maxLength={200} />
       </View>
 
       <FlatList
-        data={businesses}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <BusinessCard business={item} />}
+        data={results}
+        keyExtractor={(item) => item.key}
+        renderItem={renderResult}
+        style={styles.list}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         contentContainerStyle={styles.listContent}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
-            <View style={styles.bleed}>
+            {!searching ? <View style={styles.bleed}>
               <CampaignBanner main={main} />
-            </View>
-            <Text style={styles.pickTitle}>Ne keşfetmek istersin?</Text>
+            </View> : null}
+            {!searching ? <Text style={styles.pickTitle}>Ne keşfetmek istersin?</Text> : null}
             <View style={styles.bleed}>
-              <MainCategoryTabs selected={main} onSelect={handleMain} counts={counts} />
+              <MainCategoryTabs compact={searching} selected={main} onSelect={handleMain} counts={counts} />
             </View>
 
             <View style={styles.bleed}>
@@ -56,7 +85,7 @@ export default function DiscoverScreen() {
             <View style={styles.sectionHead}>
               <View>
                 <Text style={styles.sectionTitle}>{activeMain?.label ?? 'İşletmeler'}</Text>
-                <Text style={styles.count}>{businesses.length} işletme · {discoveryRatingSorts.find(item => item.id === ratingSort)?.label}</Text>
+                <Text style={styles.count}>{searching ? menuSearch.loading ? 'Ürünler aranıyor…' : `${menuSearch.total} ürün / hizmet · ${businesses.length} işletme` : `${businesses.length} işletme · ${discoveryRatingSorts.find(item => item.id === ratingSort)?.label}`}</Text>
               </View>
               <Pressable
                 onPress={() => setOnlyOpen((v) => !v)}
@@ -73,10 +102,10 @@ export default function DiscoverScreen() {
                 <Text style={[styles.openFilterText, onlyOpen && { color: colors.onPrimary }]}>Sadece Açık</Text>
               </Pressable>
             </View>
-            <View style={styles.ratingSort}>
+            {!searching ? <View style={styles.ratingSort}>
               <FeedbackChips label="İşletme sıralaması" hideLabel compact items={discoveryRatingSorts} selected={ratingSort} onSelect={value => setRatingSort(value as DiscoveryRatingSort)} />
               {ratingSort !== 'recommended' ? <Text style={styles.count}>Puanı olmayan işletmeler ve demo içerikler sonda gösterilir.</Text> : null}
-            </View>
+            </View> : null}
           </View>
         }
         ListEmptyComponent={
@@ -107,7 +136,14 @@ const createStyles = (colors: ThemeColors) =>
   },
   brandSub: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: spacing.xs },
   brand: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.primaryDark, letterSpacing: -0.5 },
-  searchWrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  searchWrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.sm },
+  searchLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.textSubtle, includeFontPadding: false },
+  list: { flex: 1 },
+  resultHeader: { gap: spacing.sm, paddingVertical: spacing.sm },
+  resultTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  searchContext: { fontSize: fontSize.md, color: colors.textSubtle, lineHeight: fontSize.md * 1.6, flexShrink: 1, includeFontPadding: false },
+  priceOrder: { fontSize: fontSize.sm, fontWeight: fontWeight.semibold, color: colors.primaryDark, includeFontPadding: false },
+  menuStatus: { gap: spacing.sm },
   listContent: { paddingHorizontal: spacing.lg, paddingBottom: spacing.xxl },
   bleed: { marginHorizontal: -spacing.lg },
   pickTitle: {
@@ -121,6 +157,8 @@ const createStyles = (colors: ThemeColors) =>
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     marginBottom: spacing.md,
     marginTop: spacing.lg,
   },

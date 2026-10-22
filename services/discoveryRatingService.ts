@@ -1,9 +1,8 @@
 import { Business } from './types';
-export type DiscoveryRatingSort = 'recommended' | 'highest' | 'lowest';
+export type DiscoveryRatingSort = 'recommended' | 'highest';
 export const discoveryRatingSorts = [
   { id: 'recommended', label: 'Önerilen' },
   { id: 'highest', label: 'En yüksek puan' },
-  { id: 'lowest', label: 'En düşük puan' },
 ] as const;
 export function sortDiscoveryBusinesses(items: Business[], sort: DiscoveryRatingSort): Business[] {
   // Recommended consumes the viewer's already shuffled discovery list without open/creation/name priority.
@@ -14,7 +13,7 @@ export function sortDiscoveryBusinesses(items: Business[], sort: DiscoveryRating
     const rankDifference = tier(first) - tier(second);
     if (rankDifference) return rankDifference;
     if (tier(first) === 0) {
-      const ratingDifference = sort === 'highest' ? second.rating - first.rating : first.rating - second.rating;
+      const ratingDifference = second.rating - first.rating;
       if (ratingDifference) return ratingDifference;
       if (second.reviewCount !== first.reviewCount) return second.reviewCount - first.reviewCount;
     }

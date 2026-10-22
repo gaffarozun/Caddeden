@@ -1,7 +1,8 @@
 // Caddeden: one smooth, layered stage across discovery, profiles and panels.
 import { Platform } from 'react-native';
 
-export type ThemeMode = 'auto' | 'light' | 'dark' | 'pink' | 'system';
+export type ThemeMode = 'auto' | 'mustard' | 'light' | 'dark' | 'pink' | 'system';
+export type ResolvedThemeMode = Exclude<ThemeMode, 'auto' | 'system'>;
 
 export const darkColors = {
   background: '#07090A', surface: '#111416', surfaceAlt: '#15191C', surfaceTint: '#1C2023',
@@ -35,9 +36,21 @@ export const pinkColors: ThemeColors = {
   overlay: 'rgba(48,16,28,0.6)', overlayStrong: 'rgba(48,16,28,0.86)', white: '#FFFFFF', black: '#000000',
 };
 
+// Shared bright orange + mustard identity for guests and every account type.
+// Luminous golden surfaces and vivid orange accents; darker action/text tokens preserve contrast.
+export const mustardColors: ThemeColors = {
+  background: '#FFDF70', surface: '#FFF4BE', surfaceAlt: '#FFD64F', surfaceTint: '#FFCA36',
+  primary: '#B34006', primaryDark: '#8B3005', primarySoft: '#FFD34C', onPrimary: '#FFFFFF', brand: '#FF850A',
+  text: '#38230F', textSubtle: '#67441D', textFaint: '#6B4B22',
+  border: '#E7B43D', borderStrong: '#AD751B',
+  success: '#246044', successSoft: '#E1EBD0', warning: '#725018', warningSoft: '#FFD34C',
+  danger: '#A52E28', dangerSoft: '#F8D9CB', info: '#34516F',
+  overlay: 'rgba(56,35,15,0.6)', overlayStrong: 'rgba(56,35,15,0.86)', white: '#FFFFFF', black: '#000000',
+};
+
 // Static exports are fallback tokens only. Rendered UI must consume useTheme.
-export const colors = darkColors;
-export const businessProfileColors = darkColors;
+export const colors = mustardColors;
+export const businessProfileColors = mustardColors;
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };
 export const radius = { sm: 8, md: 12, lg: 16, xl: 22, xxl: 28, pill: 999 };
 export const fontSize = { xs: 12, sm: 14, md: 16, lg: 18, xl: 22, xxl: 28, xxxl: 34 };

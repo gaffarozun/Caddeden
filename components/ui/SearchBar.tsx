@@ -9,9 +9,11 @@ interface SearchBarProps {
   value: string;
   onChangeText: (t: string) => void;
   placeholder?: string;
+  label?: string;
+  maxLength?: number;
 }
 
-export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) {
+export function SearchBar({ value, onChangeText, placeholder, label, maxLength }: SearchBarProps) {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   return (
@@ -24,7 +26,8 @@ export function SearchBar({ value, onChangeText, placeholder }: SearchBarProps) 
         placeholderTextColor={colors.textFaint}
         style={styles.input}
         returnKeyType="search"
-        accessibilityLabel="Arama"
+        accessibilityLabel={label ?? 'Arama'}
+        maxLength={maxLength}
       />
     </View>
   );
