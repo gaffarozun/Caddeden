@@ -1,6 +1,6 @@
 # Turuncu ve hardal varsayılan tema
 
-- Caddeden’in ortak varsayılan görünümü sıcak hardal yüzeyler, turuncu marka vurguları ve okunaklı koyu turuncu bağlantı/buton renklerinden oluşur.
+- Caddeden’in ortak varsayılan görünümü daha parlak altın-hardal arka plan, canlı sarı yüzeyler ve belirgin turuncu marka vurgularından oluşur. Bağlantı ve butonlarda okunaklı koyu turuncu, metinlerde koyu kahverengi korunur; tüm ortak tema kullanan ekranlar aynı paleti alır.
 - `mustardColors` semantik renkleri `constants/theme.ts` içinde tanımlıdır. `mustard` açık bir tema seçeneğidir; `auto` artık cinsiyetten bağımsız olarak bu paleti seçer.
 - Misafir, kadın, erkek, kullanıcı, işletme ve yönetici aynı varsayılan paleti kullanır. Hesap türleri, cinsiyet bilgisi ve erişim yetkileri değiştirilmez.
 - Giriş/kayıt ekranı ve mevcut `useTheme` / `useThemeStyles` kullanan keşfet, profil, işletme ve yönetici ekranları ortak sağlayıcıdan bu paleti alır. Girişteki eski cinsiyete göre pembe/koyu tema açıklaması güncellenmiştir.
