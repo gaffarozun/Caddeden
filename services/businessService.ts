@@ -4,6 +4,7 @@ import { BUSINESSES } from './mockData';
 import { Business } from './types';
 import { MainCategoryId, getSubCategory } from './categories';
 import { attachStarRatings } from './ratingService';
+import { searchNameMatches } from './searchTextService';
 
 export function getBusinessById(id?: string): Business | undefined {
   return BUSINESSES.find(b => b.id === id);
@@ -75,8 +76,12 @@ export async function fetchBusinessesByIds(ids: string[]): Promise<Business[]> {
 }
 export async function fetchApprovedBusinesses(): Promise<Business[]> {
   const { data, error } = await getSupabaseClient().from('businesses').select('*').eq('approval_status', 'approved').eq('is_published', true).order('created_at', { ascending: false });
-  if (error || !Array.isArray(data)) return [];
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) throw new Error('İşletmeler yüklenemedi. Yeniden deneyin.');
   return withRatings(data.map(row => mapBusinessRow(row)));
+}
+export async function loadDiscoveryBusinesses(): Promise<Business[]> {
+  return mergeBusinesses(await fetchApprovedBusinesses(), BUSINESSES);
 }
 export function mergeBusinesses(real: Business[], mock: Business[]): Business[] {
   const byId = new Map<string, Business>();
@@ -85,12 +90,12 @@ export function mergeBusinesses(real: Business[], mock: Business[]): Business[] 
   return Array.from(byId.values());
 }
 export function filterBusinessList(list: Business[], main: MainCategoryId | 'all', sub: string | 'all', query: string): Business[] {
-  const q = query.trim().toLowerCase();
+  const q = query.trim();
   return list.filter(b => {
     const category = getSubCategory(b.category);
     const matchMain = main === 'all' || category?.main === main;
     const matchSub = sub === 'all' || category?.id === sub;
-    const matchQuery = !q || b.name.toLowerCase().includes(q) || (category?.label.toLowerCase().includes(q) ?? false) || (b.campaign?.toLowerCase().includes(q) ?? false);
+    const matchQuery = !q || searchNameMatches(b.name, q) || searchNameMatches(category?.label ?? '', q) || searchNameMatches(b.campaign ?? '', q);
     return matchMain && matchSub && matchQuery;
   });
 }

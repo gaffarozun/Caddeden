@@ -1,9 +1,8 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MenuSearchOptions, MenuSearchResult, searchPublicMenu } from '@/services/menuSearchService';
 import { normalizeSearchText } from '@/services/searchTextService';
 
-export function useMenuSearch(options: MenuSearchOptions, revision: number) {
+export function useMenuSearch(options: MenuSearchOptions) {
   const query = normalizeSearchText(options.query).slice(0, 200);
   const openIdsKey = options.openBusinessIds === null ? '*' : options.openBusinessIds.join(',');
   const params = useMemo<MenuSearchOptions>(() => ({
@@ -33,14 +32,15 @@ export function useMenuSearch(options: MenuSearchOptions, revision: number) {
       if (version.current === request) { locked.current = false; setLoading(false); setLoadingMore(false); }
     }
   }, [params]);
-  useFocusEffect(useCallback(() => {
+  // Re-search only for user input/filter changes or an explicit retry, not tab focus/polling.
+  useEffect(() => {
     const request = ++version.current;
     setItems([]); setTotal(0); setError(''); setMoreError(''); setLoadingMore(false);
     locked.current = !!query;
     setLoading(!!query);
     const timer = query ? setTimeout(() => { void loadPage(0, request); }, 250) : null;
     return () => { if (timer !== null) clearTimeout(timer); version.current += 1; locked.current = false; };
-  }, [query, loadPage, revision, retryRevision]));
+  }, [query, loadPage, retryRevision]);
   const hasMore = items.length < total;
   const loadMore = useCallback(() => {
     if (locked.current || !query || !hasMore || error) return;

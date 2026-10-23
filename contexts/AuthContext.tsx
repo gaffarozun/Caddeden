@@ -8,6 +8,8 @@ import { withRequestTimeout } from '@/services/requestTimeoutService';
 export interface AuthContextType {
   authUser: AuthProfile | null; loading: boolean; operationLoading: boolean; profileError: string;
   isAdmin: boolean; isBusiness: boolean;
+  passwordRecovery: boolean; recoveryUserId: string | null;
+  beginPasswordRecovery: (userId?: string) => void; endPasswordRecovery: () => void;
   signIn: (email: string, password: string, account?: 'user' | 'business') => Promise<{ error: string | null }>;
   sendOtp: (email: string, meta?: RegisterMeta) => Promise<{ error: string | null }>;
   registerWithOtp: (email: string, otp: string, password: string, meta: RegisterMeta) => Promise<{ error: string | null }>;
@@ -21,13 +23,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [operationLoading, setOperationLoading] = useState(false);
   const [profileError, setProfileError] = useState('');
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const [recoveryUserId, setRecoveryUserId] = useState<string | null>(null);
+  const recovering = useRef(false);
   const epoch = useRef(0);
   const alive = useRef(true);
   const operation = useRef(false);
   const currentProfile = useRef<AuthProfile | null>(null);
   const pending = useRef<Promise<void> | null>(null);
 
+  const beginPasswordRecovery = useCallback((userId?: string) => {
+    recovering.current = true;
+    epoch.current += 1; pending.current = null; currentProfile.current = null;
+    setAuthUser(null); setProfileError(''); setLoading(false);
+    setPasswordRecovery(true);
+    if (userId) setRecoveryUserId(userId);
+  }, []);
+  const endPasswordRecovery = useCallback(() => {
+    recovering.current = false;
+    setPasswordRecovery(false); setRecoveryUserId(null); setProfileError('');
+  }, []);
+
   const refreshProfile = useCallback((): Promise<void> => {
+    // Recovery sessions are not regular logins and must not hydrate account access.
+    if (recovering.current) return Promise.resolve();
     // Startup, foreground, polling and auth events share a single read.
     if (pending.current) return pending.current;
     const version = ++epoch.current;
@@ -67,6 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const timers = new Set<ReturnType<typeof setTimeout>>();
     // Never await Supabase reads in this callback: doing so can deadlock the auth lock.
     const { data: subscription } = client.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY' && session?.user) {
+        beginPasswordRecovery(session.user.id);
+        return;
+      }
       if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
         epoch.current += 1;
         pending.current = null;
@@ -74,7 +97,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAuthUser(null); setProfileError(''); setLoading(false);
         return;
       }
-      if (!session || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
+      if (recovering.current || !session || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
       // getUser() in existing business services can emit SIGNED_IN for the
       // current account. It must not trigger a profile/route-check feedback loop.
       if (event === 'SIGNED_IN' && currentProfile.current?.id === session.user.id) return;
@@ -99,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.subscription.unsubscribe(); clearInterval(poll);
       timers.forEach(clearTimeout); appState.remove(); client.auth.stopAutoRefresh();
     };
-  }, [client, refreshProfile]);
+  }, [client, refreshProfile, beginPasswordRecovery]);
 
   const run = useCallback(async (task: () => Promise<{ error: string | null }>, refresh: boolean) => {
     if (operation.current) return { error: 'İşlem devam ediyor.' };
@@ -130,9 +153,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [showAlert]);
   const value = useMemo<AuthContextType>(() => ({
     authUser, loading, operationLoading, profileError,
+    passwordRecovery, recoveryUserId, beginPasswordRecovery, endPasswordRecovery,
     isAdmin: authUser?.role === 'admin' && authUser.status === 'active',
     isBusiness: authUser?.role === 'business' && authUser.businessAccess === true,
     signIn, sendOtp, registerWithOtp, signOut, refreshProfile,
-  }), [authUser, loading, operationLoading, profileError, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);
+  }), [authUser, loading, operationLoading, profileError, passwordRecovery, recoveryUserId, beginPasswordRecovery, endPasswordRecovery, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

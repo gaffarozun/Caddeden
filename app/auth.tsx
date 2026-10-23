@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Redirect, useRouter } from 'expo-router';
 import { Button } from '@/components';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,7 +27,7 @@ export default function AuthScreen() {
   const { colors, styles } = useThemeStyles(createStyles);
   const router = useRouter();
   const { showAlert } = useAlert();
-  const { authUser, loading, signIn, sendOtp, registerWithOtp, operationLoading } = useAuth();
+  const { authUser, loading, signIn, sendOtp, registerWithOtp, operationLoading, passwordRecovery } = useAuth();
 
   const [account, setAccount] = useState<Account>('user');
   const [mode, setMode] = useState<Mode>('login');
@@ -121,8 +122,10 @@ export default function AuthScreen() {
     // Auth state drives the redirect; account type is never changed here.
   };
 
+  if (passwordRecovery) return <Redirect href="/password-reset" />;
   if (authUser && !loading && !operationLoading) return <Redirect href="/" />;
   return (
+    <SafeAreaView style={styles.screen} edges={['bottom']}>
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <Text style={styles.brand}>Caddeden</Text>
@@ -206,6 +209,14 @@ export default function AuthScreen() {
             ) : null}
 
             <Field label="Şifre" icon="lock-outline" value={password} onChangeText={setPassword} placeholder="En az 6 karakter" secureTextEntry />
+            {mode === 'login' ? <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Şifremi unuttum"
+              accessibilityState={{ disabled: loading || operationLoading }}
+              disabled={loading || operationLoading}
+              onPress={() => router.push({ pathname: '/password-reset', params: { email: email.trim() } })}
+              style={({ pressed }) => [styles.forgotPassword, pressed ? styles.pressed : null, loading || operationLoading ? styles.disabled : null]}
+            ><MaterialCommunityIcons name="lock-reset" size={20} color={colors.primaryDark} /><Text style={styles.forgotPasswordText}>Şifremi unuttum</Text></Pressable> : null}
             {mode === 'register' ? <Field label="Şifreyi tekrar gir" icon="lock-check-outline" value={confirmPassword} onChangeText={setConfirmPassword} placeholder="Şifreni doğrula" secureTextEntry /> : null}
 
             <View style={{ marginTop: spacing.lg }}>
@@ -245,6 +256,7 @@ export default function AuthScreen() {
         ) : null}
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
@@ -288,7 +300,8 @@ function Field({
           style={styles.input}
           secureTextEntry={secureTextEntry}
           keyboardType={keyboardType ?? 'default'}
-          autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
+          autoCapitalize={secureTextEntry || keyboardType === 'email-address' ? 'none' : 'sentences'}
+          autoCorrect={!secureTextEntry && keyboardType !== 'email-address'}
           accessibilityLabel={label}
         />
       </View>
@@ -345,4 +358,8 @@ const createStyles = (colors: ThemeColors) => StyleSheet.create({
   switchLink: { color: colors.primary, fontWeight: fontWeight.bold },
   guestBtn: { alignItems: 'center', marginTop: spacing.lg, padding: spacing.sm },
   guestText: { fontSize: fontSize.sm, color: colors.textSubtle, textDecorationLine: 'underline' },
+  forgotPassword: { minHeight: spacing.xxxl, alignSelf: 'flex-end', flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.sm },
+  forgotPasswordText: { color: colors.primaryDark, fontSize: fontSize.md, fontWeight: fontWeight.semibold, includeFontPadding: false },
+  pressed: { opacity: 0.72 },
+  disabled: { opacity: 0.5 },
 });

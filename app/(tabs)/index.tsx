@@ -11,12 +11,13 @@ import { FeedbackButton, FeedbackChips, FeedbackError } from '@/components/featu
 import { MenuSearchCard } from '@/components/feature/MenuSearchCard';
 import { DiscoveryResultRow } from '@/services/discoveryResultsService';
 import { CampaignBanner } from '@/components/feature/CampaignBanner';
+import { FeedRefreshButton } from '@/components/ui/FeedRefreshButton';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
   const { colors } = useTheme();
   const { query, setQuery, main, sub, setSub, onlyOpen, setOnlyOpen, ratingSort, setRatingSort,
-    businesses, results, menuSearch, searching, counts, activeMain, handleMain, refreshing, refresh } = useDiscoveryFeed();
+    businesses, results, menuSearch, searching, counts, activeMain, handleMain, refreshing, error, refresh } = useDiscoveryFeed();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const renderResult = useCallback(({ item: row }: { item: DiscoveryResultRow }) => {
     switch (row.kind) {
@@ -46,10 +47,11 @@ export default function DiscoverScreen() {
     <SafeAreaView style={styles.screen} edges={['top']}>
       <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.brandBlock}>
           <Text style={styles.brand}>Caddeden</Text>
           <Text style={styles.brandSub}>İşletmeler, lezzetler ve sana özel keşifler</Text>
         </View>
+        <FeedRefreshButton refreshing={refreshing} onRefresh={refresh} />
       </View>
 
       <View style={styles.searchWrap}>
@@ -70,6 +72,7 @@ export default function DiscoverScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
+            {error ? <View style={styles.feedError}><FeedbackError message={error} /><FeedbackButton label="Yeniden dene" secondary busy={refreshing} onPress={refresh} /></View> : null}
             {!searching ? <View style={styles.bleed}>
               <CampaignBanner main={main} />
             </View> : null}
@@ -111,7 +114,7 @@ export default function DiscoverScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <MaterialCommunityIcons name="store-search-outline" size={48} color={colors.textFaint} />
-            <Text style={styles.emptyText}>Bu kategoride henüz işletme bulunamadı.</Text>
+            <Text style={styles.emptyText}>{refreshing ? 'İşletmeler yükleniyor…' : error ? 'İşletmeler yüklenemedi. Yeniden deneyin.' : 'Bu kategoride henüz işletme bulunamadı.'}</Text>
           </View>
         }
       />
@@ -134,6 +137,8 @@ const createStyles = (colors: ThemeColors) =>
     borderBottomWidth: 1,
     borderBottomColor: colors.brand,
   },
+  brandBlock: { flex: 1, paddingRight: spacing.sm },
+  feedError: { gap: spacing.sm, marginBottom: spacing.lg },
   brandSub: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: spacing.xs },
   brand: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.primaryDark, letterSpacing: -0.5 },
   searchWrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.sm },

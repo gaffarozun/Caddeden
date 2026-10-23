@@ -8,4 +8,8 @@ function AuthRouter() {
   if (loading || operationLoading) return <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator color={colors.primary} /></View>;
   return <Redirect href={authUser?.role === 'business' ? (authUser.businessAccess ? '/(business-tabs)' : '/business-approval') : '/(tabs)'} />;
 }
-export default function IndexScreen() { return <AccountRouteBoundary><AuthRouter /></AccountRouteBoundary>; }
+export default function IndexScreen() {
+  const { passwordRecovery } = useAuth();
+  if (passwordRecovery) return <Redirect href="/password-reset" />;
+  return <AccountRouteBoundary><AuthRouter /></AccountRouteBoundary>;
+}

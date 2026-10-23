@@ -16,6 +16,7 @@ import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { BusinessApprovalView } from '@/components/feature/BusinessApprovalView';
 import { CaddedenIntro } from '@/components/feature/CaddedenIntro';
 import { useCaddedenIntro } from '@/hooks/useCaddedenIntro';
+import { usePasswordRecoveryRouting } from '@/hooks/usePasswordRecoveryRouting';
 import { useAuth } from '@/hooks/useAuth';
 import { businessProfileLayout, spacing, fontSize } from '@/constants/theme';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -50,11 +51,12 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
+  usePasswordRecoveryRouting();
   const intro = useCaddedenIntro();
   const { colors, isDark, ready } = useTheme();
-  const { profileError, authUser, loading, operationLoading } = useAuth();
+  const { profileError, authUser, loading, operationLoading, passwordRecovery } = useAuth();
   const path = usePathname();
-  const approvalGate = !loading && !operationLoading && authUser?.role === 'business' && !authUser.businessAccess && !['/', '/auth', '/business-approval'].includes(path);
+  const approvalGate = !passwordRecovery && !loading && !operationLoading && authUser?.role === 'business' && !authUser.businessAccess && !['/', '/auth', '/password-reset', '/business-approval'].includes(path);
   const header = {
     headerTintColor: colors.text,
     headerStyle: { backgroundColor: colors.surface },
@@ -96,10 +98,12 @@ function RootNavigator() {
         <Stack.Screen name="history" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="saved" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="auth" options={{ headerShown: true, title: '', presentation: 'modal', ...header }} />
+        <Stack.Screen name="password-reset" options={{ headerShown: false, gestureEnabled: false }} />
       </Stack>
       </View>
       {approvalGate ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background }]}><BusinessApprovalView /></View> : null}
-      {profileError && path !== '/auth' ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
+      {profileError && !passwordRecovery && !['/auth', '/password-reset'].includes(path) ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
+      {passwordRecovery && path !== '/password-reset' ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Şifre yenileme açılıyor…</Text></View> : null}
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
       </View>
       <CaddedenIntro intro={intro} />
