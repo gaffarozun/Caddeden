@@ -460,6 +460,28 @@ Deno.serve(async (req) => {
         return json({ ok: true });
       }
 
+      case 'order_report': {
+        const dateOk = (value: unknown) => value == null || (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value));
+        const businessOk = body.p_business == null || (typeof body.p_business === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.p_business));
+        if (!dateOk(body.p_start) || !dateOk(body.p_end) || !businessOk
+          || !['all','pending','approved','on_the_way','delivered','rejected'].includes(body.p_status)
+          || !['newest','oldest','highest','lowest'].includes(body.p_sort)
+          || !['orders','daily'].includes(body.p_view)
+          || !Number.isInteger(body.p_page) || body.p_page < 0 || body.p_page > 1000000) {
+          return json({ error: 'Geçersiz sipariş raporu filtresi.' }, 400);
+        }
+        const { data, error } = await admin.rpc('admin_order_report', {
+          p_admin: caller.id, p_start: body.p_start ?? null, p_end: body.p_end ?? null,
+          p_business: body.p_business ?? null, p_status: body.p_status,
+          p_sort: body.p_sort, p_view: body.p_view, p_page: body.p_page,
+        });
+        if (error) {
+          console.error('Order report failed', error.code);
+          return json({ error: error.message }, error.code === '42501' ? 403 : 400);
+        }
+        return json(data);
+      }
+
       case 'revenue': {
         const { data: payments, error } = await admin
           .from('payments')

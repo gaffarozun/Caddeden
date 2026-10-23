@@ -94,6 +94,7 @@ export default function AdminDashboard() {
         <LinkRow icon="tag-multiple-outline" title="Fiyatlandırma" subtitle="Reklam, içerik ve bildirim ücretleri" tone="success" onPress={() => router.push('/admin/packages')} />
         <LinkRow icon="bell-ring-outline" title="Bildirim Merkezi" subtitle="Duyuru ve kampanya gönder" tone="info" onPress={() => router.push('/admin/notifications')} />
         <LinkRow icon="account-cog-outline" title="Kullanıcı Girişleri" subtitle="Kullanıcılar onay beklemez; hesap durumu ve kısıtlama" tone="info" onPress={() => router.push({ pathname: '/admin/users', params: { account: 'user' } })} />
+        <LinkRow icon="receipt-text-outline" title="Tüm Siparişler ve Ciro" subtitle="İşletmelere göre sipariş geçmişi, tarih sıralaması ve günlük ciro" tone="primary" onPress={() => router.push('/admin/orders')} />
         <LinkRow icon="chart-line" title="Gelir Yönetimi" subtitle="Ödemeler ve raporlar" tone="success" onPress={() => router.push('/admin/revenue')} />
         <LinkRow icon="comment-text-multiple-outline" title="Müşteri Deneyimleri" subtitle="Deneyim alanını onayla/aç, yorum ve önerileri denetle" tone="primary" onPress={() => router.push('/admin/feedback')} />
         <LinkRow icon="email-edit-outline" title="Şikâyet E-posta Adresi" subtitle="Kullanıcıların şikâyetlerini göndereceği adresi belirle" tone="primary" onPress={() => router.push('/admin/support-settings')} />

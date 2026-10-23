@@ -11,7 +11,6 @@ import { FeedbackButton, FeedbackChips, FeedbackError } from '@/components/featu
 import { MenuSearchCard } from '@/components/feature/MenuSearchCard';
 import { DiscoveryResultRow } from '@/services/discoveryResultsService';
 import { CampaignBanner } from '@/components/feature/CampaignBanner';
-import { FeedRefreshButton } from '@/components/ui/FeedRefreshButton';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
@@ -49,9 +48,7 @@ export default function DiscoverScreen() {
       <View style={styles.header}>
         <View style={styles.brandBlock}>
           <Text style={styles.brand}>Caddeden</Text>
-          <Text style={styles.brandSub}>İşletmeler, lezzetler ve sana özel keşifler</Text>
         </View>
-        <FeedRefreshButton refreshing={refreshing} onRefresh={refresh} />
       </View>
 
       <View style={styles.searchWrap}>
@@ -139,7 +136,6 @@ const createStyles = (colors: ThemeColors) =>
   },
   brandBlock: { flex: 1, paddingRight: spacing.sm },
   feedError: { gap: spacing.sm, marginBottom: spacing.lg },
-  brandSub: { fontSize: fontSize.sm, color: colors.textSubtle, marginTop: spacing.xs },
   brand: { fontSize: fontSize.xxl, fontWeight: fontWeight.bold, color: colors.primaryDark, letterSpacing: -0.5 },
   searchWrap: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, gap: spacing.sm },
   searchLabel: { fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.textSubtle, includeFontPadding: false },

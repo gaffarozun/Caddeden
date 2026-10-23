@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { RequestSection, useBusinessRequests } from '@/hooks/useBusinessRequests';
 import { OrderRow, ReservationRow, requestStatusMeta } from '@/services/businessRequestService';
 import { money } from '@/services/businessProfileService';
@@ -11,7 +12,7 @@ import { BusinessChips } from './BusinessProfileControls';
 import { spacing, radius, fontSize, ThemeColors } from '@/constants/theme';
 interface BusinessRequestsViewProps { initialSection?: RequestSection; tabPage?: boolean }
 export const BusinessRequestsView = memo(function BusinessRequestsView({ initialSection = 'orders', tabPage = false }: BusinessRequestsViewProps) {
- const m = useBusinessRequests(initialSection); const { colors: c, styles: s } = useThemeStyles(createStyles);
+ const m = useBusinessRequests(initialSection); const { colors: c, styles: s } = useThemeStyles(createStyles); const router = useRouter();
  const render = ({ item }: { item: OrderRow | ReservationRow }) => {
   const order = 'items' in item ? item : null; const booking = 'date' in item ? item : null; const meta = requestStatusMeta(item.status);
   return <View style={s.card}><View style={s.row}><View style={s.info}><Text style={s.heading}>{item.businesses?.name ?? 'İşletmem'}</Text><Text style={s.subtle}>{order ? 'Sipariş' : booking?.type === 'appointment' ? 'Randevu' : 'Rezervasyon'} · {timeAgo(item.created_at)}</Text></View><Text style={[s.status, { color: c[meta.tone] }]}>{meta.label}</Text></View>
@@ -23,7 +24,7 @@ export const BusinessRequestsView = memo(function BusinessRequestsView({ initial
   </View>;
  };
  return <SafeAreaView style={s.screen} edges={tabPage ? ['top'] : ['bottom']}><FlatList<OrderRow | ReservationRow> data={m.data} keyExtractor={item => item.id} renderItem={render} contentContainerStyle={s.content} showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={m.refreshing} onRefresh={m.refresh} tintColor={c.primary} />} ItemSeparatorComponent={() => <View style={s.space} />}
-  ListHeaderComponent={<View style={s.blocks}><View style={s.hero}><Text style={s.title}>Gelen talepler</Text><Text style={s.subtle}>Yalnızca size ait işletmelerin sipariş, rezervasyon ve randevuları. Durumlar 15 saniyede bir yenilenir.</Text></View><BusinessChips label="Talep türü" items={[{ id: 'orders', label: 'Siparişler' }, { id: 'reservations', label: 'Rezervasyonlar' }, { id: 'appointments', label: 'Randevular' }]} selected={m.section} onSelect={value => m.setSection(value as RequestSection)} /><BusinessChips label="Talep durumu" items={[{ id: 'pending', label: 'Bekleyen' }, { id: 'approved', label: 'Onaylı' }, ...(m.section === 'orders' ? [{ id: 'on_the_way', label: 'Yola çıktı' }, { id: 'delivered', label: 'Teslim edildi' }] : []), { id: 'rejected', label: 'Reddedilen' }, { id: 'all', label: 'Tümü' }]} selected={m.filter} onSelect={m.setFilter} />{m.error ? <View style={s.errorRow}><MaterialCommunityIcons name="alert-circle-outline" size={22} color={c.danger} /><Text style={s.error}>{m.error}</Text></View> : null}{m.loading ? <ActivityIndicator color={c.primary} /> : null}</View>}
+  ListHeaderComponent={<View style={s.blocks}><View style={s.hero}><Text style={s.title}>Gelen talepler</Text><Text style={s.subtle}>Yalnızca size ait işletmelerin sipariş, rezervasyon ve randevuları. Durumlar 15 saniyede bir yenilenir.</Text></View>{m.section === 'orders' ? <Action label="Sipariş geçmişi ve günlük ciro" icon="chart-timeline-variant" disabled={false} onPress={() => router.push('/business/order-history')} /> : null}<BusinessChips label="Talep türü" items={[{ id: 'orders', label: 'Siparişler' }, { id: 'reservations', label: 'Rezervasyonlar' }, { id: 'appointments', label: 'Randevular' }]} selected={m.section} onSelect={value => m.setSection(value as RequestSection)} /><BusinessChips label="Talep durumu" items={[{ id: 'pending', label: 'Bekleyen' }, { id: 'approved', label: 'Onaylı' }, ...(m.section === 'orders' ? [{ id: 'on_the_way', label: 'Yola çıktı' }, { id: 'delivered', label: 'Teslim edildi' }] : []), { id: 'rejected', label: 'Reddedilen' }, { id: 'all', label: 'Tümü' }]} selected={m.filter} onSelect={m.setFilter} />{m.error ? <View style={s.errorRow}><MaterialCommunityIcons name="alert-circle-outline" size={22} color={c.danger} /><Text style={s.error}>{m.error}</Text></View> : null}{m.loading ? <ActivityIndicator color={c.primary} /> : null}</View>}
   ListEmptyComponent={!m.loading ? <View style={s.card}><Text style={s.text}>Bu alanda talep bulunmuyor.</Text></View> : null} /></SafeAreaView>;
 });
 interface ActionProps { label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap; onPress: () => void; disabled: boolean; danger?: boolean }

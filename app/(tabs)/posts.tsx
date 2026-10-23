@@ -4,7 +4,6 @@ import { FlatList, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PostCard, ScreenHeader } from '@/components';
 import { MainCategoryTabs } from '@/components/ui/MainCategoryTabs';
-import { FeedRefreshButton } from '@/components/ui/FeedRefreshButton';
 import { usePostsFeed } from '@/hooks/usePostsFeed';
 import { FeedbackButton, FeedbackError } from '@/components/feature/FeedbackControls';
 import { useTheme } from '@/hooks/useTheme';
@@ -17,11 +16,10 @@ export default function PostsScreen() {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top']}>
-      <ScreenHeader title="Gönderiler" subtitle="İşletmelerden kampanya ve duyurular" />
+      <ScreenHeader title="Gönderiler" />
       <View style={styles.categories}><MainCategoryTabs compact selected={main} onSelect={setMain} /></View>
       <View style={styles.categorySummary}>
         <View style={styles.categoryText}><Text style={styles.categoryTitle}>{categoryLabel}</Text><Text style={styles.count}>{posts.length} gönderi</Text></View>
-        <FeedRefreshButton refreshing={refreshing} onRefresh={refresh} />
       </View>
       <FlatList
         data={posts}

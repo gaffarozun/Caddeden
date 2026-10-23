@@ -54,6 +54,8 @@ export const adminApi = {
   setBusinessFeatured: (businessId: string, featured: boolean) =>
     call('set_business_featured', { businessId, featured }),
 
+  setComplaintEmail: (email: string) => call('set_complaint_email', { email }),
+  deleteRejectedMedia: (id: string, section: 'content' | 'campaign' | 'ad') => call('delete_rejected_media', { id, section }),
   listAds: (status?: string) => call('list_ads', { status }),
   updateAd: (adId: string, patch: Record<string, unknown>) => call('update_ad', { adId, ...patch }),
 
@@ -95,6 +97,7 @@ export const adminApi = {
   listComplaints: () => call('list_complaints'),
   updateComplaint: (complaintId: string, status: string) => call('update_complaint', { complaintId, status }),
 
+  orderReport: (params: { p_start: string | null; p_end: string | null; p_business: string | null; p_status: string; p_sort: string; p_view: string; p_page: number }) => call('order_report', params),
   revenue: () => call('revenue'),
   listLogs: () => call('list_logs'),
 };
