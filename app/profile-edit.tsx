@@ -5,6 +5,9 @@
 import React, { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { CafeProfilePhotoCard } from '@/components/feature/CafeProfilePhotoCard';
+import { CafeVisitPrivacyCard } from '@/components/feature/CafeVisitPrivacyCard';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { Button } from '@/components';
@@ -96,8 +99,11 @@ export default function ProfileEditScreen() {
   };
 
   return (
+    <SafeAreaView style={styles.screen} edges={['bottom']}>
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+        <CafeProfilePhotoCard />
+        <CafeVisitPrivacyCard />
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Kişisel Bilgiler</Text>
 
@@ -146,6 +152,7 @@ export default function ProfileEditScreen() {
         <Button label={saving ? 'Kaydediliyor...' : 'Bilgileri Kaydet'} icon="content-save-outline" onPress={save} loading={saving} />
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 

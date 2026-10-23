@@ -38,13 +38,14 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Konumunu, işletmeni haritada göstermek ve yakındaki işletmeleri sıralamak için kullanırız."
+          "locationAlwaysAndWhenInUsePermission": "Konumunu, işletmeni haritada göstermek ve yakındaki işletmeleri sıralamak için kullanırız.",
+          "locationWhenInUsePermission": "Konumunu yakındaki işletmeleri göstermek ve kendi isteğinle kafeye katılırken yakınlığını doğrulamak için kullanırız."
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "İşletme profili ve paylaşımların için fotoğraflarına erişim izni gerekir."
+          "photosPermission": "Profil fotoğrafını, işletme görsellerini ve paylaşımlarını seçebilmen için fotoğraflarına erişim izni gerekir."
         }
       ]
     ],

@@ -13,7 +13,9 @@ import { AccountAccessProvider } from '@/contexts/AccountAccessContext';
 import { UniversityProvider } from '@/contexts/UniversityContext';
 import { CampaignProvider } from '@/contexts/CampaignContext';
 import { OrderMessagesProvider } from '@/contexts/OrderMessagesContext';
-import { OrderMessageBubble } from '@/components/feature/OrderMessageBubble';
+import { OrderRatingsProvider } from '@/contexts/OrderRatingsContext';
+import { CafePresenceProvider } from '@/contexts/CafePresenceContext';
+import { OrderNotifications } from '@/components/feature/OrderNotifications';
 import { useMediaMaintenance } from '@/hooks/useMediaMaintenance';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { BusinessApprovalView } from '@/components/feature/BusinessApprovalView';
@@ -32,21 +34,25 @@ export default function RootLayout() {
         <AuthProvider>
           <ThemeProvider>
             <AccountAccessProvider>
+            <CafePresenceProvider>
             <CampaignProvider>
             <UniversityProvider>
             <AppProvider>
             <OrderMessagesProvider>
               <FeedbackProvider>
                 <RatingProvider>
-                  <BusinessCartProvider>
-                    <RootNavigator />
-                  </BusinessCartProvider>
+                  <OrderRatingsProvider>
+                    <BusinessCartProvider>
+                      <RootNavigator />
+                    </BusinessCartProvider>
+                  </OrderRatingsProvider>
                 </RatingProvider>
               </FeedbackProvider>
             </OrderMessagesProvider>
             </AppProvider>
             </UniversityProvider>
             </CampaignProvider>
+            </CafePresenceProvider>
             </AccountAccessProvider>
           </ThemeProvider>
         </AuthProvider>
@@ -99,6 +105,7 @@ function RootNavigator() {
         <Stack.Screen name="business/posts" options={{ headerShown: true, title: 'Paylaşım Ekle', ...header }} />
         <Stack.Screen name="business/campaigns" options={{ headerShown: true, title: 'Kampanya Ekle', ...header }} />
         <Stack.Screen name="business/requests" options={{ headerShown: true, title: 'Gelen Talepler', ...header }} />
+        <Stack.Screen name="business/order-history" options={{ headerShown: true, title: 'Sipariş Geçmişi ve Ciro', ...header }} />
         <Stack.Screen name="business/notifications" options={{ headerShown: true, title: 'Bildirim Gönder', ...header }} />
         <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Hesap Bilgilerim', ...header }} />
         <Stack.Screen name="university" options={{ headerShown: true, title: 'Cadde TV · Yazı Gönder', ...header }} />
@@ -114,7 +121,7 @@ function RootNavigator() {
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
       </View>
       <CaddedenIntro intro={intro} />
-      <OrderMessageBubble hidden={intro.visible || !ready || passwordRecovery || approvalGate || !!profileError} />
+      <OrderNotifications hidden={intro.visible || !ready || passwordRecovery || approvalGate || !!profileError} />
     </View>
   );
 }
