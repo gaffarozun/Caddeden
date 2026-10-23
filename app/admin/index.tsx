@@ -96,6 +96,7 @@ export default function AdminDashboard() {
         <LinkRow icon="account-cog-outline" title="Kullanıcı Girişleri" subtitle="Kullanıcılar onay beklemez; hesap durumu ve kısıtlama" tone="info" onPress={() => router.push({ pathname: '/admin/users', params: { account: 'user' } })} />
         <LinkRow icon="chart-line" title="Gelir Yönetimi" subtitle="Ödemeler ve raporlar" tone="success" onPress={() => router.push('/admin/revenue')} />
         <LinkRow icon="comment-text-multiple-outline" title="Müşteri Deneyimleri" subtitle="Deneyim alanını onayla/aç, yorum ve önerileri denetle" tone="primary" onPress={() => router.push('/admin/feedback')} />
+        <LinkRow icon="email-edit-outline" title="Şikâyet E-posta Adresi" subtitle="Kullanıcıların şikâyetlerini göndereceği adresi belirle" tone="primary" onPress={() => router.push('/admin/support-settings')} />
         <LinkRow icon="flag-outline" title="Şikâyet ve Denetim" subtitle="İçerik ve kullanıcı şikâyetleri" badge={s.openComplaints} tone="danger" onPress={() => router.push('/admin/complaints')} />
         <LinkRow icon="history" title="İşlem Kayıtları" subtitle="Yönetici işlem geçmişi" tone="neutral" onPress={() => router.push('/admin/logs')} />
       </View>

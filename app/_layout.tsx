@@ -12,6 +12,9 @@ import { BusinessCartProvider } from '@/contexts/BusinessCartContext';
 import { AccountAccessProvider } from '@/contexts/AccountAccessContext';
 import { UniversityProvider } from '@/contexts/UniversityContext';
 import { CampaignProvider } from '@/contexts/CampaignContext';
+import { OrderMessagesProvider } from '@/contexts/OrderMessagesContext';
+import { OrderMessageBubble } from '@/components/feature/OrderMessageBubble';
+import { useMediaMaintenance } from '@/hooks/useMediaMaintenance';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { BusinessApprovalView } from '@/components/feature/BusinessApprovalView';
 import { CaddedenIntro } from '@/components/feature/CaddedenIntro';
@@ -32,6 +35,7 @@ export default function RootLayout() {
             <CampaignProvider>
             <UniversityProvider>
             <AppProvider>
+            <OrderMessagesProvider>
               <FeedbackProvider>
                 <RatingProvider>
                   <BusinessCartProvider>
@@ -39,6 +43,7 @@ export default function RootLayout() {
                   </BusinessCartProvider>
                 </RatingProvider>
               </FeedbackProvider>
+            </OrderMessagesProvider>
             </AppProvider>
             </UniversityProvider>
             </CampaignProvider>
@@ -51,12 +56,13 @@ export default function RootLayout() {
 }
 
 function RootNavigator() {
+  useMediaMaintenance();
   usePasswordRecoveryRouting();
   const intro = useCaddedenIntro();
   const { colors, isDark, ready } = useTheme();
   const { profileError, authUser, loading, operationLoading, passwordRecovery } = useAuth();
   const path = usePathname();
-  const approvalGate = !passwordRecovery && !loading && !operationLoading && authUser?.role === 'business' && !authUser.businessAccess && !['/', '/auth', '/password-reset', '/business-approval'].includes(path);
+  const approvalGate = !passwordRecovery && !loading && !operationLoading && authUser?.role === 'business' && !authUser.businessAccess && !['/', '/auth', '/password-reset', '/business-approval', '/complaint'].includes(path);
   const header = {
     headerTintColor: colors.text,
     headerStyle: { backgroundColor: colors.surface },
@@ -86,6 +92,7 @@ function RootNavigator() {
         <Stack.Screen name="business/rate/[id]" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="business/feedback/[id]" options={{ headerShown: true, title: 'Müşteri Deneyimleri', ...header }} />
         <Stack.Screen name="account-delete" options={{ headerShown: true, title: 'Hesabımı Sil', ...header }} />
+        <Stack.Screen name="complaint" options={{ headerShown: true, title: 'Şikâyet / Sorun Bildir', ...header }} />
         <Stack.Screen name="business/manage/[id]" options={{ headerShown: true, title: 'İşletme Sayfam', ...header }} />
         <Stack.Screen name="business/register" options={{ headerShown: true, title: 'İşletme Kaydı', ...header }} />
         <Stack.Screen name="business/ads" options={{ headerShown: true, title: 'Reklam Ver', ...header }} />
@@ -102,11 +109,12 @@ function RootNavigator() {
       </Stack>
       </View>
       {approvalGate ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background }]}><BusinessApprovalView /></View> : null}
-      {profileError && !passwordRecovery && !['/auth', '/password-reset'].includes(path) ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
+      {profileError && !passwordRecovery && !['/auth', '/password-reset', '/complaint'].includes(path) ? <View style={StyleSheet.absoluteFillObject}><AccountRouteBoundary>{null}</AccountRouteBoundary></View> : null}
       {passwordRecovery && path !== '/password-reset' ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Şifre yenileme açılıyor…</Text></View> : null}
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
       </View>
       <CaddedenIntro intro={intro} />
+      <OrderMessageBubble hidden={intro.visible || !ready || passwordRecovery || approvalGate || !!profileError} />
     </View>
   );
 }

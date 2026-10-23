@@ -7,6 +7,7 @@ import { AD_TYPE_LABELS } from '@/services/adService';
 import { useAlert } from '@/template';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
+import { useRejectedAdRemoval } from '@/hooks/useRejectedAdRemoval';
 
 interface Ad {
   id: string;
@@ -24,11 +25,9 @@ const TABS = [
   { id: 'pending', label: 'Bekleyen' },
   { id: 'active', label: 'Aktif' },
   { id: 'paused', label: 'Durdurulan' },
+  { id: 'rejected', label: 'Red' },
   { id: 'all', label: 'Tümü' },
 ];
-
-const today = () => new Date().toISOString().slice(0, 10);
-const plusDays = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 
 export default function AdminAds() {
   const { colors, styles } = useThemeStyles(createStyles);
@@ -46,6 +45,7 @@ export default function AdminAds() {
     setRefreshing(false);
   }, [filter, showAlert]);
 
+  const removal = useRejectedAdRemoval(load);
   useEffect(() => {
     setLoading(true);
     load();
@@ -81,15 +81,16 @@ export default function AdminAds() {
 
         <View style={styles.actions}>
           {item.status !== 'active' ? (
-            <SmallButton label="Yayınla" icon="play" tone="success" onPress={() => run(adminApi.updateAd(item.id, { status: 'active', start_date: today(), end_date: plusDays(30) }))} />
+            <SmallButton label="Yayınla" icon="play" tone="success" onPress={() => run(adminApi.updateAd(item.id, { status: 'active' }))} />
           ) : (
             <SmallButton label="Durdur" icon="pause" tone="neutral" outline onPress={() => run(adminApi.updateAd(item.id, { status: 'paused' }))} />
           )}
           {item.status !== 'rejected' ? (
             <SmallButton label="Reddet" icon="close" tone="danger" outline onPress={() => run(adminApi.updateAd(item.id, { status: 'rejected', rejection_reason: 'Yönetici tarafından reddedildi' }))} />
           ) : null}
+          {item.status === 'rejected' ? <SmallButton label="Sil" icon="trash-can-outline" tone="danger" outline disabled={!!removal.busy} onPress={() => removal.remove(item.id)} /> : null}
           <SmallButton
-            label={paid ? 'Ödemeyi geri al' : 'Ödendi işaretle'}
+            label={paid ? 'Ödeme doğrulamasını kaldır' : 'Ödendi işaretle'}
             icon="cash"
             tone={paid ? 'neutral' : 'primary'}
             outline

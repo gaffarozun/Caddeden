@@ -95,6 +95,7 @@ export interface Post {
   likes: number;
   sponsored: boolean;
   timeAgo: string;
+  expiresAt?: number;
 }
 
 export interface SavedMedia {

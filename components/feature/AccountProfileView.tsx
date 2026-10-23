@@ -20,6 +20,7 @@ export const AccountProfileView = memo(function AccountProfileView({ businessPag
   const saved = savedBusinessIds.length + savedPosts.length + savedReels.length + savedCampaigns.length;
   const logout = () => showAlert('Çıkış yap', 'Hesabınızdan çıkmak istiyor musunuz?', [{ text: 'Vazgeç', style: 'cancel' }, { text: 'Çıkış yap', onPress: () => { void signOut(); } }]);
   const rows: { id: string; label: string; icon: keyof typeof MaterialCommunityIcons.glyphMap; onPress: () => void; danger?: boolean }[] = [
+    { id: 'complaint', label: 'Şikâyet / Sorun Bildir', icon: 'flag-outline', onPress: () => router.push('/complaint') },
     ...(authUser ? [{ id: 'edit', label: 'Hesap Bilgilerim', icon: 'account-edit-outline' as const, onPress: () => router.push('/profile-edit') }] : []),
     { id: 'admin', label: 'Yönetici', icon: 'shield-account-outline', onPress: () => router.push(isAdmin ? '/admin' : '/admin-setup') },
     ...(!guest && !isAdmin ? [{ id: 'delete', label: 'Hesabımı Sil', icon: 'account-remove-outline' as const, danger: true, onPress: () => router.push('/account-delete') }] : []),

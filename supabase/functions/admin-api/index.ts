@@ -4,6 +4,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from '../_shared/cors.ts';
 import { caddeTvPublicationDates } from '../_shared/caddeTvPublication.ts';
+import { queueCreative, processCreativeQueue } from '../_shared/mediaCleanup.ts';
 
 function json(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -135,6 +136,31 @@ Deno.serve(async (req) => {
     }
 
     switch (action) {
+      case 'set_complaint_email': {
+        const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : '';
+        if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ error: 'Geçerli bir e-posta adresi girin.' }, 400);
+        const { error } = await admin.from('app_config').upsert({ key: 'complaint_email', value: email, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        if (error) return json({ error: error.message }, 400);
+        await log('set_complaint_email', { email });
+        return json({ ok: true });
+      }
+      case 'delete_rejected_media': {
+        const table = body.section === 'content' ? 'business_posts' : body.section === 'campaign' ? 'campaigns' : body.section === 'ad' ? 'ads' : null;
+        if (!table || typeof body.id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.id)) return json({ error: 'Geçersiz içerik.' }, 400);
+        const { data: row, error: readError } = await admin.from(table).select('id,status,business_id,image_url,price,payment_status').eq('id', body.id).single();
+        if (readError || !row) return json({ error: 'İçerik bulunamadı. Listeyi yenileyin.' }, 404);
+        if (row.status !== 'rejected') return json({ error: 'Yalnızca reddedilmiş içerikleri silebilirsiniz.' }, 409);
+        await queueCreative(admin, row.image_url, row.business_id, url);
+        // Conditional delete prevents deleting content approved by a concurrent request.
+        const { data: deleted, error } = await admin.from(table).delete().eq('id', row.id).eq('status', 'rejected').select('id');
+        if (error) return json({ error: error.message }, 400);
+        if (!deleted?.length) return json({ error: 'İçerik durumu değişmiş. Listeyi yenileyin.' }, 409);
+        // Payment rows and refund decisions are never removed with a creative.
+        await log('delete_rejected_media', { table, id: row.id, business_id: row.business_id, price: row.price, payment_status: row.payment_status, payment_ledger_preserved: true });
+        try { await processCreativeQueue(admin, url); }
+        catch (reason) { console.error('Rejected media storage cleanup queued for retry', reason instanceof Error ? reason.message : 'Unknown error'); }
+        return json({ ok: true });
+      }
       case 'list_university_messages': {
         if (!['pending', 'approved', 'rejected', 'withdrawn'].includes(body.status)) return json({ error: 'Geçersiz yazı filtresi.' }, 400);
         let query = admin.from('university_messages')
@@ -269,10 +295,11 @@ Deno.serve(async (req) => {
           if (k in body) patch[k] = body[k];
         }
         const { data: existingAd, error: adReadError } = await admin.from('ads')
-          .select('type,package_id,image_url').eq('id', body.adId).single();
+          .select('type,package_id,image_url,media_removed_at').eq('id', body.adId).single();
         if (adReadError || !existingAd) return json({ error: adReadError?.message ?? 'Reklam bulunamadı.' }, 400);
-        if (existingAd.type === 'reels_sponsored' && patch.status === 'active') {
-          if (!String(existingAd.image_url ?? '').trim()) return json({ error: 'Cadde TV reklamında görsel yok. İşletme, görselle yeniden başvurmalıdır.' }, 400);
+        if (patch.status === 'active') {
+          if (existingAd.media_removed_at) return json({ error: 'Görselin yayın süresi dolmuş. Yeni bir reklam başvurusu gerekir.' }, 400);
+          if (existingAd.type === 'reels_sponsored' && !String(existingAd.image_url ?? '').trim()) return json({ error: 'Cadde TV reklamında görsel yok. İşletme, görselle yeniden başvurmalıdır.' }, 400);
           let days = 30;
           if (existingAd.package_id) {
             const { data: pkg, error: packageError } = await admin.from('ad_packages')
@@ -473,20 +500,18 @@ Deno.serve(async (req) => {
         const patch: Record<string, unknown> = { status: body.status };
         patch.rejection_reason = body.status === 'rejected' ? (body.rejection_reason ?? null) : null;
         if (body.status === 'approved') {
-          const { data: row, error: contentReadError } = await admin.from('business_posts').select('package_id,kind').eq('id', body.contentId).single();
+          const { data: row, error: contentReadError } = await admin.from('business_posts').select('package_id,kind,image_url,price,payment_status,media_removed_at').eq('id', body.contentId).single();
           if (contentReadError || !row) return json({ error: contentReadError?.message ?? 'İçerik bulunamadı.' }, 400);
+          if (row.media_removed_at || !String(row.image_url ?? '').trim()) return json({ error: 'Görsel kaldırılmış. Yeni içerik başvurusu gerekir.' }, 400);
+          if (Number(row.price) > 0 && row.payment_status !== 'paid') return json({ error: 'Ücretli içerik için önce ödemeyi doğrulayın.' }, 400);
           let days = 0;
           if (row.package_id) {
             const { data: pkg, error: packageError } = await admin.from('ad_packages').select('duration_days').eq('id', row.package_id).single();
             if (packageError || !pkg) return json({ error: packageError?.message ?? 'İçerik paketi bulunamadı.' }, 400);
             days = Number(pkg.duration_days ?? 0);
           }
-          if (row.kind === 'reel') {
-            Object.assign(patch, caddeTvPublicationDates(days));
-          } else {
-            patch.start_date = new Date().toISOString().slice(0, 10);
-            patch.end_date = days > 0 ? new Date(Date.now() + days * 86400000).toISOString().slice(0, 10) : null;
-          }
+          if (row.package_id && (!Number.isFinite(days) || days <= 0)) return json({ error: 'Paketin yayın süresi pozitif olmalıdır.' }, 400);
+          Object.assign(patch, caddeTvPublicationDates(days));
         }
         const { error } = await admin.from('business_posts').update(patch).eq('id', body.contentId);
         if (error) return json({ error: error.message }, 400);
@@ -518,7 +543,8 @@ Deno.serve(async (req) => {
 
       case 'set_content_paid': {
         const paid = body.payment_status === 'paid';
-        const { error } = await admin.from('business_posts').update({ payment_status: body.payment_status }).eq('id', body.contentId);
+        if (!['paid','unpaid'].includes(body.payment_status)) return json({ error: 'Geçersiz ödeme durumu.' }, 400);
+        const { error } = await admin.from('business_posts').update(paid ? { payment_status: 'paid' } : { payment_status: 'unpaid', status: 'pending' }).eq('id', body.contentId);
         if (error) return json({ error: error.message }, 400);
         if (paid) {
           const ref = `content:${body.contentId}`;

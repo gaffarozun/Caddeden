@@ -5,6 +5,7 @@ import { decode } from 'base64-arraybuffer';
 import { getSupabaseClient } from '@/template';
 import { businessAccessError, ownedRowAccessError } from './accountAccessService';
 import { caddeTvCreativeError } from './caddeTvService';
+import { broadcastDay } from './mediaPublicationService';
 
 const sb = () => getSupabaseClient();
 const BUCKET = 'business-media';
@@ -20,6 +21,8 @@ export interface FeedItem {
   status: string;
   rejection_reason: string | null;
   created_at: string;
+  end_date?: string | null;
+  start_date?: string | null;
   businesses?: { name?: string; category?: string } | null;
 }
 
@@ -27,12 +30,14 @@ export async function listFeed(kind: ContentKind): Promise<{ data: FeedItem[]; e
   // Only approved + unexpired content is public. RLS also enforces approved, but
   // we filter explicitly so an owner never sees their own pending rows here, and
   // honour the admin-set end_date (e.g. a Reels that runs for 30 days).
-  const today = new Date().toISOString().slice(0, 10);
+  const today = broadcastDay();
   const { data, error } = await sb()
     .from('business_posts')
     .select('*, businesses(name, category)')
     .eq('kind', kind)
     .eq('status', 'approved')
+    .neq('image_url', '')
+    .or(`start_date.is.null,start_date.lte.${today}`)
     .or(`end_date.is.null,end_date.gte.${today}`)
     .order('created_at', { ascending: false })
     .limit(60);

@@ -9,7 +9,7 @@ import { requireCustomer, accessError, businessAccessError, ownedRowAccessError 
 const sb = () => getSupabaseClient();
 
 export type RequestStatus = 'pending' | 'approved' | 'rejected';
-export type OrderStatus = RequestStatus | 'delivered';
+export type OrderStatus = RequestStatus | 'on_the_way' | 'delivered';
 
 export interface OrderItem {
   menu_item_id: string;
@@ -190,6 +190,7 @@ export async function updateReservationStatus(
 
 export function requestStatusMeta(status?: string): { label: string; tone: 'success' | 'warning' | 'danger' } {
   if (status === 'delivered') return { label: 'Teslim edildi', tone: 'success' };
+  if (status === 'on_the_way') return { label: 'Yola çıktı', tone: 'warning' };
   if (status === 'approved') return { label: 'Onaylandı', tone: 'success' };
   if (status === 'rejected') return { label: 'Reddedildi', tone: 'danger' };
   return { label: 'Onay bekliyor', tone: 'warning' };
