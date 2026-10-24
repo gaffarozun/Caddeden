@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from './theme';
 export const createCafeStyles = (c: ThemeColors) => StyleSheet.create({
+  venueSection: { marginVertical: spacing.md, padding: spacing.md, gap: spacing.lg, backgroundColor: c.primarySoft, borderColor: c.brand, borderWidth: 1, borderRadius: radius.lg },
+  venueIcon: { width: spacing.xxxl, height: spacing.xxxl, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderRadius: radius.md },
   card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
   row: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' },
   info: { flex: 1, minWidth: spacing.xxxl * 2, gap: spacing.xs },

@@ -11,6 +11,7 @@ import { FeedbackButton, FeedbackChips, FeedbackError } from '@/components/featu
 import { MenuSearchCard } from '@/components/feature/MenuSearchCard';
 import { DiscoveryResultRow } from '@/services/discoveryResultsService';
 import { CampaignBanner } from '@/components/feature/CampaignBanner';
+import { CafeDemoVenues } from '@/components/feature/CafeDemoVenues';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
@@ -73,6 +74,7 @@ export default function DiscoverScreen() {
             {!searching ? <View style={styles.bleed}>
               <CampaignBanner main={main} />
             </View> : null}
+            <CafeDemoVenues visible={!searching && main === 'yeme_icme' && (sub === 'all' || sub === 'kafe')} />
             {!searching ? <Text style={styles.pickTitle}>Ne keşfetmek istersin?</Text> : null}
             <View style={styles.bleed}>
               <MainCategoryTabs compact={searching} selected={main} onSelect={handleMain} counts={counts} />
@@ -99,7 +101,7 @@ export default function DiscoverScreen() {
                   size={15}
                   color={onlyOpen ? colors.onPrimary : colors.textSubtle}
                 />
-                <Text style={[styles.openFilterText, onlyOpen && { color: colors.onPrimary }]}>Sadece Açık</Text>
+                <Text style={[styles.openFilterText, onlyOpen ? { color: colors.onPrimary } : null]}>Sadece Açık</Text>
               </Pressable>
             </View>
             {!searching ? <View style={styles.ratingSort}>
@@ -132,6 +134,7 @@ const createStyles = (colors: ThemeColors) =>
     paddingBottom: spacing.md,
     backgroundColor: colors.primarySoft,
     borderBottomWidth: 1,
+    borderTopColor: colors.brand,
     borderBottomColor: colors.brand,
   },
   brandBlock: { flex: 1, paddingRight: spacing.sm },
