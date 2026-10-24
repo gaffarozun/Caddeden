@@ -16,8 +16,9 @@ import { OrderMessagesProvider } from '@/contexts/OrderMessagesContext';
 import { OrderRatingsProvider } from '@/contexts/OrderRatingsContext';
 import { CafePresenceProvider } from '@/contexts/CafePresenceContext';
 import { CafeSocialProvider } from '@/contexts/CafeSocialContext';
-import { CafeDemoProvider } from '@/contexts/CafeDemoContext';
 import { OrderNotifications } from '@/components/feature/OrderNotifications';
+import { CafeArrivalBubble } from '@/components/feature/CafeArrivalBubble';
+import { useCafeArrival } from '@/hooks/useCafeArrival';
 import { useMediaMaintenance } from '@/hooks/useMediaMaintenance';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { BusinessApprovalView } from '@/components/feature/BusinessApprovalView';
@@ -38,7 +39,6 @@ export default function RootLayout() {
             <AccountAccessProvider>
             <CafePresenceProvider>
             <CafeSocialProvider>
-            <CafeDemoProvider>
             <CampaignProvider>
             <UniversityProvider>
             <AppProvider>
@@ -56,7 +56,6 @@ export default function RootLayout() {
             </AppProvider>
             </UniversityProvider>
             </CampaignProvider>
-            </CafeDemoProvider>
             </CafeSocialProvider>
             </CafePresenceProvider>
             </AccountAccessProvider>
@@ -75,6 +74,8 @@ function RootNavigator() {
   const { profileError, authUser, loading, operationLoading, passwordRecovery } = useAuth();
   const path = usePathname();
   const approvalGate = !passwordRecovery && !loading && !operationLoading && authUser?.role === 'business' && !authUser.businessAccess && !['/', '/auth', '/password-reset', '/business-approval', '/complaint'].includes(path);
+  const overlaysHidden = intro.visible || !ready || passwordRecovery || approvalGate || !!profileError;
+  const arrival = useCafeArrival(!overlaysHidden && !loading && !operationLoading && !['/auth', '/password-reset', '/account-delete', '/complaint', '/profile-edit'].includes(path));
   const header = {
     headerTintColor: colors.text,
     headerStyle: { backgroundColor: colors.surface },
@@ -127,7 +128,8 @@ function RootNavigator() {
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
       </View>
       <CaddedenIntro intro={intro} />
-      <OrderNotifications hidden={intro.visible || !ready || passwordRecovery || approvalGate || !!profileError} />
+      <OrderNotifications hidden={overlaysHidden || !!arrival.cafe} />
+      <CafeArrivalBubble arrival={arrival} hidden={overlaysHidden} />
     </View>
   );
 }

@@ -3,6 +3,7 @@ import * as Location from 'expo-location';
 import { withRequestTimeout } from './requestTimeoutService';
 import { CafeTable } from './cafeSeatingService';
 import { CafeRequestStatus } from './cafeSocialService';
+import { CafePosition, cafePositionParameters, isCafePositionUsable, isCafeWithinEntryRadius } from './cafeLocationRules';
 
 export interface CafeVisit { business_id: string; business_name: string; photo_visible: boolean; expires_at: string; social_enabled?: boolean }
 export interface CafeMember { user_id: string; name: string; photo_path: string; has_instagram?: boolean; request_status?: CafeRequestStatus | null; request_id?: string | null }
@@ -25,11 +26,27 @@ export const fetchCafeRoom = (businessId: string) => rpc<CafeRoom>('cafe_room_st
 export const setCafeRoomEnabled = (businessId: string, enabled: boolean) => rpc<{ enabled: boolean }>('cafe_set_room', { p_business: businessId, p_enabled: enabled });
 export const setCafePhotoVisibility = (visible: boolean) => rpc<CafeVisit>('cafe_set_visibility', { p_visible: visible });
 export const leaveCafe = () => rpc<void>('cafe_leave');
+export interface NearbyCafe { business_id: string; business_name: string; social_enabled: boolean; distance_meters: number }
+async function readCafePosition(): Promise<CafePosition> {
+  const fix = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }), 'Konum alınamadı. Kafenin içinde yeniden deneyin.', 20000);
+  const position: CafePosition = { latitude: fix.coords.latitude, longitude: fix.coords.longitude, accuracy: fix.coords.accuracy, capturedAt: fix.timestamp };
+  if (!isCafePositionUsable(position)) throw new Error('Konum yeterince hassas veya güncel değil. Hassas konumu açıp yeniden deneyin (en fazla 20 m hassasiyet).');
+  return position;
+}
+// Passive checks never open the system permission dialog and never persist GPS coordinates.
+export async function getGrantedCafePosition(): Promise<CafePosition | null> {
+  const permission = await Location.getForegroundPermissionsAsync();
+  if (!permission.granted) return null;
+  return readCafePosition();
+}
+export async function fetchNearbyCafes(position: CafePosition): Promise<NearbyCafe[]> {
+  if (!isCafePositionUsable(position)) return [];
+  const rows = await rpc<NearbyCafe[]>('cafe_nearby', cafePositionParameters(position));
+  return (Array.isArray(rows) ? rows : []).filter(row => isCafeWithinEntryRadius(row.distance_meters));
+}
 export async function joinCafe(businessId: string, visible: boolean): Promise<CafeVisit> {
   const permission = await Location.requestForegroundPermissionsAsync();
-  if (!permission.granted) throw new Error('Kafeye katılmak için konum izni verin.');
-  const position = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }), 'Konum alınamadı. Kafenin yakınında yeniden deneyin.', 20000);
-  const { latitude, longitude, accuracy } = position.coords;
-  if (accuracy == null || accuracy > 60) throw new Error('Konum yeterince hassas değil. Hassas konumu açıp tekrar deneyin.');
-  return rpc<CafeVisit>('cafe_join', { p_business: businessId, p_lat: latitude, p_lng: longitude, p_accuracy: accuracy, p_captured_at: new Date(position.timestamp).toISOString(), p_visible: visible });
+  if (!permission.granted) throw new Error('Burada olduğunuzu doğrulamak için konum izni verin.');
+  const position = await readCafePosition();
+  return rpc<CafeVisit>('cafe_join', { p_business: businessId, ...cafePositionParameters(position), p_visible: visible });
 }

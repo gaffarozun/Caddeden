@@ -6,9 +6,9 @@ import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { createCafeStyles } from '@/constants/cafeStyles';
 import { CafePhoto } from './CafePhoto';
 import { FeedbackButton, FeedbackError } from './FeedbackControls';
-interface CafeSocialRequestsCardProps { showEmpty?: boolean }
-export const CafeSocialRequestsCard = memo(function CafeSocialRequestsCard({ showEmpty = false }: CafeSocialRequestsCardProps) {
- const m = useCafeSocial(); const { colors: c, styles: s } = useThemeStyles(createCafeStyles);
+interface CafeSocialRequestsCardProps { showEmpty?: boolean; localOnly?: boolean }
+export const CafeSocialRequestsCard = memo(function CafeSocialRequestsCard({ showEmpty = false, localOnly = false }: CafeSocialRequestsCardProps) {
+ const m = useCafeSocial(localOnly); const { colors: c, styles: s } = useThemeStyles(createCafeStyles);
  if (!showEmpty && m.incoming.length === 0) return null;
  return <View style={s.card}>
   <View style={s.row}><MaterialCommunityIcons name="account-check-outline" size={28} color={c.primaryDark} /><Text style={s.title}>Instagram görme istekleri</Text></View>

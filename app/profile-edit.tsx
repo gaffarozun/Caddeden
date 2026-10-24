@@ -8,6 +8,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CafeProfilePhotoCard } from '@/components/feature/CafeProfilePhotoCard';
 import { CafeVisitPrivacyCard } from '@/components/feature/CafeVisitPrivacyCard';
+import { CafeInstagramProfileCard } from '@/components/feature/CafeInstagramProfileCard';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { Button } from '@/components';
@@ -104,6 +105,7 @@ export default function ProfileEditScreen() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <CafeProfilePhotoCard />
         <CafeVisitPrivacyCard />
+        <CafeInstagramProfileCard />
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Kişisel Bilgiler</Text>
 
