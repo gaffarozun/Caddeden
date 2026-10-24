@@ -39,7 +39,7 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Konumunu, işletmeni haritada göstermek ve yakındaki işletmeleri sıralamak için kullanırız.",
-          "locationWhenInUsePermission": "Konumunu yakındaki işletmeleri göstermek ve kendi isteğinle kafeye katılırken yakınlığını doğrulamak için kullanırız."
+          "locationWhenInUsePermission": "Konumunu uygulama açıkken yakındaki işletmeleri göstermek, 20 metreden yakın kafeler için katılım önerisi sunmak ve yalnızca onayladığında kafede olduğunu doğrulamak için kullanırız. Konumun kaydedilmez."
         }
       ],
       [

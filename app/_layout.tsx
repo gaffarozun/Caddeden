@@ -16,6 +16,7 @@ import { OrderMessagesProvider } from '@/contexts/OrderMessagesContext';
 import { OrderRatingsProvider } from '@/contexts/OrderRatingsContext';
 import { CafePresenceProvider } from '@/contexts/CafePresenceContext';
 import { CafeSocialProvider } from '@/contexts/CafeSocialContext';
+import { CafeArrivalProvider } from '@/contexts/CafeArrivalContext';
 import { OrderNotifications } from '@/components/feature/OrderNotifications';
 import { CafeArrivalBubble } from '@/components/feature/CafeArrivalBubble';
 import { useCafeArrival } from '@/hooks/useCafeArrival';
@@ -39,6 +40,7 @@ export default function RootLayout() {
             <AccountAccessProvider>
             <CafePresenceProvider>
             <CafeSocialProvider>
+            <CafeArrivalProvider>
             <CampaignProvider>
             <UniversityProvider>
             <AppProvider>
@@ -56,6 +58,7 @@ export default function RootLayout() {
             </AppProvider>
             </UniversityProvider>
             </CampaignProvider>
+            </CafeArrivalProvider>
             </CafeSocialProvider>
             </CafePresenceProvider>
             </AccountAccessProvider>

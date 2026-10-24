@@ -28,14 +28,15 @@ export const setCafePhotoVisibility = (visible: boolean) => rpc<CafeVisit>('cafe
 export const leaveCafe = () => rpc<void>('cafe_leave');
 export interface NearbyCafe { business_id: string; business_name: string; social_enabled: boolean; distance_meters: number }
 async function readCafePosition(): Promise<CafePosition> {
-  const fix = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }), 'Konum alınamadı. Kafenin içinde yeniden deneyin.', 20000);
+  if (!await Location.hasServicesEnabledAsync()) throw new Error('Cihaz konumu kapalı. Konumu ve hassas konum seçeneğini açıp yeniden kontrol edin.');
+  const fix = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest }), 'Konum alınamadı. Kafenin içinde yeniden deneyin.', 20000);
   const position: CafePosition = { latitude: fix.coords.latitude, longitude: fix.coords.longitude, accuracy: fix.coords.accuracy, capturedAt: fix.timestamp };
-  if (!isCafePositionUsable(position)) throw new Error('Konum yeterince hassas veya güncel değil. Hassas konumu açıp yeniden deneyin (en fazla 20 m hassasiyet).');
+  if (!isCafePositionUsable(position)) throw new Error(`Konum yeterince hassas veya güncel değil${position.accuracy !== null && Number.isFinite(position.accuracy) ? ` (ölçüm: ${Math.round(position.accuracy)} m)` : ''}. Hassas konumu açıp yeniden deneyin; en fazla 20 m hassasiyet gerekir.`);
   return position;
 }
-// Passive checks never open the system permission dialog and never persist GPS coordinates.
-export async function getGrantedCafePosition(): Promise<CafePosition | null> {
-  const permission = await Location.getForegroundPermissionsAsync();
+// Only an explicit control action can open the permission dialog. GPS is never persisted.
+export async function getGrantedCafePosition(requestPermission = false): Promise<CafePosition | null> {
+  const permission = requestPermission ? await Location.requestForegroundPermissionsAsync() : await Location.getForegroundPermissionsAsync();
   if (!permission.granted) return null;
   return readCafePosition();
 }
