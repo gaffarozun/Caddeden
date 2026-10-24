@@ -14,7 +14,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
-        "backgroundColor": "#FFDF70"
+        "backgroundColor": "#F7F3EB"
       },
       "edgeToEdgeEnabled": true
     },
@@ -31,7 +31,7 @@
           "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FFDF70"
+          "backgroundColor": "#F7F3EB"
         }
       ],
       "expo-web-browser",
@@ -39,7 +39,7 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "Konumunu, işletmeni haritada göstermek ve yakındaki işletmeleri sıralamak için kullanırız.",
-          "locationWhenInUsePermission": "Konumunu uygulama açıkken yakındaki işletmeleri göstermek, 20 metreden yakın kafeler için katılım önerisi sunmak ve yalnızca onayladığında kafede olduğunu doğrulamak için kullanırız. Konumun kaydedilmez."
+          "locationWhenInUsePermission": "Konumunu uygulama açıkken yakındaki işletmeleri göstermek, 40 metreden yakın, katılımı açan işletmeler için katılım önerisi sunmak ve yalnızca onayladığında işletmede olduğunu doğrulamak için kullanırız. Konumun kaydedilmez."
         }
       ],
       [

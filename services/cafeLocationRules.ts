@@ -1,5 +1,5 @@
-// Shared 20-metre entry policy. GPS fixes are transient and never persisted.
-export const cafeEntryRadiusMeters = 20;
+// Shared strict 40-metre entry policy; GPS accuracy is independently limited to 20 m. GPS fixes are transient and never persisted.
+export const cafeEntryRadiusMeters = 40;
 export const cafeMaximumAccuracyMeters = 20;
 export const cafeArrivalPollMilliseconds = 20000;
 export interface CafePosition { latitude: number; longitude: number; accuracy: number | null; capturedAt: number }

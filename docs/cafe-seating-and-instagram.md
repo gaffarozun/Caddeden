@@ -1,27 +1,24 @@
-# Kafe oturma düzeni ve Instagram gizliliği
+# Masa planı, tahmini doluluk ve Instagram istekleri
 
-## Kullanım
-- İşletme Sayfam → İsteğe bağlı kafe katılımı: konumla katılımı aç/kapat. Önce kafe kategorisi ve işletme konumu kaydedilmelidir.
-- İşletme Sayfam → Masa planı: masa ekle, adını ve 1–12 kişilik kapasitesini belirle, oklarla 6×10 plan içinde konumlandır, gösterim tercihiyle birlikte kaydet. En fazla 60 masa. Plan ve doluluk gösterimi ayrıca kapatılabilir; kapalıyken ziyaretçilere masa planı verilmez.
-- Mekânın sayfasında kimlik/iletişim düğmelerinin hemen altında **Mekândakiler** alanı bulunur: tahmini doluluk, konumla katılım, masa düzeni ve görünür profiller burada toplanır. İşletme gösterimi açtıysa doluluk özeti uzaktan da görünür; masa düzeni sunucuda yalnızca aynı mekâna konumla katılmış müşterilere ve işletmenin yetkili yöneticisine verilir. Aktif katılımcı sayısı / kaydedilen kapasite 0–100 olarak gösterilir; gizli fotoğraflı kişiler de sayılır. İşletme konumu veya kapasite eksikse oran gösterilmez.
-- Masa planı açık, sosyal katılım kapalı olabilir: konumla katılım masa düzenini açar, hiçbir profil veya Instagram erişimi paylaşılmaz. Profil fotoğrafları ve istekler işletmenin sosyal katılım ayarına bağlı kalır. Konumla katılım sona erdiğinde masa düzeni ve diğer kişilerin fotoğrafları temizlenir; tekrar konumla katılım gerekir.
-- Profil → Hesap Bilgilerim: profil fotoğrafı ekle, isteğe bağlı Instagram kullanıcı adını özel olarak kaydet. Bu kullanıcı adının sahipliği Instagram OAuth ile doğrulanmaz; Instagram API veya giriş entegrasyonu değildir.
-- Kafeye katılırken her girişte fotoğrafını Göster/Gizle seç. Konum 20 metreden az mesafe ve en fazla 20 metre hassasiyet sınırlarıyla mevcut katılım RPC'sinde kontrol edilir; müşteri koordinatları saklanmaz. Katılım 5 dakika sürer, kullanıcı konumla yeniler.
-- Konum izni önceden verilmişse uygulama açıkken 20 metreden yakın kafe için katılım bulutu gelir. Evet denmeden doluluk artmaz. Fotoğraf gizli başlar; gösterme tercihi onayla uygulanır. Bulutu reddeden veya almayan müşteri işletme sayfasından konumla doğrulayabilir. Ayrıntılar: docs/cafe-arrival-prompt.md.
-- Aynı kafeye katılmış kullanıcılar görünür profil fotoğraflarından Instagram görme isteği gönderir. Bekleyen istekte bağlantı verilmez. İstekler kafe katılım bölümünde ve Profil bölümünde gösterilir.
-- Alıcı İzin ver veya Reddet seçer. Instagram bağlantısı yalnızca isteği gönderen kişiye, onaydan sonra ve iki kullanıcı da aynı kafede aktif katılımcıyken sunulur. Başka kullanıcının isteğiyle açılamaz.
-- Reddet veya İzni kaldır: alıcının profil fotoğrafı, isteği gönderen kişiye tam 72 saat gösterilmez; aynı kişiye bu süre boyunca yeniden istek gönderilemez. Bu engel tüm kafelerde ve fotoğraf değişse bile geçerlidir. Diğer katılımcılar etkilenmez. Önceki görülmüş fotoğraf, ekran görüntüsü veya Instagram adresi geri alınamaz.
+## İşletme ayarları
+- İşletme Sayfam → İsteğe bağlı mekân katılımı kullanıcı profillerini açar/kapatır. Masa planı ve tahmini doluluk bağımsız seçenektir. Tüm kategoriler desteklenir; mevcut işletmeler kendiliğinden açılmaz.
+- Masa planı 6×10 alanda en fazla 60 masa, masa başına 1–12 kişilik kapasite içerir. Gösterimi açmadan önce en az bir masa eklenir ve Kaydet seçilir. İşletmenin gerçek konumu kaydedilmelidir.
+- Masa kayıt hatası için eski JSON değişkeni/SQL alias çakışması kaldırıldı. İstemci JSON planını text taşıma RPC'si üzerinden gönderir; sunucu JSON'a çevirip doğrular ve atomik kaydeder. Konumlar değiş tokuş edilse de geçici unique çakışması oluşmaz. Başka işletmenin masasını kullanmak yasaktır.
+- Kullanıcı 40 metreden yakın konumda onay verdiğinde işletme sayfasının Doluluk ve Mekândakiler düğmesinde yalnızca tahmini yüzde, oran çubuğu ve profiller açılır. Müşteri ekranından masa planı çizimi ve uzun açıklamalar kaldırılmıştır. Oran onaylı aktif kullanıcı sayısı / masa kapasitesidir; kesin fiziksel doluluk değildir. Kapasite hesabı için işletmenin özel masa editörü ve kayıtları korunur.
+- Doluluk açık, sosyal katılım kapalıysa doluluk yüzdesi kullanılabilir fakat fotoğraf/Instagram paylaşımı açılmaz. Her iki seçenek kapalıysa müşteriye düğme/bulut gösterilmez.
 
-## Güvenlik ve sınırlar
-- Instagram kullanıcı adları özel bir tabloya kaydedilir; public user_profiles/metadata/avatar URL'lerine eklenmez. İstek listeleri hiçbir karşı tarafın kullanıcı adını döndürmez.
-- Fotoğraflar mevcut private cafe-profile-photos bucket'ında kalır. Storage download yetkisi aynı kafe, aktif katılım, fotoğraf görünürlüğü ve 3 günlük reddetme engelini her istekte kontrol eder. Public/signed URL oluşturulmaz, expo-image cachePolicy none kullanılır.
-- Üyeler, istekler ve fotoğraf yetkileri uygulama aktifken 10 saniyelik polling ile yeniden doğrulanır. Mevcut bellek görüntüsünün diğer cihazda kaybolması bu aralık kadar gecikebilir; yeni indirmeler sunucuda hemen engellenir. Arka plana geçildiğinde diğer kullanıcı görüntüleri temizlenir.
-- GPS gerçek doluluk veya hangi masanın dolu olduğunu ölçemez. Uygulamayı kullanmayanlar sayılmaz. Masa planı gerçek dolu/boş masa göstergesi değildir; kullanıcıya açıkça tahmin olarak gösterilir. Konum ölçümleri cihazdan geldiği için sahteciliğe karşı fiziksel kanıt değildir.
-- İstek gönderme sınırı saatte 10 kişi, kişinin kendisine istek yasak. Aynı çiftin bekleyen/onaylı isteği tekrar oluşturulmaz. Onay/ret yalnızca alıcı RPC'siyle işlenir. Yetki, hesap durumu, yakınlık/katılım ve izin sunucuda doğrulanır.
-- Migration mevcut roller, siparişler, hesap izinleri veya katılım görünürlük seçimlerini değiştirmez. Tablo planı değişimi yalnızca işletmenin Kaydet eyleminde atomik olarak yapılır.
+## Profiller ve Instagram
+- Genel profil görünürlüğü hesap bazında kapatılabilir; her yeni girişte ayrıca Göster/Gizle sorulur. Görünür profilde ad + sansürlü soyad ve varsa özel fotoğraf gösterilir. Gizli profiller yalnızca Kullanıcı kartıdır.
+- Instagram kullanıcı adı isteğe bağlıdır; OAuth ile doğrulanmış Instagram hesabı değildir. Ancak kullanıcı adı eklemeyen kişi istek gönderemez veya onay veremez. Her iki tarafın kayıtlı, geçerli kullanıcı adı sunucuda kontrol edilir; istemci de gönderme/onaylama eylemlerini kapatır. Reddetmek kullanıcı adı gerektirmez. Fotoğraf yüklenmiş olması şart değildir.
+- Tek isteğin onaylanması iki tarafa karşılıklı erişim sağlar. Gönderen alıcının, alıcı gönderenin Instagram bağlantısını aynı istek kimliğiyle açar; ikinci bir istek gerekmez. Alıcı için gelen onaylı istekte ve görünür katılımcı kartında Instagramı aç eylemi bulunur.
+- Bağlantı yalnızca açık eylemde sunucudan alınır. Sunucu isteğin onaylı olmasını, çağıranın iki katılımcıdan biri olmasını, iki kullanıcı adını, aynı mekânda aktif katılımı, karşı tarafın profil görünürlüğünü ve ret süresini tekrar doğrular. Genel/per-entry gizlilik ve konumdan ayrılınca erişim engelleri korunur. Başka biri veya kullanıcı adı olmayan hesap onaylı bir isteğin kimliğini bilse bile bağlantıyı alamaz.
+- Ret/izin kaldırma, alıcının ad ve fotoğrafını gönderen kişiden 7 gün gizler; alıcı mekânda yalnızca Kullanıcı olarak kalır. Bu süre boyunca yeni istek gönderilemez. Eski kararlar yeniden yazılmaz; 7 günlük etkili süre karar tarihinden hesaplanır.
+- Gönderen kendi farklı alıcı sayısını görür. Her gelen istekte gönderenin toplam kaç farklı kişiye istek yolladığı gösterilir; diğer kişilerin kimlikleri paylaşılmaz. Aynı alıcıya tekrar gönderim farklı kişi sayısını artırmaz.
+- Saatlik mevcut 10 istek koruması ve kendine istek yasağı korunur. Gönderen bazında transaction lock eşzamanlı farklı kişilere gönderimlerle sınırın aşılmasını engeller. Bekleyen/onaylı çift isteği yeniden üretilmez.
 
-## Kontrol
-- supabase/tests/cafe_venue_page_read_only.sql ve tests/cafeVenuePageChecks.ts: anonim/uzaktaki kullanıcıya masa planının verilmemesi, aktif sunucu/yerel katılım eşleşmesi, süre dolumu ve sosyal katılım kapalıyken profil gizliliği.
-- supabase/tests/cafe_seating_social_read_only.sql: RLS/privilege, alıcı/gönderen kapsamı, onay/co-presence, 72 saat ve fotoğraf indirme korumaları. Kullanıcı verisi değiştirmez.
-- tests/cafeSeatingSocialChecks.ts: kapasite, yüzdelik sınırları, kullanıcı adı ve cooldown bitiş sınırı için çalıştırılabilir kontroller.
-- Gerçek cihazda iki müşteriyle aynı kafe, ayrı kafe, konum izni reddi, gizli fotoğraf, istek/onay/ret, uygulama arka planı, 5 dakika dolumu ve 72 saat sonu ayrıca kontrol edilmelidir.
+## Güvenlik ve test
+- Özel fotoğraflar aynı mekân, görünürlük ve ret süresiyle kontrol edilir. 10 saniyelik polling ve arka plan temizliği korunur. Müşteri koordinatları saklanmaz.
+- supabase/tests/venue_presence_40m_privacy_read_only.sql: 40 m sözleşmesi, 7 gün, maskeli isim, anonim çıktı, farklı alıcı sayıları, RLS ve RPC sınırları.
+- supabase/tests/venue_mutual_instagram_read_only.sql: iki tarafın kullanıcı adı zorunluluğu, karşılıklı bağlantı, üçüncü taraf/anonim yetki sınırları ve gizlilik kontrolleri. Dağıtılmış sözleşme için salt-okunur SQL regresyonu çalıştırılmıştır; gerçek cihaz testinin yerine geçmez.
+- tests/cafeSeatingSocialChecks.ts: onaylı gelen/giden isteğin tek kimlikle seçilmesi, boş kullanıcı adı ve doluluk sınırları için ek senaryolar.
+- Gerçek cihazda iki hesapla konum, genel/per-entry görünürlük, istek sayıları, kabul/ret, ayrılma, süre dolumu ve işletme kapatması ayrıca test edilmelidir.

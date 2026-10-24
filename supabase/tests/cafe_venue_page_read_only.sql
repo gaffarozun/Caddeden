@@ -11,7 +11,7 @@ begin
  if position('p_visible and public.cafe_room_live(p_business)' in pg_get_functiondef('public.cafe_join(uuid,double precision,double precision,double precision,timestamptz,boolean)'::regprocedure))=0 then raise exception 'Seating-only entry must not share photos'; end if;
  perform set_config('request.jwt.claim.sub','',true);
  perform set_config('request.jwt.claims','{"role":"anon"}',true);
- for b in select id from public.businesses where category='kafe' loop
+ for b in select id from public.businesses  loop
   payload:=public.cafe_room_state(b.id);
   if payload->'tables'<>'[]'::jsonb or payload->'members'<>'[]'::jsonb or (payload->>'plan_visible')::boolean then raise exception 'Remote/anonymous viewer saw local-only content'; end if;
  end loop;
@@ -20,13 +20,13 @@ begin
   perform set_config('request.jwt.claim.sub',actor::text,true);
   perform set_config('request.jwt.claims',jsonb_build_object('sub',actor,'role','authenticated')::text,true);
   mine:=public.cafe_my_visit();
-  for b in select id from public.businesses where category='kafe' loop
+  for b in select id from public.businesses  loop
    payload:=public.cafe_room_state(b.id); local_visit:=coalesce(mine->>'business_id'=b.id::text,false); manager:=coalesce(public.account_can_manage(b.id),false);
    if not local_visit and not manager and (payload->'tables'<>'[]'::jsonb or payload->'members'<>'[]'::jsonb or (payload->>'plan_visible')::boolean) then raise exception 'Remote customer saw venue-only content'; end if;
    if not (payload->>'enabled')::boolean and payload->'members'<>'[]'::jsonb then raise exception 'Seating-only room exposed profiles'; end if;
    if payload::text like '%instagram_handle%' then raise exception 'Venue overview exposed Instagram addresses'; end if;
   end loop;
  end if;
- if position('interval ''3 days''' in pg_get_functiondef('public.cafe_decide_instagram(uuid,boolean)'::regprocedure))=0 then raise exception 'Three-day rejection privacy missing'; end if;
+ if position('interval ''7 days''' in pg_get_functiondef('public.cafe_decide_instagram(uuid,boolean)'::regprocedure))=0 then raise exception 'Seven-day rejection privacy missing'; end if;
 end; $$;
 rollback;

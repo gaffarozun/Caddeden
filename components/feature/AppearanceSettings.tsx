@@ -16,7 +16,7 @@ export const AppearanceSettings = memo(function AppearanceSettings(_props: Appea
   const choose = (next: ThemeMode) => setMode(next);
   return <View style={styles.card}>
     <View style={styles.row}><MaterialCommunityIcons name="palette-outline" size={22} color={colors.primary} /><View style={styles.info}><Text style={styles.title}>Görünüm</Text><Text style={styles.subtle}>Aktif tema: {palettes.find(item => item.id === resolvedMode)?.label}</Text></View></View>
-    <Text style={styles.subtle}>Kadın, erkek, kullanıcı, işletme ve yönetici hesaplarında varsayılan tema turuncu ve hardaldır.</Text>
+    <Text style={styles.subtle}>Kadın, erkek, kullanıcı, işletme ve yönetici hesaplarında varsayılan tema açıktır. Seçtiğiniz diğer temalar hesabınız için korunur.</Text>
     <View style={styles.previews}>{palettes.map(item => {
       const selected = mode === item.id;
       return <Pressable key={item.id} disabled={!ready} accessibilityRole="button" accessibilityLabel={`${item.label} tema`} accessibilityState={{ selected, disabled: !ready }} onPress={() => choose(item.id)} style={({ pressed }) => [styles.choice, selected ? styles.selected : null, pressed ? styles.pressed : null]}>

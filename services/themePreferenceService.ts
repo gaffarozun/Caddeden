@@ -6,8 +6,8 @@ export function isThemeMode(value: unknown): value is ThemeMode {
   return value === 'auto' || value === 'mustard' || value === 'light' || value === 'dark' || value === 'pink' || value === 'system';
 }
 // Keep the existing API, but gender no longer changes the default appearance.
-export function defaultThemeForGender(_gender?: string | null): 'mustard' {
-  return 'mustard';
+export function defaultThemeForGender(_gender?: string | null): 'light' {
+  return 'light';
 }
 export function resolveTheme(mode: ThemeMode, gender: string | null | undefined, systemDark: boolean): ResolvedThemeMode {
   if (mode === 'auto') return defaultThemeForGender(gender);

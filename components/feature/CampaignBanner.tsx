@@ -3,7 +3,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useAuth } from '@/hooks/useAuth';
 import { MainCategoryId } from '@/services/categories';
-import { NeonTicker } from '@/components/feature/NeonTicker';
+import { CampaignTicker } from '@/components/feature/CampaignTicker';
 
 interface CampaignBannerProps { main: MainCategoryId }
 export const CampaignBanner = memo(function CampaignBanner({ main }: CampaignBannerProps) {
@@ -21,5 +21,5 @@ export const CampaignBanner = memo(function CampaignBanner({ main }: CampaignBan
   const submit = useCallback(() => router.push('/business/campaigns'), [router]);
   const retry = useCallback(() => { void refresh(); }, [refresh]);
   useFocusEffect(useCallback(() => { void refresh(); }, [refresh]));
-  return <NeonTicker title="GÜNCEL KAMPANYALAR" leftIcon="tag-outline" rightIcon="ticket-percent-outline" items={items} error={error} onRetry={retry} onSelect={select} onAction={authUser?.role === 'business' ? submit : undefined} actionIcon="plus" actionLabel="Ücretli kampanya başvurusu yap" />;
+  return <CampaignTicker items={items} error={error} onRetry={retry} onSelect={select} onSubmit={authUser?.role === 'business' ? submit : undefined} />;
 });
