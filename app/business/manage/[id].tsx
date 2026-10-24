@@ -27,6 +27,7 @@ import { StatusPill } from '@/components/admin/ui';
 import { ExperienceAccessCard } from '@/components/feature/ExperienceAccessCard';
 import { BusinessAppearanceEditor } from '@/components/feature/BusinessAppearanceEditor';
 import { CafeRoomSetting } from '@/components/feature/CafeRoomSetting';
+import { CafeSeatingEditor } from '@/components/feature/CafeSeatingEditor';
 import { useAuth } from '@/hooks/useAuth';
 import {
   MenuItemRow,
@@ -478,7 +479,7 @@ function BusinessManage() {
 
         <Button label="İşletme Sayfamı Önizle" icon="eye-outline" variant="secondary" onPress={() => router.push(`/business/${bizId}`)} />
         <ExperienceAccessCard businessId={bizId} />
-        {business.category === 'kafe' ? <CafeRoomSetting businessId={bizId} /> : null}
+        {business.category === 'kafe' ? <><CafeRoomSetting businessId={bizId} /><CafeSeatingEditor businessId={bizId} /></> : null}
         <BusinessAppearanceEditor businessId={bizId} menuVersion={menu.map(item => `${item.id}:${item.group_name}`).join('|')} />
 
         <Text style={styles.sectionTitle}>Durum & Çalışma Saatleri</Text>
