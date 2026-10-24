@@ -17,7 +17,7 @@ export const CafeSeatingEditor = memo(function CafeSeatingEditor({ businessId }:
   {!m.ready ? <><ActivityIndicator color={c.primary} /><FeedbackError message={m.error} /></> : <>
    <View style={s.row}><Text style={[s.label, s.info]}>Masa planını ve tahmini doluluğu göster</Text><Switch accessibilityLabel="Masa planı ve tahmini doluluk gösterimi" disabled={m.busy} value={m.enabled} onValueChange={m.changeEnabled} trackColor={{ true: c.primary, false: c.border }} thumbColor={c.onPrimary} /></View>
    <View style={s.badge}><Text style={s.badgeText}>{m.tables.length} masa · {m.capacity} kişilik kapasite</Text></View>
-   <Text style={s.text}>Masalara dokunup adını, kapasitesini ve konumunu düzenleyin. Konum katılımını üstte açın; doluluk oranı aktif gönüllü katılımcı / toplam kapasite olarak tahmin edilir.</Text>
+   <Text style={s.text}>Masalara dokunup adını, kapasitesini ve konumunu düzenleyin. Önce işletme konumunu kaydedin. Doluluk mekânın sayfasında görünür; masa düzeni yalnızca konumla katılan müşterilere açılır. Fotoğraf ve Instagram katılımını üstte ayrıca açıp kapatabilirsiniz.</Text>
    <CafeTablePlan tables={m.tables} selected={m.selected} onSelect={m.select} disabled={m.busy} />
    <FeedbackButton secondary disabled={m.busy || m.tables.length >= 60} label="Masa ekle" icon="plus" onPress={m.add} />
    {m.table ? <View style={s.editPanel}>

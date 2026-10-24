@@ -15,6 +15,7 @@ import { CampaignProvider } from '@/contexts/CampaignContext';
 import { OrderMessagesProvider } from '@/contexts/OrderMessagesContext';
 import { OrderRatingsProvider } from '@/contexts/OrderRatingsContext';
 import { CafePresenceProvider } from '@/contexts/CafePresenceContext';
+import { CafeSocialProvider } from '@/contexts/CafeSocialContext';
 import { OrderNotifications } from '@/components/feature/OrderNotifications';
 import { useMediaMaintenance } from '@/hooks/useMediaMaintenance';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
@@ -35,6 +36,7 @@ export default function RootLayout() {
           <ThemeProvider>
             <AccountAccessProvider>
             <CafePresenceProvider>
+            <CafeSocialProvider>
             <CampaignProvider>
             <UniversityProvider>
             <AppProvider>
@@ -52,6 +54,7 @@ export default function RootLayout() {
             </AppProvider>
             </UniversityProvider>
             </CampaignProvider>
+            </CafeSocialProvider>
             </CafePresenceProvider>
             </AccountAccessProvider>
           </ThemeProvider>
