@@ -2,6 +2,11 @@ import { StyleSheet } from 'react-native';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from './theme';
 export const createCafeStyles = (c: ThemeColors) => StyleSheet.create({
   venueSection: { marginVertical: spacing.md, padding: spacing.md, gap: spacing.lg, backgroundColor: c.primarySoft, borderColor: c.brand, borderWidth: 1, borderRadius: radius.lg },
+  venueButton: { minHeight: spacing.xxxl, flexDirection: 'row', alignItems: 'center', gap: spacing.md, padding: spacing.md, backgroundColor: c.surface, borderColor: c.brand, borderWidth: 1, borderRadius: radius.lg },
+  venueButtonOpen: { backgroundColor: c.primarySoft, borderColor: c.primaryDark },
+  panel: { gap: spacing.lg },
+  accountSection: { gap: spacing.md },
+  scanNotice: { padding: spacing.md, gap: spacing.sm, backgroundColor: c.surfaceAlt, borderWidth: 1, borderColor: c.border, borderRadius: radius.md },
   venueIcon: { width: spacing.xxxl, height: spacing.xxxl, alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, borderRadius: radius.md },
   card: { backgroundColor: c.surface, borderColor: c.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },
   row: { flexDirection: 'row', gap: spacing.md, alignItems: 'center', flexWrap: 'wrap' },
@@ -35,8 +40,4 @@ export const createCafeStyles = (c: ThemeColors) => StyleSheet.create({
   editPanel: { padding: spacing.md, gap: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: c.primaryDark, backgroundColor: c.primarySoft },
   control: { width: spacing.xxxl, height: spacing.xxxl, alignItems: 'center', justifyContent: 'center', borderRadius: radius.md, borderWidth: 1, borderColor: c.borderStrong, backgroundColor: c.surface },
   moveRail: { minHeight: spacing.xxxl + spacing.lg },
-  occupancy: { padding: spacing.lg, gap: spacing.md, borderWidth: 1, borderColor: c.brand, backgroundColor: c.primarySoft, borderRadius: radius.lg },
-  percentage: { fontSize: fontSize.xxxl, fontWeight: fontWeight.bold, color: c.primaryDark, includeFontPadding: false },
-  progressTrack: { height: spacing.sm, backgroundColor: c.surface, borderRadius: radius.pill, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: c.primary, borderRadius: radius.pill },
 });

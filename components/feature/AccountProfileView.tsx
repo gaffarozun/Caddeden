@@ -5,8 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Button } from '@/components';
 import { OwnCafePhoto } from './CafePhoto';
-import { CafeVisitPrivacyCard } from './CafeVisitPrivacyCard';
-import { CafeSocialRequestsCard } from './CafeSocialRequestsCard';
+import { CafeAccountPanel } from './CafeAccountPanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/hooks/useApp';
 import { useProfileOverview } from '@/hooks/useProfileOverview';
@@ -37,8 +36,7 @@ export const AccountProfileView = memo(function AccountProfileView({ businessPag
       <View style={s.stats}>{(isBusiness ? [{ label: 'İşletme', value: m.owned.length }, { label: 'Yayında', value: m.owned.filter(b => b.is_published).length }, { label: 'Onayda', value: m.owned.filter(b => b.approval_status === 'pending').length }] : [{ label: 'Sipariş', value: m.myOrders.length }, { label: 'Rezervasyon / Randevu', value: m.myReservations.length }, { label: 'Kayıtlı', value: saved }]).map(item => <View key={item.label} style={s.stat}><Text style={s.title}>{item.value}</Text><Text style={s.small}>{item.label}</Text></View>)}</View>
       {m.error ? <View style={s.notice}><Text style={s.error}>{m.error}</Text></View> : null}
       {isBusiness || businessPage ? <Button label="İşletmelerim" icon="storefront-outline" variant="secondary" onPress={() => router.push('/(business-tabs)')} /> : <><Text style={s.heading}>Kayıtlılarım</Text><Pressable style={({ pressed }) => [s.row, pressed ? s.pressed : null]} onPress={() => router.push('/saved')}><MaterialCommunityIcons name="bookmark-multiple-outline" color={colors.primary} size={26} /><View style={s.info}><Text style={s.heading}>Tüm kayıtlarım</Text><Text style={s.subtle}>{saved} kayıt · İşletme, gönderi, Cadde TV ve kampanya</Text></View><MaterialCommunityIcons name="chevron-right" color={colors.primary} size={24} /></Pressable>{!guest ? <Button label="Sipariş, Rezervasyon ve Randevu Geçmişim" variant="secondary" icon="history" onPress={() => router.push('/history')} /> : <Button label="Giriş Yap / Kayıt Ol" icon="login" onPress={() => router.push('/auth')} />}</>}
-      <CafeVisitPrivacyCard />
-      {authUser?.role === 'user' ? <CafeSocialRequestsCard showEmpty /> : null}
+      <CafeAccountPanel />
       <Text style={s.heading}>Ayarlar</Text><AppearanceSettings />
       <View style={s.row}><MaterialCommunityIcons name="bell-outline" size={22} color={colors.primary} /><Text style={s.rowText}>Bildirimler</Text><Switch accessibilityLabel="Bildirimler" value={notificationsEnabled} onValueChange={setNotificationsEnabled} trackColor={{ true: colors.primary, false: colors.border }} thumbColor={colors.onPrimary} /></View>
     </View>}

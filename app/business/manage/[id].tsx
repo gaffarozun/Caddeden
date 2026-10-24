@@ -479,7 +479,8 @@ function BusinessManage() {
 
         <Button label="İşletme Sayfamı Önizle" icon="eye-outline" variant="secondary" onPress={() => router.push(`/business/${bizId}`)} />
         <ExperienceAccessCard businessId={bizId} />
-        {business.category === 'kafe' ? <><CafeRoomSetting businessId={bizId} /><CafeSeatingEditor businessId={bizId} /></> : null}
+        <CafeRoomSetting businessId={bizId} />
+        <CafeSeatingEditor businessId={bizId} />
         <BusinessAppearanceEditor businessId={bizId} menuVersion={menu.map(item => `${item.id}:${item.group_name}`).join('|')} />
 
         <Text style={styles.sectionTitle}>Durum & Çalışma Saatleri</Text>

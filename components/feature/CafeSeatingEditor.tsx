@@ -13,11 +13,11 @@ const moves: { id: string; label: string; icon: keyof typeof MaterialCommunityIc
 export const CafeSeatingEditor = memo(function CafeSeatingEditor({ businessId }: CafeSeatingEditorProps) {
  const m = useCafeSeatingEditor(businessId); const { colors: c, styles: s } = useThemeStyles(createCafeStyles);
  return <View style={s.card}>
-  <View style={s.row}><MaterialCommunityIcons name="table-chair" color={c.primaryDark} size={28} /><View style={s.info}><Text style={s.title}>Masa planı ve tahmini doluluk</Text><Text style={s.text}>Gösterim tamamen sizin tercihinizdir.</Text></View></View>
+  <View style={s.row}><MaterialCommunityIcons name="table-chair" color={c.primaryDark} size={28} /><View style={s.info}><Text style={s.title}>İsteğe bağlı masa planı</Text><Text style={s.text}>Gösterim tamamen sizin tercihinizdir.</Text></View></View>
   {!m.ready ? <><ActivityIndicator color={c.primary} /><FeedbackError message={m.error} /></> : <>
-   <View style={s.row}><Text style={[s.label, s.info]}>Masa planını ve tahmini doluluğu göster</Text><Switch accessibilityLabel="Masa planı ve tahmini doluluk gösterimi" disabled={m.busy} value={m.enabled} onValueChange={m.changeEnabled} trackColor={{ true: c.primary, false: c.border }} thumbColor={c.onPrimary} /></View>
+   <View style={s.row}><Text style={[s.label, s.info]}>Masa planını göster</Text><Switch accessibilityLabel="Masa planı gösterimi" disabled={m.busy} value={m.enabled} onValueChange={m.changeEnabled} trackColor={{ true: c.primary, false: c.border }} thumbColor={c.onPrimary} /></View>
    <View style={s.badge}><Text style={s.badgeText}>{m.tables.length} masa · {m.capacity} kişilik kapasite</Text></View>
-   <Text style={s.text}>Masalara dokunup adını, kapasitesini ve konumunu düzenleyin. Önce işletme konumunu kaydedin. Doluluk mekânın sayfasında görünür; masa düzeni yalnızca konumla katılan müşterilere açılır. Fotoğraf ve Instagram katılımını üstte ayrıca açıp kapatabilirsiniz.</Text>
+   <Text style={s.text}>Tüm işletmelerde kullanılabilir. Masalara dokunup adını, kapasitesini ve konumunu düzenleyin. Önce işletme konumunu kaydedin. Masa düzeni yalnızca konumla katılan müşterilere açılır. Fotoğraf ve Instagram katılımını üstte ayrıca açıp kapatabilirsiniz.</Text>
    <CafeTablePlan tables={m.tables} selected={m.selected} onSelect={m.select} disabled={m.busy} />
    <FeedbackButton secondary disabled={m.busy || m.tables.length >= 60} label="Masa ekle" icon="plus" onPress={m.add} />
    {m.table ? <View style={s.editPanel}>
@@ -27,7 +27,7 @@ export const CafeSeatingEditor = memo(function CafeSeatingEditor({ businessId }:
     <View style={s.moveRail}><FlatList horizontal data={moves} keyExtractor={item => item.id} contentContainerStyle={s.members} showsHorizontalScrollIndicator={false} renderItem={({ item }) => <Pressable accessibilityLabel={item.label} disabled={m.busy} style={({ pressed }) => [s.control, pressed ? s.pressed : null]} onPress={() => m.move(item.dx, item.dy)}><MaterialCommunityIcons name={item.icon} size={24} color={c.primaryDark} /></Pressable>} /></View>
     <FeedbackButton secondary danger disabled={m.busy} label="Seçili masayı kaldır" icon="trash-can-outline" onPress={m.remove} />
    </View> : null}
-   <Text style={s.text}>Bu bilgi gerçek doluluk değildir; uygulamayı kullanmayanlar sayılmaz. Konum hangi masanın dolu olduğunu belirleyemez. Masalar dolu/boş diye işaretlenmez.</Text>
+   <Text style={s.text}>Doluluk yüzdesi gösterilmez. Konum hangi masanın dolu olduğunu belirleyemez; masalar dolu/boş diye işaretlenmez.</Text>
    <FeedbackButton busy={m.busy} disabled={!m.dirty} label="Masa planını kaydet" icon="content-save-outline" onPress={() => { void m.save(); }} />
    <FeedbackError message={m.error} />{m.notice ? <Text style={s.text} accessibilityLiveRegion="polite">{m.notice}</Text> : null}
   </>}

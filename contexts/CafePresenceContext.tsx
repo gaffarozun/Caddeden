@@ -51,15 +51,15 @@ export function CafePresenceProvider({ children }: { children: ReactNode }) {
   const join = useCallback((businessId: string, visible: boolean) => run(async () => {
     const version = epoch.current; const next = await joinCafe(businessId, visible);
     if (version === epoch.current) applyVisit(next);
-  }, visible ? 'Kafeye katıldınız. Fotoğrafınız bu kafedeki katılımcılara açık.' : 'Kafeye katıldınız. Fotoğrafınız diğer katılımcılara gizli.'), [run, applyVisit]);
+  }, visible ? 'Mekâna katıldınız. Fotoğrafınız bu mekândaki katılımcılara açık.' : 'Mekâna katıldınız. Fotoğrafınız diğer katılımcılara gizli.'), [run, applyVisit]);
   const setVisible = useCallback((visible: boolean) => run(async () => {
     const version = epoch.current;
     const next = await setCafePhotoVisibility(visible);
     if (version === epoch.current) applyVisit(next);
-  }, visible ? 'Fotoğrafınız bu kafedeki katılımcılara gösteriliyor.' : 'Fotoğrafınız diğer katılımcılardan gizlendi.'), [run, applyVisit]);
+  }, visible ? 'Fotoğrafınız bu mekândaki katılımcılara gösteriliyor.' : 'Fotoğrafınız diğer katılımcılardan gizlendi.'), [run, applyVisit]);
   const leave = useCallback(() => run(async () => {
     const version = epoch.current; await leaveCafe(); if (version === epoch.current) applyVisit(null);
-  }, 'Kafe katılımınız sonlandırıldı.'), [run, applyVisit]);
+  }, 'Mekân katılımınız sonlandırıldı.'), [run, applyVisit]);
   const upload = useCallback(() => run(async () => {
     const version = epoch.current; const path = await pickAndUploadCafePhoto(userId);
     if (!path) return false;

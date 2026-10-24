@@ -1,26 +1,16 @@
-# Kafe katılımında fotoğraf gizliliği
+# Mekân katılımında fotoğraf gizliliği
 
-## Kullanım
-- Kafe sahibi İşletme Sayfam bölümünden kafe katılımını isteğe bağlı açar. Kafe kategorisi ve kayıtlı konum gerekir; müşterilere yalnızca onaylı/yayındaki kafelerde görünür.
-- Müşteri işletme profilindeki Kafedeyim kartında her yeni katılımda Göster veya Gizle seçmeden katılamaz. Önceden verilen görünürlük izni yeni katılım için otomatik kullanılmaz.
-- Katılan kişi kendi profilinden veya işletme sayfasından fotoğrafını gizleyebilir/gösterebilir ve kafeden ayrılabilir. Gizli katılımcılar sayıya dahildir, fotoğraf listesine dahil değildir.
-- Hesap Bilgilerim bölümünden kare profil fotoğrafı yüklenir. Kendi profilinde gizliyken de görünür.
-- Konum izni önceden verilmişse uygulama ön plandayken 20 metreden yakın uygun kafe için onay bulutu gelebilir. Fotoğraf varsayılan olarak gizlidir, Göster/Gizle tercihi onayla uygulanır. Reddetmek işletme sayfasından konumla katılmayı engellemez. Ayrıntılar: docs/cafe-arrival-prompt.md.
-- Katılım 5 dakikalık bir süredir; devam etmek isteyen müşteri konumuyla açıkça yeniler. Arka plan konumu kullanılmaz, otomatik katılım yoktur.
-
-## Sunucu ve gizlilik
-- Yeni tablolar: cafe_rooms, cafe_visits, cafe_profile_photos. Eski user_profiles/avatar_url verileri ve mevcut hesap/işletme yetkileri değiştirilmedi.
-- Konumun tazeliği (60 sn), hassasiyeti (en fazla 20 m) ve işletmeye mesafesi (20 metreden az) RPC içinde doğrulanır. Ham müşteri koordinatları saklanmaz. Cihazın bildirdiği GPS koordinatı kriptografik bulunma kanıtı değildir; yanlış GPS veya komşu işletme riski vardır.
-- Fotoğraflar 512x512 JPEG, en fazla 1 MB, özel cafe-profile-photos bucket içinde saklanır. Doğrudan herkese açık URL veya imzalı fotoğraf bağlantısı üretilmez.
-- Storage SELECT kuralı her indirmede iki kişinin aynı aktif kafede bulunmasını, hedefin fotoğraf gösterme iznini, hesapların aktif olmasını ve kafenin açık katılımını denetler. İşletme/yönetici rolü katılımcı fotoğraflarına ek erişim sağlamaz.
-- Fotoğraf meta tablosu doğrudan yalnızca sahibine okunur. Gösterilmeyen fotoğraf yolu katılımcı API yanıtına konmaz; e-posta, soyad, telefon, kesin konum veya Instagram bilgisi sunulmaz.
-- Katılım ve diğer katılımcılar 10 saniyelik polling ile güncellenir. Ayrılma ve yerel süre dolması kendi ekranında listeyi temizler. Yetki/indirme hatasında fotoğraf gösterilmez. expo-image cachePolicy="none"; indirilen fotoğraf verisi yalnızca bellekte tutulur.
-- Gizleme yeni indirmeleri hemen engeller. Daha önce indirilmiş/görülmüş görüntüyü veya ekran görüntüsünü geri almak mümkün değildir. Diğer cihazdaki mevcut görüntü sonraki başarılı polling turunda kaldırılır; kesintili bağlantıda garanti edilen anlık geri çekme yoktur.
-
-## Kapsam
-Bu değişiklik per-katılım fotoğraf görünürlüğü, özel profil fotoğrafı yükleme ve bunu kullanmak için temel isteğe bağlı kafe katılımını içerir. Masa planı ve Instagram erişim istekleri bu değişikliğin parçası değildir. Katılımcı sayısı gerçek kafe doluluğu olarak sunulmaz.
+- Tüm işletme kategorileri desteklenir. İşletme sahibi İsteğe bağlı mekân katılımı ayarıyla profilleri açar/kapatır; hiçbir işletme otomatik etkinleştirilmez. Onaylı/yayında işletme ve kayıtlı konum gerekir.
+- 20 metreden yakın müşteri buluttan veya işletme → Mekândakiler bölümünden konumla onay verir. Fotoğraf her yeni girişte varsayılan gizlidir; gösterme kullanıcı tercihidir. Gizliyken de katılım ve görünür profillere erişim mümkündür.
+- Hesap Bilgilerim bölümünden kare fotoğraf yüklenir. Fotoğraf gizliyken kendi hesabında görünür; diğer katılımcılara görünmez. Göster/Gizle, katılımı yenile ve Mekândan ayrıl aynı bölümde kullanılabilir.
+- Katılım 5 dakika sürer. Güncel GPS hassasiyeti en fazla 20 m ve ölçüm yaşı en fazla 60 sn olmalıdır. Arka plan konumu ve otomatik katılım yoktur; ham müşteri koordinatları kaydedilmez.
+- 512x512 JPEG fotoğraflar en fazla 1 MB olarak özel cafe-profile-photos bucket'ında kalır. Public veya signed URL oluşturulmaz. Storage indirmelerinde aktif hesaplar, aynı mekânda aktif katılım, açık işletme tercihi, fotoğraf görünürlüğü ve 72 saatlik ret engeli kontrol edilir.
+- İşletme/yönetici rolü müşterilerin özel fotoğraflarına ek erişim vermez. E-posta, soyad, telefon, kesin müşteri konumu veya Instagram kullanıcı adı katılımcı listesinde sunulmaz.
+- Görünür profiller uygulama aktifken 10 saniyelik polling ile doğrulanır. Ayrılma, süre bitimi veya indirme hatası fotoğrafları temizler. expo-image cachePolicy none kullanılır; fotoğraf yalnızca bellekte tutulur.
+- Gizleme yeni indirmeleri engeller; daha önce görülen fotoğraf veya ekran görüntüsü geri alınamaz. Diğer cihazda mevcut görüntünün kaldırılması polling/bağlantı süresine bağlıdır.
+- Doluluk yüzdesi gösterilmez; aktif katılımcı sayısı fiziksel doluluk değildir. Ayrıntılar: docs/cafe-arrival-prompt.md ve docs/cafe-seating-and-instagram.md.
 
 ## Doğrulama
-- supabase/tests/cafe_photo_privacy_read_only.sql: salt-okunur yetki/RLS kontrolü.
-- tests/cafePhotoPrivacyChecks.ts: süre ve veri modeli kontrolü (bir test yürütücüsünden çağrılabilir).
-- İki gerçek müşteri hesabıyla aynı kafeye katılım, Gizle/Göster, ayrılma, 5 dk sona erme, kafe sahibi kapatma, farklı kafedeki kullanıcıdan indirme reddi ve yeniden girişte seçimin boş kalması cihazda test edilmelidir.
+- supabase/tests/all_business_participation_read_only.sql: tüm kategorilerde işletme tercihi ve uzaktan gizlilik sınırları.
+- supabase/tests/cafe_photo_privacy_read_only.sql ve tests/cafePhotoPrivacyChecks.ts: mevcut özel fotoğraf erişimi ve süre modeli kontrolleri.
+- Gerçek cihazda iki müşteriyle aynı/farklı mekân, gizli/görünür fotoğraf, ayrılma, 5 dakika sona erme ve işletme tarafından kapatma ayrıca test edilmelidir.

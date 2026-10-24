@@ -14,11 +14,11 @@ export const CafeArrivalBubble = memo(function CafeArrivalBubble({ arrival: m, h
     <View style={[s.bubble, { height: Math.min(viewport.availableHeight, spacing.xxxl * 11) }]} accessibilityLiveRegion="polite">
       <ScrollView style={s.scroll} contentContainerStyle={s.content} showsVerticalScrollIndicator={false}>
         <View style={s.row}>
-          <View style={s.icon}><MaterialCommunityIcons name="coffee-outline" size={28} color={c.primaryDark} /></View>
-          <View style={s.copy}><Text style={s.eyebrow}>YAKININDA BİR KAFE VAR</Text><Text style={s.title}>{m.cafe.business_name}</Text></View>
-          <Pressable disabled={m.busy} accessibilityRole="button" accessibilityLabel="Kafe önerisini kapat" onPress={m.dismiss} style={({ pressed }) => [s.close, pressed ? s.pressed : null]}><MaterialCommunityIcons name="close" size={24} color={c.textSubtle} /></Pressable>
+          <View style={s.icon}><MaterialCommunityIcons name="storefront-outline" size={28} color={c.primaryDark} /></View>
+          <View style={s.copy}><Text style={s.eyebrow}>YAKININDA BİR İŞLETME VAR</Text><Text style={s.title}>{m.cafe.business_name}</Text></View>
+          <Pressable disabled={m.busy} accessibilityRole="button" accessibilityLabel="İşletme önerisini kapat" onPress={m.dismiss} style={({ pressed }) => [s.close, pressed ? s.pressed : null]}><MaterialCommunityIcons name="close" size={24} color={c.textSubtle} /></Pressable>
         </View>
-        <Text style={s.question}>Bu kafede misiniz?</Text>
+        <Text style={s.question}>Bu mekânda mısınız?</Text>
         <Text style={s.text}>Kayıtlı konuma 20 metreden yakınsınız. Yalnızca onaylarsanız katılımcı sayısına dahil olursunuz.</Text>
         {m.cafe.social_enabled ? <>
           <Text style={s.label}>Bu girişte profil fotoğrafınız</Text>
@@ -26,7 +26,7 @@ export const CafeArrivalBubble = memo(function CafeArrivalBubble({ arrival: m, h
             <Pressable disabled={m.busy} accessibilityRole="radio" accessibilityLabel="Profil fotoğrafımı gizle" accessibilityState={{ checked: !m.visible, disabled: m.busy }} onPress={() => m.choose(false)} style={({ pressed }) => [s.choice, !m.visible ? s.selected : null, pressed ? s.pressed : null]}><MaterialCommunityIcons name="eye-off-outline" size={22} color={c.primaryDark} /><Text style={s.label}>Gizle</Text></Pressable>
             <Pressable disabled={m.busy} accessibilityRole="radio" accessibilityLabel="Profil fotoğrafımı göster" accessibilityState={{ checked: m.visible, disabled: m.busy }} onPress={() => m.choose(true)} style={({ pressed }) => [s.choice, m.visible ? s.selected : null, pressed ? s.pressed : null]}><MaterialCommunityIcons name="eye-outline" size={22} color={c.primaryDark} /><Text style={s.label}>Göster</Text></Pressable>
           </View>
-          <Text style={s.text}>Fotoğrafınız gizli kalsa da dolulukta sayılırsınız ve görünür profilleri görebilirsiniz. Instagram erişimi ayrıca izin gerektirir.</Text>
+          <Text style={s.text}>Fotoğrafınız gizli kalsa da mekâna katılabilir ve görünür profilleri görebilirsiniz. Instagram erişimi ayrıca izin gerektirir.</Text>
         </> : <Text style={s.text}>İşletme profil paylaşımını kapalı tutuyor; fotoğrafınız paylaşılmaz.</Text>}
         <FeedbackError message={m.error} />
         <FeedbackButton busy={m.busy} label="Evet, buradayım" icon="check-circle-outline" onPress={() => { void m.confirm(); }} />
