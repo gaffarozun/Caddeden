@@ -1,10 +1,12 @@
 import { getSupabaseClient } from '@/template';
 import * as Location from 'expo-location';
 import { withRequestTimeout } from './requestTimeoutService';
+import { CafeTable } from './cafeSeatingService';
+import { CafeRequestStatus } from './cafeSocialService';
 
 export interface CafeVisit { business_id: string; business_name: string; photo_visible: boolean; expires_at: string }
-export interface CafeMember { user_id: string; name: string; photo_path: string }
-export interface CafeRoom { enabled: boolean; mine: CafeVisit | null; count: number; members: CafeMember[] }
+export interface CafeMember { user_id: string; name: string; photo_path: string; has_instagram?: boolean; request_status?: CafeRequestStatus | null; request_id?: string | null }
+export interface CafeRoom { enabled: boolean; mine: CafeVisit | null; count: number; members: CafeMember[]; occupancy_enabled?: boolean; tables?: CafeTable[]; capacity?: number }
 export const cafePollMilliseconds = 10000;
 export function isCafeVisitLive(visit: CafeVisit | null, now = Date.now()): visit is CafeVisit {
   return !!visit && Number.isFinite(Date.parse(visit.expires_at)) && Date.parse(visit.expires_at) > now;

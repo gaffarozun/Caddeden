@@ -3,7 +3,10 @@ import { FlatList, Pressable, StyleSheet, Switch, Text, View } from 'react-nativ
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Avatar, Button } from '@/components';
+import { Button } from '@/components';
+import { OwnCafePhoto } from './CafePhoto';
+import { CafeVisitPrivacyCard } from './CafeVisitPrivacyCard';
+import { CafeSocialRequestsCard } from './CafeSocialRequestsCard';
 import { useAuth } from '@/hooks/useAuth';
 import { useApp } from '@/hooks/useApp';
 import { useProfileOverview } from '@/hooks/useProfileOverview';
@@ -29,11 +32,13 @@ export const AccountProfileView = memo(function AccountProfileView({ businessPag
   return <SafeAreaView style={s.screen} edges={['top']}><FlatList data={rows} keyExtractor={item => item.id} contentContainerStyle={s.content} showsVerticalScrollIndicator={false} ItemSeparatorComponent={() => <View style={s.space} />}
     renderItem={({ item }) => <Pressable accessibilityRole="button" style={({ pressed }) => [s.row, pressed ? s.pressed : null]} onPress={item.onPress}><MaterialCommunityIcons name={item.icon} size={22} color={item.danger ? colors.danger : colors.primary} /><Text style={[s.rowText, item.danger ? { color: colors.danger } : null]}>{item.label}</Text><MaterialCommunityIcons name="chevron-right" size={22} color={colors.textFaint} /></Pressable>}
     ListHeaderComponent={<View style={s.blocks}>
-      <View style={s.identity}><Avatar name={user.name} size={60} /><View style={s.info}><Text style={s.title}>{user.name}</Text><Text style={s.subtle}>{isAdmin ? 'Yönetici Hesabı' : isBusiness ? 'İşletme Hesabı' : guest ? 'Misafir' : 'Kullanıcı Hesabı'}</Text>{authUser ? <Text style={s.subtle}>{authUser.email}</Text> : null}</View></View>
+      <View style={s.identity}><OwnCafePhoto name={user.name} size={60} /><View style={s.info}><Text style={s.title}>{user.name}</Text><Text style={s.subtle}>{isAdmin ? 'Yönetici Hesabı' : isBusiness ? 'İşletme Hesabı' : guest ? 'Misafir' : 'Kullanıcı Hesabı'}</Text>{authUser ? <Text style={s.subtle}>{authUser.email}</Text> : null}</View></View>
       {isAdmin ? <Button label="Yönetici Paneli" icon="shield-crown-outline" onPress={() => router.push('/admin')} /> : null}
       <View style={s.stats}>{(isBusiness ? [{ label: 'İşletme', value: m.owned.length }, { label: 'Yayında', value: m.owned.filter(b => b.is_published).length }, { label: 'Onayda', value: m.owned.filter(b => b.approval_status === 'pending').length }] : [{ label: 'Sipariş', value: m.myOrders.length }, { label: 'Rezervasyon / Randevu', value: m.myReservations.length }, { label: 'Kayıtlı', value: saved }]).map(item => <View key={item.label} style={s.stat}><Text style={s.title}>{item.value}</Text><Text style={s.small}>{item.label}</Text></View>)}</View>
       {m.error ? <View style={s.notice}><Text style={s.error}>{m.error}</Text></View> : null}
       {isBusiness || businessPage ? <Button label="İşletmelerim" icon="storefront-outline" variant="secondary" onPress={() => router.push('/(business-tabs)')} /> : <><Text style={s.heading}>Kayıtlılarım</Text><Pressable style={({ pressed }) => [s.row, pressed ? s.pressed : null]} onPress={() => router.push('/saved')}><MaterialCommunityIcons name="bookmark-multiple-outline" color={colors.primary} size={26} /><View style={s.info}><Text style={s.heading}>Tüm kayıtlarım</Text><Text style={s.subtle}>{saved} kayıt · İşletme, gönderi, Cadde TV ve kampanya</Text></View><MaterialCommunityIcons name="chevron-right" color={colors.primary} size={24} /></Pressable>{!guest ? <Button label="Sipariş, Rezervasyon ve Randevu Geçmişim" variant="secondary" icon="history" onPress={() => router.push('/history')} /> : <Button label="Giriş Yap / Kayıt Ol" icon="login" onPress={() => router.push('/auth')} />}</>}
+      <CafeVisitPrivacyCard />
+      {authUser?.role === 'user' ? <CafeSocialRequestsCard showEmpty /> : null}
       <Text style={s.heading}>Ayarlar</Text><AppearanceSettings />
       <View style={s.row}><MaterialCommunityIcons name="bell-outline" size={22} color={colors.primary} /><Text style={s.rowText}>Bildirimler</Text><Switch accessibilityLabel="Bildirimler" value={notificationsEnabled} onValueChange={setNotificationsEnabled} trackColor={{ true: colors.primary, false: colors.border }} thumbColor={colors.onPrimary} /></View>
     </View>}
