@@ -1,4 +1,4 @@
-import { CafeRoom, CafeVisit, isCafeRoomLocal } from '../services/cafePresenceService';
+import { CafeRoom, CafeVisit, isCafeRoomLocal, isVenueParticipationAvailable } from '../services/cafePresenceService';
 function assert(condition: boolean, message: string) { if (!condition) throw new Error(message); }
 export function runCafeVenuePageChecks() {
   const now = Date.parse('2026-10-24T12:00:00Z');
@@ -12,5 +12,10 @@ export function runCafeVenuePageChecks() {
   assert(!isCafeRoomLocal(room, visit, 'cafe-a', now + 300000), 'Visit expires at the exact five-minute boundary.');
   assert(!isCafeRoomLocal({ ...room, mine: { ...visit, expires_at: 'invalid' } }, visit, 'cafe-a', now), 'Invalid server expiry is denied.');
   assert(isCafeRoomLocal({ ...room, enabled: false, members: [], mine: { ...visit, social_enabled: false } }, { ...visit, social_enabled: false }, 'cafe-a', now), 'Seating-only entry is independent of social participation.');
-  return 'passed: server/local matching, expiry, leave, cross-venue privacy and seating-only entry';
+  assert(!isVenueParticipationAvailable(null), 'Loading never implies owner consent.');
+  assert(!isVenueParticipationAvailable({ ...room, enabled: false, occupancy_enabled: false }), 'Opted-out businesses have no public venue entry.');
+  assert(isVenueParticipationAvailable({ ...room, enabled: true, occupancy_enabled: false }), 'Social participation does not require seating or a cafe category.');
+  assert(isVenueParticipationAvailable({ ...room, enabled: false, occupancy_enabled: true }), 'Owner-enabled seating remains independently available.');
+  assert(isVenueParticipationAvailable(null, true), 'Managers can configure features before opting in.');
+  return 'passed: server/local matching, expiry, leave, cross-venue privacy, seating-only entry and owner opt-in';
 }

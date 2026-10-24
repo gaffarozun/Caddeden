@@ -6,9 +6,13 @@ import { CafeRequestStatus } from './cafeSocialService';
 import { CafePosition, cafePositionParameters, isCafePositionUsable, isCafeWithinEntryRadius } from './cafeLocationRules';
 
 export interface CafeVisit { business_id: string; business_name: string; photo_visible: boolean; expires_at: string; social_enabled?: boolean }
-export interface CafeMember { user_id: string; name: string; photo_path: string; has_instagram?: boolean; request_status?: CafeRequestStatus | null; request_id?: string | null }
-export interface CafeRoom { enabled: boolean; mine: CafeVisit | null; count: number; members: CafeMember[]; occupancy_enabled?: boolean; tables?: CafeTable[]; capacity?: number; participation_enabled?: boolean; plan_visible?: boolean }
+export interface CafeMember { user_id: string; name: string; photo_path: string | null; anonymous?: boolean; has_instagram?: boolean; request_status?: CafeRequestStatus | null; request_id?: string | null }
+export interface CafeRoom { enabled: boolean; mine: CafeVisit | null; count: number; members: CafeMember[]; occupancy_enabled?: boolean; tables?: CafeTable[]; capacity?: number; participation_enabled?: boolean; plan_visible?: boolean; occupancy_percent?: number | null; occupancy_visible?: boolean }
 export const cafePollMilliseconds = 10000;
+// All categories are supported. Public entry points appear only for owner-enabled features.
+export function isVenueParticipationAvailable(room: CafeRoom | null, manage = false): boolean {
+  return manage || !!(room?.enabled || room?.occupancy_enabled);
+}
 export function isCafeVisitLive(visit: CafeVisit | null, now = Date.now()): visit is CafeVisit {
   return !!visit && Number.isFinite(Date.parse(visit.expires_at)) && Date.parse(visit.expires_at) > now;
 }
@@ -17,7 +21,7 @@ export function isCafeRoomLocal(room: CafeRoom | null, visit: CafeVisit | null, 
     && visit.business_id === businessId && room?.mine?.business_id === businessId;
 }
 async function rpc<T>(name: string, body: Record<string, unknown> = {}): Promise<T> {
-  const { data, error } = await withRequestTimeout(getSupabaseClient().rpc(name, body), 'Kafe bilgileri alınamadı. Bağlantınızı kontrol edin.');
+  const { data, error } = await withRequestTimeout(getSupabaseClient().rpc(name, body), 'Mekân bilgileri alınamadı. Bağlantınızı kontrol edin.');
   if (error) throw new Error(error.message);
   return data as T;
 }
@@ -29,7 +33,7 @@ export const leaveCafe = () => rpc<void>('cafe_leave');
 export interface NearbyCafe { business_id: string; business_name: string; social_enabled: boolean; distance_meters: number }
 async function readCafePosition(): Promise<CafePosition> {
   if (!await Location.hasServicesEnabledAsync()) throw new Error('Cihaz konumu kapalı. Konumu ve hassas konum seçeneğini açıp yeniden kontrol edin.');
-  const fix = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest }), 'Konum alınamadı. Kafenin içinde yeniden deneyin.', 20000);
+  const fix = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest }), 'Konum alınamadı. Mekânın içinde yeniden deneyin.', 20000);
   const position: CafePosition = { latitude: fix.coords.latitude, longitude: fix.coords.longitude, accuracy: fix.coords.accuracy, capturedAt: fix.timestamp };
   if (!isCafePositionUsable(position)) throw new Error(`Konum yeterince hassas veya güncel değil${position.accuracy !== null && Number.isFinite(position.accuracy) ? ` (ölçüm: ${Math.round(position.accuracy)} m)` : ''}. Hassas konumu açıp yeniden deneyin; en fazla 20 m hassasiyet gerekir.`);
   return position;

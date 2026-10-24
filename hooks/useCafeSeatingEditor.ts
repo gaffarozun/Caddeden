@@ -22,10 +22,13 @@ export function useCafeSeatingEditor(businessId: string) {
  const remove = useCallback(() => { setTables(previous => previous.filter(item => item.id !== selected)); setSelected(''); setDirty(true); setNotice(''); }, [selected]);
  const save = useCallback(async () => {
   if (lock.current) return; lock.current = true; setBusy(true); setError(''); setNotice(''); const version = generation.current;
-  try { await saveCafeSeating(businessId, enabled, tables); if (version === generation.current) { setDirty(false); setNotice('Masa planı ve gösterim tercihi kaydedildi.'); m.presence.invalidateRoom(); } }
+  try {
+   if (!m.room) throw new Error('Masa ayarları henüz yüklenmedi. Bağlantınızı kontrol edip yeniden deneyin.');
+   if (enabled && tables.length === 0) throw new Error('Gösterimi açmadan önce Masa ekle ile en az bir masa oluşturun.');
+   await saveCafeSeating(businessId, enabled, tables); if (version === generation.current) { setDirty(false); setNotice('Masa planı ve gösterim tercihi kaydedildi.'); m.presence.invalidateRoom(); } }
   catch (reason) { if (version === generation.current) setError(reason instanceof Error ? reason.message : 'Masa planı kaydedilemedi.'); }
   finally { if (version === generation.current) { setBusy(false); lock.current = false; } }
- }, [businessId, enabled, tables, m.presence.invalidateRoom]);
+ }, [businessId, enabled, tables, m.room, m.presence.invalidateRoom]);
  const capacity = useMemo(() => cafeCapacity(tables), [tables]);
  return { tables, enabled, selected, select: setSelected, table, busy, error: error || m.error, notice, dirty, ready: !!m.room, capacity, changeEnabled, add, update, move, remove, save };
 }

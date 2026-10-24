@@ -20,7 +20,7 @@ import { Image } from 'expo-image';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
-import * as Location from 'expo-location';
+import { saveBusinessCurrentLocation } from '@/services/businessLocationService';
 import { Button } from '@/components';
 import { AccountRouteBoundary } from '@/components/auth/AccountRouteBoundary';
 import { StatusPill } from '@/components/admin/ui';
@@ -273,23 +273,16 @@ function BusinessManage() {
   };
 
   const useMyLocation = async () => {
+    if (locating) return;
     setLocating(true);
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      setLocating(false);
-      showAlert('Konum izni gerekli', 'İşletmeni haritada göstermek için konum izni ver.', [{ text: 'Tamam' }]);
-      return;
-    }
     try {
-      const pos = await Location.getCurrentPositionAsync({});
-      setLat(pos.coords.latitude);
-      setLng(pos.coords.longitude);
-      await updateBusinessProfile(bizId, { lat: pos.coords.latitude, lng: pos.coords.longitude });
-      showAlert('Konum kaydedildi', 'İşletme konumun güncellendi ve haritada gösterilecek.', [{ text: 'Tamam' }]);
-    } catch {
-      showAlert('Konum alınamadı', 'Lütfen tekrar dene.', [{ text: 'Tamam' }]);
-    }
-    setLocating(false);
+      const position = await saveBusinessCurrentLocation(bizId);
+      setLat(position.latitude);
+      setLng(position.longitude);
+      showAlert('Konum kaydedildi', 'Hassas işletme konumu kaydedildi. Katılımı açtığınızda 40 metreden yakın müşteriler konumla doğrulayabilir.', [{ text: 'Tamam' }]);
+    } catch (reason) {
+      showAlert('Konum kaydedilemedi', reason instanceof Error ? reason.message : 'İşletmedeyken hassas konumu açıp yeniden deneyin.', [{ text: 'Tamam' }]);
+    } finally { setLocating(false); }
   };
 
   const openOnMap = () => {

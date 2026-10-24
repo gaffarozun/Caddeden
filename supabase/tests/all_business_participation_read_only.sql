@@ -11,7 +11,7 @@ begin
  definition:=pg_get_functiondef('public.cafe_room_state(uuid)'::regprocedure);
  if position('if enabled and local_visit then' in definition)=0 or position('not public.cafe_photo_blocked(auth.uid(),v.user_id)' in definition)=0 then raise exception 'Local profile/cooldown protection missing'; end if;
  definition:=pg_get_functiondef('public.cafe_join(uuid,double precision,double precision,double precision,timestamptz,boolean)'::regprocedure);
- if position('d>=20' in definition)=0 or position('p_accuracy between 0 and 20' in definition)=0 then raise exception 'GPS boundary changed'; end if;
+ if position('d>=40' in definition)=0 or position('p_accuracy between 0 and 20' in definition)=0 then raise exception 'GPS boundary changed'; end if;
  if has_function_privilege('anon','public.cafe_nearby(double precision,double precision,double precision,timestamptz)','execute') or has_table_privilege('authenticated','public.cafe_tables','select') then raise exception 'Private access exposed'; end if;
  perform set_config('request.jwt.claim.sub','',true);
  perform set_config('request.jwt.claims','{"role":"anon"}',true);

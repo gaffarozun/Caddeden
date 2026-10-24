@@ -7,7 +7,7 @@ begin
  join_def:=pg_get_functiondef('public.cafe_join(uuid,double precision,double precision,double precision,timestamptz,boolean)'::regprocedure);
  if has_function_privilege('anon','public.cafe_nearby(double precision,double precision,double precision,timestamptz)','execute') then raise exception 'Anonymous cafe scan exposed'; end if;
  if not has_function_privilege('authenticated','public.cafe_nearby(double precision,double precision,double precision,timestamptz)','execute') then raise exception 'Authenticated suggestion access missing'; end if;
- if position('x.distance_meters<20' in nearby_def)=0 or position('d>=20' in join_def)=0 then raise exception 'Strict 20 metre boundary missing'; end if;
+ if position('x.distance_meters<40' in nearby_def)=0 or position('d>=40' in join_def)=0 then raise exception 'Strict 40 metre boundary missing'; end if;
  if position('p_accuracy between 0 and 20' in nearby_def)=0 or position('p_accuracy between 0 and 20' in join_def)=0 then raise exception 'Accuracy guard missing'; end if;
  if position('account_customer()' in nearby_def)=0 or position('interval ''60 seconds''' in nearby_def)=0 then raise exception 'Account/freshness guard missing'; end if;
  if position('insert into' in lower(nearby_def))>0 or position('update public.' in lower(nearby_def))>0 then raise exception 'Suggestions must be read only'; end if;

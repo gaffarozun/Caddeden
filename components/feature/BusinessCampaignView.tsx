@@ -6,7 +6,7 @@ import { Image } from 'expo-image';
 import { useCampaignSubmission } from '@/hooks/useCampaignSubmission';
 import { useThemeStyles } from '@/hooks/useThemeStyles';
 import { CROP_PRESETS, ImageCropper } from '@/components/feature/ImageCropper';
-import { NeonTickerHeader } from '@/components/feature/NeonTicker';
+import { CampaignHeader } from '@/components/feature/CampaignTicker';
 import { FeedbackButton, FeedbackError, FeedbackInput } from '@/components/feature/FeedbackControls';
 import { AdminEmpty, AdminLoading, StatusPill } from '@/components/admin/ui';
 import { MyCampaign, campaignMoney, campaignTitleLimit } from '@/services/campaignService';
@@ -40,9 +40,9 @@ export function BusinessCampaignView(_: BusinessCampaignViewProps) {
     <KeyboardAvoidingView style={styles.screen} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 96 : 0}>
       <FlatList data={state.items} keyExtractor={item => item.id} renderItem={({ item }) => <CampaignRequestCard item={item} disabled={state.disabled} onRemove={state.remove} />} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content} ItemSeparatorComponent={() => <View style={styles.separator} />} refreshControl={<RefreshControl refreshing={state.refreshing} onRefresh={state.refresh} tintColor={colors.primary} />}
         ListHeaderComponent={<View style={styles.form}>
-          <View style={styles.hero}><NeonTickerHeader title="GÜNCEL KAMPANYALAR" leftIcon="tag-outline" rightIcon="ticket-percent-outline" /></View>
-          <Text style={styles.heading}>Kampanyan bantta duyulsun.</Text>
-          <Text style={styles.body}>İşletmenin teklifini gönder. Yönetici belirlediği ücretin ödemesini doğruladıktan sonra yayınını onaylar; kampanya seçtiğin süre boyunca sola kayan LED bantta görünür.</Text>
+          <View style={styles.hero}><CampaignHeader /></View>
+          <Text style={styles.heading}>Kampanyanızı paylaşın.</Text>
+          <Text style={styles.body}>İşletmenin teklifini gönder. Yönetici belirlediği ücretin ödemesini doğruladıktan sonra yayınını onaylar; kampanya seçtiğin süre boyunca uygulamanın aktif temasıyla uyumlu kampanya bandında görünür.</Text>
           <FeedbackError message={state.error} />
           {state.success ? <View style={styles.success} accessibilityLiveRegion="polite"><MaterialCommunityIcons name="check-circle-outline" size={22} color={colors.success} /><Text style={styles.successText}>Başvurun yöneticiye gönderildi. Ödeme doğrulaması ve yayın onayı bekleniyor.</Text></View> : null}
           {state.businesses.length === 0 ? <View style={styles.card}><Text style={styles.body}>Başvuru için önce işletmeni ekle.</Text><FeedbackButton label="İşletme ekle" icon="storefront-outline" onPress={state.addBusiness} /></View> : <View style={styles.card}>
@@ -71,7 +71,7 @@ export function BusinessCampaignView(_: BusinessCampaignViewProps) {
 }
 const createStyles = (colors: ThemeColors) => StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.background }, content: { padding: spacing.lg, paddingBottom: spacing.xxl }, form: { gap: spacing.lg, paddingBottom: spacing.lg },
-  hero: { borderRadius: radius.md, overflow: 'hidden' }, heading: { color: colors.text, fontSize: fontSize.xl, fontWeight: fontWeight.bold, includeFontPadding: false },
+  hero: { borderRadius: radius.md, overflow: 'hidden', padding: spacing.lg, borderWidth: 1, borderColor: colors.brand, backgroundColor: colors.primarySoft }, heading: { color: colors.text, fontSize: fontSize.xl, fontWeight: fontWeight.bold, includeFontPadding: false },
   title: { color: colors.text, fontSize: fontSize.md, fontWeight: fontWeight.semibold, includeFontPadding: false },
   body: { color: colors.textSubtle, fontSize: fontSize.md, lineHeight: fontSize.md * 1.6, includeFontPadding: false }, bodyFlex: { flex: 1, color: colors.textSubtle, fontSize: fontSize.md, lineHeight: fontSize.md * 1.6 },
   card: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, borderRadius: radius.lg, padding: spacing.lg, gap: spacing.md },

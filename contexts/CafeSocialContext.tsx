@@ -5,11 +5,11 @@ import { useCafePresence } from '@/hooks/useCafePresence';
 import { cafePollMilliseconds } from '@/services/cafePresenceService';
 import { CafeSocialData, CafeSocialRequest, decideCafeInstagram, fetchCafeSocialState, fetchOwnInstagram, openCafeInstagram, requestCafeInstagram, saveCafeInstagram } from '@/services/cafeSocialService';
 export interface CafeSocialState {
- incoming: CafeSocialRequest[]; outgoing: CafeSocialRequest[]; handle: string; ready: boolean; busy: boolean; error: string; notice: string; revision: number;
+ incoming: CafeSocialRequest[]; outgoing: CafeSocialRequest[]; sentRecipientCount: number; handle: string; ready: boolean; busy: boolean; error: string; notice: string; revision: number;
  saveHandle: (value: string) => Promise<boolean>; request: (targetId: string) => Promise<boolean>; decide: (requestId: string, accept: boolean) => Promise<boolean>; open: (requestId: string) => Promise<boolean>;
 }
 export const CafeSocialContext = createContext<CafeSocialState | undefined>(undefined);
-const empty: CafeSocialData = { incoming: [], outgoing: [] };
+const empty: CafeSocialData = { incoming: [], outgoing: [], sent_recipient_count: 0 };
 export function CafeSocialProvider({ children }: { children: ReactNode }) {
  const { authUser, loading, passwordRecovery, profileError } = useAuth(); const presence = useCafePresence();
  const uid = !loading && !passwordRecovery && !profileError && authUser?.role === 'user' && authUser.status === 'active' ? authUser.id : '';
@@ -52,9 +52,9 @@ export function CafeSocialProvider({ children }: { children: ReactNode }) {
  }, [uid]);
  const saveHandle = useCallback((value: string) => run(async () => { const version = epoch.current; const next = await saveCafeInstagram(value); if (version === epoch.current) { setHandle(next); setReady(true); } }, 'Instagram kullanıcı adınız özel olarak kaydedildi.'), [run]);
  const request = useCallback((targetId: string) => run(async () => { await requestCafeInstagram(targetId); }, 'Instagram görme isteğiniz gönderildi.'), [run]);
- const decide = useCallback((id: string, accept: boolean) => run(async () => { await decideCafeInstagram(id, accept); }, accept ? 'İzin verildi. Instagram yalnızca aynı kafede aktif katılım varken açılabilir.' : 'İzin kaldırıldı. Bu kişi fotoğrafınızı 3 gün göremez.'), [run]);
+ const decide = useCallback((id: string, accept: boolean) => run(async () => { await decideCafeInstagram(id, accept); }, accept ? 'İzin verildi. Instagram yalnızca aynı mekânda aktif katılım varken açılabilir.' : 'İzin kaldırıldı. Bu kişi isminizi ve fotoğrafınızı 1 hafta göremez; mekânda yalnızca Kullanıcı olarak görünürsünüz.'), [run]);
  const open = useCallback((id: string) => run(() => openCafeInstagram(id), ''), [run]);
  const current = owner === uid && !!uid;
- const value = useMemo<CafeSocialState>(() => ({ incoming: current ? data.incoming : [], outgoing: current ? data.outgoing : [], handle: current ? handle : '', ready: current && ready, busy, error, notice, revision, saveHandle, request, decide, open }), [current,data,handle,ready,busy,error,notice,revision,saveHandle,request,decide,open]);
+ const value = useMemo<CafeSocialState>(() => ({ incoming: current ? data.incoming : [], outgoing: current ? data.outgoing : [], sentRecipientCount: current ? Number(data.sent_recipient_count ?? 0) : 0, handle: current ? handle : '', ready: current && ready, busy, error, notice, revision, saveHandle, request, decide, open }), [current,data,handle,ready,busy,error,notice,revision,saveHandle,request,decide,open]);
  return <CafeSocialContext.Provider value={value}>{children}</CafeSocialContext.Provider>;
 }

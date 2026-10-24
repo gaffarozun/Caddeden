@@ -36,6 +36,6 @@ export function useCafeRoom(businessId: string, manage = false) {
   // Both the server visit and local visit must be current; do not keep plans/photos after leave or expiry.
   const local = foreground && isCafeRoomLocal(room, presence.visit, businessId);
   const members = local && room?.enabled ? room.members : [];
-  const visibleRoom = room ? { ...room, members, mine: local ? room.mine : null, tables: manage || local ? room.tables : [], plan_visible: !!room.plan_visible && (manage || local) } : null;
+  const visibleRoom = room ? { ...room, members, mine: local ? room.mine : null, tables: manage || local ? room.tables : [], plan_visible: !!room.plan_visible && (manage || local), occupancy_visible: !!room.occupancy_visible && (manage || local), occupancy_percent: manage || local ? room.occupancy_percent : null } : null;
   return { room: visibleRoom, members, local, busy, error, toggleEnabled, presence };
 }
