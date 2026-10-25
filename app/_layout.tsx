@@ -17,6 +17,8 @@ import { OrderRatingsProvider } from '@/contexts/OrderRatingsContext';
 import { CafePresenceProvider } from '@/contexts/CafePresenceContext';
 import { CafeSocialProvider } from '@/contexts/CafeSocialContext';
 import { CafeArrivalProvider } from '@/contexts/CafeArrivalContext';
+import { CustomerInboxProvider } from '@/contexts/CustomerInboxContext';
+import { InstagramNotificationBubble } from '@/components/feature/InstagramNotificationBubble';
 import { OrderNotifications } from '@/components/feature/OrderNotifications';
 import { CafeArrivalBubble } from '@/components/feature/CafeArrivalBubble';
 import { useCafeArrival } from '@/hooks/useCafeArrival';
@@ -45,6 +47,7 @@ export default function RootLayout() {
             <UniversityProvider>
             <AppProvider>
             <OrderMessagesProvider>
+            <CustomerInboxProvider>
               <FeedbackProvider>
                 <RatingProvider>
                   <OrderRatingsProvider>
@@ -54,6 +57,7 @@ export default function RootLayout() {
                   </OrderRatingsProvider>
                 </RatingProvider>
               </FeedbackProvider>
+            </CustomerInboxProvider>
             </OrderMessagesProvider>
             </AppProvider>
             </UniversityProvider>
@@ -118,6 +122,7 @@ function RootNavigator() {
         <Stack.Screen name="business/order-history" options={{ headerShown: true, title: 'Sipariş Geçmişi ve Ciro', ...header }} />
         <Stack.Screen name="business/notifications" options={{ headerShown: true, title: 'Bildirim Gönder', ...header }} />
         <Stack.Screen name="profile-edit" options={{ headerShown: true, title: 'Hesap Bilgilerim', ...header }} />
+        <Stack.Screen name="notifications" options={{ headerShown: true, title: 'Bildirimler', ...header }} />
         <Stack.Screen name="university" options={{ headerShown: true, title: 'Cadde TV · Yazı Gönder', ...header }} />
         <Stack.Screen name="history" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
         <Stack.Screen name="saved" options={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }} />
@@ -131,7 +136,8 @@ function RootNavigator() {
       {!ready ? <View style={[StyleSheet.absoluteFillObject, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', gap: spacing.md }]} accessibilityLiveRegion="polite"><ActivityIndicator color={colors.primary} /><Text style={{ color: colors.textSubtle, fontSize: fontSize.md }}>Görünüm hazırlanıyor…</Text></View> : null}
       </View>
       <CaddedenIntro intro={intro} />
-      <OrderNotifications hidden={overlaysHidden || !!arrival.cafe} />
+      <OrderNotifications hidden={overlaysHidden || !!arrival.cafe || path === '/notifications'} />
+      <InstagramNotificationBubble hidden={overlaysHidden || !!arrival.cafe || path === '/notifications'} />
       <CafeArrivalBubble arrival={arrival} hidden={overlaysHidden} />
     </View>
   );

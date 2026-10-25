@@ -9,6 +9,8 @@ export type AccountStatus = 'active' | 'restricted' | 'banned';
 export type Gender = 'male' | 'female';
 
 export interface AuthProfile {
+  school_name?: string | null;
+  education_status?: string | null;
   id: string;
   email: string;
   username: string | null;
@@ -43,7 +45,7 @@ export async function getCurrentSession() {
 export async function fetchProfile(userId: string, fallbackEmail: string): Promise<AuthProfile> {
   const { data, error } = await sb()
     .from('user_profiles')
-    .select('id, username, email, role, status, restricted_until, first_name, last_name, gender, phone, address, lat, lng')
+    .select('id, username, email, role, status, restricted_until, first_name, last_name, gender, phone, address, lat, lng, school_name, education_status')
     .eq('id', userId)
     .single();
   if (error || !data || !['user', 'business', 'admin'].includes(data.role)) throw new Error(error?.message ?? 'Hesap türü doğrulanamadı.');
@@ -61,6 +63,8 @@ export async function fetchProfile(userId: string, fallbackEmail: string): Promi
       first_name: data.first_name ?? null,
       last_name: data.last_name ?? null,
       gender: (data.gender ?? null) as Gender | null,
+      school_name: data.school_name ?? null,
+      education_status: data.education_status ?? null,
       phone: data.phone ?? null,
       address: data.address ?? null,
       lat: data.lat ?? null,
@@ -140,6 +144,8 @@ export async function verifyOtpAndRegister(
 // Update the signed-in user's own profile (name, gender, saved contact/location).
 // Keeps `username` in sync with first + last name for display everywhere.
 export async function updateMyProfile(patch: {
+  school_name?: string | null;
+  education_status?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   gender?: Gender | null;

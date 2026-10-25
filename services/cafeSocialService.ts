@@ -31,6 +31,7 @@ export async function saveCafeInstagram(value: string): Promise<string> {
 }
 export const requestCafeInstagram = (targetId: string) => socialRpc<{ id: string; status: CafeRequestStatus }>('cafe_request_instagram', { p_target: targetId });
 export const decideCafeInstagram = (requestId: string, accept: boolean) => socialRpc<void>('cafe_decide_instagram', { p_request: requestId, p_accept: accept });
+export const revokeCafeInstagram = (requestId: string) => socialRpc<void>('cafe_revoke_instagram', { p_request: requestId });
 export async function openCafeInstagram(requestId: string): Promise<void> {
  // Retrieve the URL only on explicit press, after the server verifies current consent/co-presence.
  const url = await socialRpc<string>('cafe_instagram_link', { p_request: requestId });

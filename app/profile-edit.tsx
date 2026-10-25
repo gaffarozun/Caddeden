@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { EducationProfileCard } from '@/components/feature/EducationProfileCard';
 import { CafeProfilePhotoCard } from '@/components/feature/CafeProfilePhotoCard';
 import { CafeVisitPrivacyCard } from '@/components/feature/CafeVisitPrivacyCard';
 import { CafeInstagramProfileCard } from '@/components/feature/CafeInstagramProfileCard';
@@ -106,6 +107,7 @@ export default function ProfileEditScreen() {
         <CafeProfilePhotoCard />
         <CafeVisitPrivacyCard />
         <CafeInstagramProfileCard />
+        <EducationProfileCard />
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Kişisel Bilgiler</Text>
 

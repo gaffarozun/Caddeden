@@ -35,7 +35,7 @@ function toMinutes(t?: string | null): number | null {
   if (!m) return null;
   const h = Number(m[1]);
   const min = Number(m[2]);
-  if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
+  if (!Number.isFinite(h) || !Number.isFinite(min) || h < 0 || h > 23 || min < 0 || min > 59) return null;
   return h * 60 + min;
 }
 
@@ -50,8 +50,10 @@ export function getOpenStatus(b: Business, now: Date = new Date()): OpenStatus {
   const range =
     b.openTime && b.closeTime ? { open: b.openTime, close: b.closeTime } : parseHoursRange(b.hours);
   const days = b.openDays && b.openDays.length ? b.openDays : ALL_DAYS;
-  const day = now.getDay();
-  const nowMin = now.getHours() * 60 + now.getMinutes();
+  // Istanbul is UTC+3 year-round; do not use the phone timezone for business hours.
+  const istanbul = new Date(now.getTime() + 3 * 60 * 60 * 1000);
+  const day = istanbul.getUTCDay();
+  const nowMin = istanbul.getUTCHours() * 60 + istanbul.getUTCMinutes();
 
   let scheduled: boolean | null = null;
   if (range) {
@@ -59,7 +61,8 @@ export function getOpenStatus(b: Business, now: Date = new Date()): OpenStatus {
     const c = toMinutes(range.close);
     if (o != null && c != null) {
       const within = c > o ? nowMin >= o && nowMin < c : nowMin >= o || nowMin < c;
-      scheduled = days.includes(day) && within;
+      const scheduleDay = c <= o && nowMin < c ? (day + 6) % 7 : day;
+      scheduled = days.includes(scheduleDay) && within;
     }
   }
   if (scheduled == null && b.openDays && b.openDays.length && !days.includes(day)) {

@@ -49,7 +49,7 @@ export function useCafeArrivalController(enabled: boolean) {
         for (const id of suppressed.current.keys()) if (!cafes.some(cafe => cafe.business_id === id)) suppressed.current.delete(id);
         const next = cafes.find(cafe => (suppressed.current.get(cafe.business_id) ?? 0) <= Date.now());
         setCheckedAt(Date.now());
-        setStatus(next ? `${next.business_name} için “Bu mekânda mısınız?” onayı hazır. Katılım yalnızca onayınızla başlar.` : cafes.length > 0 ? 'Yakın işletme önerisi daha önce kapatılmış. Konumu kontrol et ile yeniden gösterin veya işletme sayfasından burada olduğunuzu doğrulayın.' : '40 metreden yakın, konumu kayıtlı ve katılımı açık bir işletme bulunamadı. İşletme onaylı ve yayında olmalı; mekân katılımını veya masa planını kendi tercihiyle açmalıdır.');
+        setStatus(next ? `${next.business_name} için “Bu mekânda mısınız?” onayı hazır. Katılım yalnızca onayınızla başlar.` : cafes.length > 0 ? 'Yakın işletme önerisi daha önce kapatılmış. Konumu kontrol et ile yeniden gösterin veya işletme sayfasından burada olduğunuzu doğrulayın.' : '40 metreden yakın, konumu kayıtlı ve yayında bir işletme bulunamadı.');
         setPrompt(previous => next ? previous?.cafe.business_id === next.business_id ? { ...previous, cafe: next } : { cafe: next, visible: false, attempted: false } : null);
       } catch (reason) {
         if (alive && !confirming.current) {
@@ -101,7 +101,7 @@ export function useCafeArrivalController(enabled: boolean) {
       if (version !== identity.current) return;
       if (joined) {
         suppressed.current.set(businessId, Date.now() + 30 * 60000); setPrompt(null);
-        setStatus('Konum onaylandı. Doluluk, masa düzeni ve kullanıcılar Mekândakiler bölümünde.');
+        setStatus('Konum onaylandı. Doluluk ve kullanıcılar Mekândakiler bölümünde.');
         router.push(`/business/${businessId}`);
       }
     } finally { if (version === identity.current) confirming.current = false; }
