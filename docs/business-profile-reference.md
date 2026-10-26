@@ -20,7 +20,7 @@ Mevcut `businesses.maps_url`, `menu_cover_url`, `menu_group_covers`, `profile_ta
 Ara, numarayı onay kutusunda gösterir ve `tel:` ile telefon uygulamasına geçer. Konum, kaydedilmiş Google Haritalar bağlantısını, yoksa koordinat/adres aramasını açar. Paylaş, işletmenin uygulama içi bağlantısını ve Haritalar bağlantısını sistem paylaşım akışına verir. Keşfet kampanyaları fotoğrafsız, kompakt metin kartlarıdır.
 
 ## Sipariş akışı
-Sepet `BusinessCartProvider` ile sayfalar arasında paylaşılır, hesap değişince temizlenir; henüz uygulama kapanışına karşı kalıcı saklama uygulanmaz. Telefon/adres/konum profilden doldurulur. Sipariş öncesinde güncel ürünlerin varlığı, fiyatı, minimum tutar, sahiplik ve açık/kapalı durumu istemcide tekrar kontrol edilir. Mevcut konum 100 m şartı korunur. Talep mevcut `orders` tablosuna aynı servis üzerinden yazılır ve Aktif siparişler sayfası açılır. Bu sürüm mevcut RLS'yi değiştirmez; istemci fiyat denetimi sunucu taraflı fiyat doğrulamasının yerine geçmez.
+Sepet `BusinessCartProvider` ile sayfalar arasında paylaşılır, hesap değişince temizlenir; henüz uygulama kapanışına karşı kalıcı saklama uygulanmaz. Telefon/adres/konum profilden doldurulur. Sipariş öncesinde güncel ürünlerin varlığı, fiyatı, minimum tutar, sahiplik ve açık/kapalı durumu istemcide tekrar kontrol edilir. Mevcut konum ile teslimat konumu arasındaki izin verilen mesafe 1 km (1000 m) olarak uygulanır; 1 km üzerindeki mesafelerde sipariş engellenir. Talep mevcut `orders` tablosuna aynı servis üzerinden yazılır ve Aktif siparişler sayfası açılır. Bu sürüm mevcut RLS'yi değiştirmez; istemci fiyat denetimi sunucu taraflı fiyat doğrulamasının yerine geçmez.
 
 ## Hesaba özel görünüm
 `ThemeProvider`, `AuthProvider` içinde çalışır ve mevcut `authUser.gender` değerini kullanır. Varsayılan (`auto`) kadın için toz pembe, erkek için koyudur; cinsiyet belirtilmemiş/misafir hesap koyu açılır. Manuel açık/koyu/pembe seçimi cinsiyetten bağımsızdır. Cihaz teması seçeneği işletim sistemini takip eder. Profil → Ayarlar → Görünüm bölümünde üç tema önizlemesi, Varsayılan ve Cihaz teması seçenekleri vardır.
@@ -45,7 +45,7 @@ Derleme/gerçek cihaz testi bu oturumda çalıştırılmadı. Yayınlamadan önc
 3. Kategori adı değiştirme, yeni ürün/grup ekleme ve açıklama kaydını kontrol edin.
 4. Ara numara gösterimi ve telefon uygulaması, kaydedilmiş Haritalar bağlantısı, kaydet ve native paylaşım akışlarını cihazda test edin.
 5. Siparişe kapalı işletmede artı/sepet görünmemesini; açık işletmede kategoriler arasında sepetin korunmasını doğrulayın.
-6. Minimum altında gönderimin engellenmesini, telefon/konum eksikliğini, konum izni reddini ve 100 m dışındaki hata durumlarını test edin.
+6. Minimum altında gönderimin engellenmesini, telefon/konum eksikliğini, konum izni reddini, 1000 m sınırında kabulü ve 1000 m üzerindeki hata durumlarını test edin.
 7. Gerçek müşteri talebini işletme hesabından onaylayıp teslim edildi olarak işaretleyin; müşterinin aktif/geçmiş listesine yansımasını kontrol edin.
 8. Rezervasyon/randevu talebi ve işletme onayını kontrol edin.
 9. Demo işletmelerde gerçek sipariş/rezervasyon/puan yazımı olmamasını ve işletme/yönetici hesaplarının puan verememesini doğrulayın.
