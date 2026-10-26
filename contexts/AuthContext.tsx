@@ -4,6 +4,7 @@ import { AppState } from 'react-native';
 import { getSupabaseClient, useAlert } from '@/template';
 import { AuthProfile, RegisterMeta, fetchProfile, sendEmailOtp, signInWithPassword, signOut as svcSignOut, verifyOtpAndRegister } from '@/services/authService';
 import { withRequestTimeout } from '@/services/requestTimeoutService';
+import { isDesignatedAdmin } from '@/services/adminEntryService';
 
 export interface AuthContextType {
   authUser: AuthProfile | null; loading: boolean; operationLoading: boolean; profileError: string;
@@ -154,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextType>(() => ({
     authUser, loading, operationLoading, profileError,
     passwordRecovery, recoveryUserId, beginPasswordRecovery, endPasswordRecovery,
-    isAdmin: authUser?.role === 'admin' && authUser.status === 'active',
+    isAdmin: isDesignatedAdmin(authUser),
     isBusiness: authUser?.role === 'business' && authUser.businessAccess === true,
     signIn, sendOtp, registerWithOtp, signOut, refreshProfile,
   }), [authUser, loading, operationLoading, profileError, passwordRecovery, recoveryUserId, beginPasswordRecovery, endPasswordRecovery, signIn, sendOtp, registerWithOtp, signOut, refreshProfile]);

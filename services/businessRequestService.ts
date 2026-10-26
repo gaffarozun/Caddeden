@@ -73,6 +73,8 @@ export async function placeOrder(params: {
 }): Promise<{ error: string | null }> {
   let uid: string;
   try { uid = await requireCustomer(); } catch (reason) { return { error: accessError(reason) }; }
+  const { data: open, error: openError } = await sb().rpc('business_is_open', { p_business: params.business_id });
+  if (openError || open !== true) return { error: openError?.message ?? 'İşletme kapalı. Açılana kadar sipariş verilemez.' };
   const { error } = await sb().from('orders').insert({
     user_id: uid,
     business_id: params.business_id,

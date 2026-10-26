@@ -6,10 +6,11 @@ import { CafeRequestStatus } from './cafeSocialService';
 import { CafePosition, cafePositionParameters, isCafePositionUsable, isCafeWithinEntryRadius } from './cafeLocationRules';
 
 export interface CafeVisit { business_id: string; business_name: string; photo_visible: boolean; expires_at: string; social_enabled?: boolean }
-export interface CafeMember { user_id: string; name: string; photo_path: string | null; anonymous?: boolean; has_instagram?: boolean; request_status?: CafeRequestStatus | null; request_id?: string | null }
-export interface CafeRoom { enabled: boolean; mine: CafeVisit | null; count: number; members: CafeMember[]; occupancy_enabled?: boolean; tables?: CafeTable[]; capacity?: number; participation_enabled?: boolean; plan_visible?: boolean; occupancy_percent?: number | null; occupancy_visible?: boolean }
+export interface VenueDemographics { total: number; female: number; male: number; gender_unknown: number; student: number; university: number; nonstudent: number; education_unknown: number }
+export interface CafeMember { education_status?: string | null; school_name?: string | null; user_id: string; name: string; photo_path: string | null; anonymous?: boolean; has_instagram?: boolean; request_status?: CafeRequestStatus | null; request_id?: string | null }
+export interface CafeRoom { demographics?: VenueDemographics; enabled: boolean; mine: CafeVisit | null; count: number; members: CafeMember[]; occupancy_enabled?: boolean; tables?: CafeTable[]; capacity?: number; participation_enabled?: boolean; plan_visible?: boolean; occupancy_percent?: number | null; occupancy_visible?: boolean }
 export const cafePollMilliseconds = 10000;
-// All categories are supported. Public entry points appear only for owner-enabled features.
+// All published geolocated venues support participation; public aggregates reveal no profiles.
 export function isVenueParticipationAvailable(room: CafeRoom | null, manage = false): boolean {
   return manage || !!(room?.enabled || room?.occupancy_enabled);
 }
@@ -30,12 +31,17 @@ export const fetchCafeRoom = (businessId: string) => rpc<CafeRoom>('cafe_room_st
 export const setCafeRoomEnabled = (businessId: string, enabled: boolean) => rpc<{ enabled: boolean }>('cafe_set_room', { p_business: businessId, p_enabled: enabled });
 export const setCafePhotoVisibility = (visible: boolean) => rpc<CafeVisit>('cafe_set_visibility', { p_visible: visible });
 export const leaveCafe = () => rpc<void>('cafe_leave');
+export async function refreshCafeLocation(businessId: string): Promise<CafeVisit | null> {
+ const position = await getGrantedCafePosition(false);
+ if (!position) throw new Error('Mekân katılımı için konum izni gerekli.');
+ return rpc<CafeVisit | null>('cafe_refresh_location', { p_business: businessId, ...cafePositionParameters(position) });
+}
 export interface NearbyCafe { business_id: string; business_name: string; social_enabled: boolean; distance_meters: number }
 async function readCafePosition(): Promise<CafePosition> {
-  if (!await Location.hasServicesEnabledAsync()) throw new Error('Cihaz konumu kapalı. Konumu ve hassas konum seçeneğini açıp yeniden kontrol edin.');
+  if (!await Location.hasServicesEnabledAsync()) throw new Error('Cihaz konumu kapalı. Konumu açıp yeniden deneyin.');
   const fix = await withRequestTimeout(Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest }), 'Konum alınamadı. Mekânın içinde yeniden deneyin.', 20000);
   const position: CafePosition = { latitude: fix.coords.latitude, longitude: fix.coords.longitude, accuracy: fix.coords.accuracy, capturedAt: fix.timestamp };
-  if (!isCafePositionUsable(position)) throw new Error(`Konum yeterince hassas veya güncel değil${position.accuracy !== null && Number.isFinite(position.accuracy) ? ` (ölçüm: ${Math.round(position.accuracy)} m)` : ''}. Hassas konumu açıp yeniden deneyin; en fazla 20 m hassasiyet gerekir.`);
+  if (!isCafePositionUsable(position)) throw new Error('Güncel konum alınamadı. Yeniden deneyin.');
   return position;
 }
 // Only an explicit control action can open the permission dialog. GPS is never persisted.
@@ -47,7 +53,12 @@ export async function getGrantedCafePosition(requestPermission = false): Promise
 export async function fetchNearbyCafes(position: CafePosition): Promise<NearbyCafe[]> {
   if (!isCafePositionUsable(position)) return [];
   const rows = await rpc<NearbyCafe[]>('cafe_nearby', cafePositionParameters(position));
-  return (Array.isArray(rows) ? rows : []).filter(row => isCafeWithinEntryRadius(row.distance_meters));
+  return sortNearbyCafes(Array.isArray(rows) ? rows : []);
+}
+// Never trust transport order: both selection and automatic prompts use closest-first candidates.
+export function sortNearbyCafes(rows: NearbyCafe[]): NearbyCafe[] {
+  return rows.filter(row => isCafeWithinEntryRadius(row.distance_meters)).slice().sort((a, b) =>
+    a.distance_meters - b.distance_meters || a.business_id.localeCompare(b.business_id));
 }
 export async function joinCafe(businessId: string, visible: boolean): Promise<CafeVisit> {
   const permission = await Location.requestForegroundPermissionsAsync();
