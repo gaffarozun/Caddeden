@@ -16,6 +16,6 @@ export async function submitDeliveryOrder(params: Parameters<typeof placeOrder>[
   if (!permission.granted) throw new Error('Sipariş göndermek için konum izni zorunludur.');
   const position = await Location.getCurrentPositionAsync({});
   const distance = distanceMeters(position.coords.latitude, position.coords.longitude, params.lat, params.lng);
-  if (distance > 100) throw new Error(`Teslimat konumuna ${Math.round(distance)} m uzaktasınız. Konumu güncelleyin; en fazla 100 m uzakta olabilirsiniz.`);
+  if (distance > 1000) throw new Error(`Teslimat konumuna ${Math.round(distance)} m uzaktasınız. Konumu güncelleyin; en fazla 1 km uzakta olabilirsiniz.`);
   const result = await placeOrder(params); if (result.error) throw new Error(result.error);
 }
