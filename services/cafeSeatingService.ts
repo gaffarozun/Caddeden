@@ -16,6 +16,9 @@ export function makeCafeTable(tables: CafeTable[]): CafeTable | null {
  return null;
 }
 export async function saveCafeSeating(businessId: string, enabled: boolean, tables: CafeTable[]): Promise<void> {
- const { error } = await withRequestTimeout(getSupabaseClient().rpc('cafe_save_seating', { p_business: businessId, p_enabled: enabled, p_tables: tables }), 'Masa planı kaydedilemedi.');
+ if (enabled && tables.length === 0) throw new Error('Gösterimi açmak için önce en az bir masa ekleyin.');
+ if (tables.some(table => !table.label.trim() || !Number.isInteger(table.seats) || table.seats < 1 || table.seats > 12)) throw new Error('Her masaya bir ad ve 1–12 kişilik kapasite girin.');
+ // Text transport avoids gateway array-to-jsonb decoding failures; the database validates and atomically saves the plan.
+ const { error } = await withRequestTimeout(getSupabaseClient().rpc('cafe_save_seating_payload', { p_business: businessId, p_enabled: enabled, p_plan: JSON.stringify(tables) }), 'Masa planı kaydedilemedi.');
  if (error) throw new Error(error.message);
 }

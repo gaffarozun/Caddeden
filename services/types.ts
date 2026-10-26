@@ -53,6 +53,7 @@ export interface Business {
   rating: number;
   reviewCount: number;
   distanceKm: number;
+  distanceMeasured?: boolean;
   address: string;
   phone: string;
   hours: string;

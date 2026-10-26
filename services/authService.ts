@@ -1,6 +1,7 @@
 // Powered by OnSpace.AI
 import { getSupabaseClient } from '@/template';
 import { BusinessApprovalStatus, loadBusinessApproval } from './businessApprovalService';
+import { logoutCurrentSession, SessionLogoutClient } from './sessionLogoutService';
 
 const sb = () => getSupabaseClient();
 
@@ -166,9 +167,9 @@ export async function updateMyProfile(patch: {
   return { error: error?.message ?? null };
 }
 
-export async function signOut() {
-  const { error } = await sb().auth.signOut();
-  if (error) throw new Error(error.message);
+export async function signOut(): Promise<void> {
+  // Keep the unique configured SDK client and its own persistence adapter.
+  await logoutCurrentSession(sb().auth as unknown as SessionLogoutClient);
 }
 
 // Masked customer display name shown to businesses: the full first name plus the

@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { BusinessCard, MainCategoryTabs, SearchBar, SubCategoryBar } from '@/components';
 import { useDiscoveryFeed } from '@/hooks/useDiscoveryFeed';
+import { useTabScrollToTop } from '@/hooks/useTabScrollToTop';
 import { useTheme } from '@/hooks/useTheme';
 import { DiscoveryRatingSort, discoveryRatingSorts } from '@/services/discoveryRatingService';
 import { FeedbackButton, FeedbackChips, FeedbackError } from '@/components/feature/FeedbackControls';
@@ -15,6 +16,7 @@ import { NotificationBell } from '@/components/feature/NotificationBell';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
+  const listRef = useTabScrollToTop<DiscoveryResultRow>();
   const { colors } = useTheme();
   const { query, setQuery, main, sub, setSub, onlyOpen, setOnlyOpen, ratingSort, setRatingSort,
     businesses, results, menuSearch, searching, counts, activeMain, handleMain, locating, locationError, refreshing, error, refresh } = useDiscoveryFeed();
@@ -59,6 +61,7 @@ export default function DiscoverScreen() {
       </View>
 
       <FlatList
+        ref={listRef}
         data={results}
         keyExtractor={(item) => item.key}
         renderItem={renderResult}
