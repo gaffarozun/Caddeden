@@ -5,7 +5,7 @@ declare b record; actor uuid; payload jsonb; peer jsonb; definition text;
 begin
  if has_function_privilege('anon','public.customer_inbox_items()','execute') or has_function_privilege('anon','public.cafe_refresh_location(uuid,double precision,double precision,double precision,timestamptz)','execute') or has_table_privilege('authenticated','public.customer_inbox','insert') then raise exception 'Private access exposed'; end if;
  definition:=pg_get_functiondef('public.cafe_refresh_location(uuid,double precision,double precision,double precision,timestamptz)'::regprocedure);
- if position('v_distance>40' in definition)=0 or position('90 seconds' in definition)=0 then raise exception 'Exit/heartbeat boundary missing'; end if;
+ if position('v_distance>=50' in definition)=0 or position('90 seconds' in definition)=0 then raise exception 'Exit/heartbeat boundary missing'; end if;
  definition:=pg_get_functiondef('public.cafe_revoke_instagram(uuid)'::regprocedure);
  if position('auth.uid() in (requester_id,recipient_id)' in definition)=0 then raise exception 'Mutual withdrawal missing'; end if;
  if not exists(select 1 from pg_trigger where tgrelid='public.orders'::regclass and tgname='order_open_guard') then raise exception 'Server closed-order guard missing'; end if;

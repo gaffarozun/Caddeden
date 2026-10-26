@@ -1,17 +1,21 @@
 import React, { memo, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { createFeedbackStyles } from '@/constants/feedbackStyles';
-import { spacing } from '@/constants/theme';
+import { fontSize, spacing } from '@/constants/theme';
 
-interface FeedbackButtonProps { label: string; onPress: () => void; disabled?: boolean; busy?: boolean; secondary?: boolean; danger?: boolean; icon?: keyof typeof MaterialCommunityIcons.glyphMap }
-export const FeedbackButton = memo(function FeedbackButton({ label, onPress, disabled, busy, secondary, danger, icon }: FeedbackButtonProps) {
+interface FeedbackButtonProps { compact?: boolean; label: string; onPress: () => void; disabled?: boolean; busy?: boolean; secondary?: boolean; danger?: boolean; icon?: keyof typeof MaterialCommunityIcons.glyphMap }
+export const FeedbackButton = memo(function FeedbackButton({ label, onPress, disabled, busy, secondary, danger, icon, compact = false }: FeedbackButtonProps) {
   const { colors } = useTheme(); const styles = useMemo(() => createFeedbackStyles(colors), [colors]);
-  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled || !!busy }} disabled={disabled || busy} onPress={onPress} style={({ pressed }) => [styles.button, secondary ? styles.secondary : null, danger ? styles.danger : null, disabled || busy ? styles.disabled : null, pressed ? styles.pressed : null]}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ disabled: !!disabled || !!busy }} disabled={disabled || busy} onPress={onPress} style={({ pressed }) => [styles.button, compact ? compactStyles.button : null, secondary ? styles.secondary : null, danger ? styles.danger : null, disabled || busy ? styles.disabled : null, pressed ? styles.pressed : null]}>
     {busy ? <ActivityIndicator color={colors.text} /> : icon ? <MaterialCommunityIcons name={icon} size={20} color={secondary || danger ? colors.text : colors.primaryDark} /> : null}
-    <Text style={[styles.buttonText, secondary || danger ? styles.secondaryText : null]}>{label}</Text>
+    <Text style={[styles.buttonText, compact ? compactStyles.text : null, secondary || danger ? styles.secondaryText : null]}>{label}</Text>
   </Pressable>;
+});
+const compactStyles = StyleSheet.create({
+  button: { minHeight: spacing.xxxl, paddingVertical: spacing.sm, paddingHorizontal: spacing.md },
+  text: { fontSize: fontSize.sm, flexShrink: 1, textAlign: 'center', includeFontPadding: false },
 });
 interface FeedbackChipsProps { items: readonly { id: string; label: string }[]; selected: string; onSelect: (id: string) => void; label: string; disabled?: boolean; compact?: boolean; hideLabel?: boolean }
 export const FeedbackChips = memo(function FeedbackChips({ items, selected, onSelect, label, disabled, compact = false, hideLabel = false }: FeedbackChipsProps) {

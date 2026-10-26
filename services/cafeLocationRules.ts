@@ -1,12 +1,11 @@
-// Shared strict 40-metre entry policy; GPS accuracy is independently limited to 20 m. GPS fixes are transient and never persisted.
-export const cafeEntryRadiusMeters = 40;
-export const cafeMaximumAccuracyMeters = 20;
+// Shared 50-metre entry/exit policy. Fresh GPS fixes are transient; no accuracy ceiling.
+export const cafeEntryRadiusMeters = 50;
 export const cafeArrivalPollMilliseconds = 20000;
 export interface CafePosition { latitude: number; longitude: number; accuracy: number | null; capturedAt: number }
 export function isCafePositionUsable(position: CafePosition, now = Date.now()): boolean {
   return Number.isFinite(position.latitude) && position.latitude >= -90 && position.latitude <= 90
     && Number.isFinite(position.longitude) && position.longitude >= -180 && position.longitude <= 180
-    && position.accuracy !== null && Number.isFinite(position.accuracy) && position.accuracy >= 0 && position.accuracy <= cafeMaximumAccuracyMeters
+    && (position.accuracy === null || (Number.isFinite(position.accuracy) && position.accuracy >= 0))
     && Number.isFinite(position.capturedAt) && position.capturedAt >= now - 60000 && position.capturedAt <= now + 15000;
 }
 export function isCafeWithinEntryRadius(distance: number): boolean {

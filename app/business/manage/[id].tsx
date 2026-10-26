@@ -279,7 +279,7 @@ function BusinessManage() {
       const position = await saveBusinessCurrentLocation(bizId);
       setLat(position.latitude);
       setLng(position.longitude);
-      showAlert('Konum kaydedildi', 'Hassas işletme konumu kaydedildi. Katılımı açtığınızda 40 metreden yakın müşteriler konumla doğrulayabilir.', [{ text: 'Tamam' }]);
+      showAlert('Konum kaydedildi', 'İşletme konumu kaydedildi. 50 metre içindeki müşteriler katılımını doğrulayabilir.', [{ text: 'Tamam' }]);
     } catch (reason) {
       showAlert('Konum kaydedilemedi', reason instanceof Error ? reason.message : 'İşletmedeyken hassas konumu açıp yeniden deneyin.', [{ text: 'Tamam' }]);
     } finally { setLocating(false); }

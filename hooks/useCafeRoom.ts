@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { useAuth } from './useAuth';
 import { useCafePresence } from './useCafePresence';
 import { useCafeSocial } from './useCafeSocial';
+import { isInstagramHandleValid } from '@/services/cafeSocialService';
 import { cafePollMilliseconds, CafeRoom, fetchCafeRoom, isCafeRoomLocal, setCafeRoomEnabled } from '@/services/cafePresenceService';
 export function useCafeRoom(businessId: string, manage = false) {
   const { authUser } = useAuth(); const presence = useCafePresence(); const social = useCafeSocial();
@@ -35,7 +36,7 @@ export function useCafeRoom(businessId: string, manage = false) {
   }, [businessId, manage]);
   // Both the server visit and local visit must be current; do not keep plans/photos after leave or expiry.
   const local = foreground && isCafeRoomLocal(room, presence.visit, businessId);
-  const members = local && room?.enabled ? room.members : [];
-  const visibleRoom = room ? { ...room, members, mine: local ? room.mine : null, tables: manage || local ? room.tables : [], plan_visible: !!room.plan_visible && (manage || local), occupancy_visible: !!room.occupancy_visible && (manage || local), occupancy_percent: manage || local ? room.occupancy_percent : null } : null;
+  const members = local && room?.enabled && social.ready && isInstagramHandleValid(social.handle) ? room.members : [];
+  const visibleRoom = room ? { ...room, members, mine: local ? room.mine : null, tables: manage || local ? room.tables : [], plan_visible: !!room.plan_visible && (manage || local), occupancy_visible: !!room.occupancy_visible, occupancy_percent: room.occupancy_percent } : null;
   return { room: visibleRoom, members, local, busy, error, toggleEnabled, presence };
 }

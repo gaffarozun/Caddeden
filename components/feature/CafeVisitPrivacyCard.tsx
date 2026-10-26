@@ -12,14 +12,14 @@ export const CafeVisitPrivacyCard = memo(function CafeVisitPrivacyCard({ busines
   if (!m.visit || (businessId && m.visit.business_id !== businessId)) return null;
   const visit = m.visit;
   return <View style={s.card}>
-    <View style={s.row}><MaterialCommunityIcons name="storefront-outline" size={28} color={c.primaryDark} /><View style={s.info}><Text style={s.title}>{visit.business_name}</Text><Text style={s.text}>{visit.social_enabled === false ? 'Konum doğrulandı' : 'Profil görünürlüğüm'}</Text></View></View>
-    {visit.social_enabled !== false ? <><View style={s.badge}><Text style={s.badgeText}>{visit.photo_visible ? 'Adım ve fotoğrafım gösteriliyor' : 'Adım ve fotoğrafım gizli'}</Text></View>
+    <View style={s.row}><MaterialCommunityIcons name="storefront-outline" size={22} color={c.primaryDark} /><Text style={s.title}>{visit.business_name}</Text></View>
+    {visit.social_enabled !== false ? <>
     <VenueProfilePrivacySetting compact />
-    <FeedbackButton busy={m.busy} disabled={!visit.photo_visible && !m.profileEnabled} icon={visit.photo_visible ? 'eye-off-outline' : 'eye-outline'} label={visit.photo_visible ? 'Adımı ve fotoğrafımı gizle' : 'Adımı ve fotoğrafımı göster'} onPress={() => { void m.setVisible(!visit.photo_visible); }} />
+    <FeedbackButton compact busy={m.busy} disabled={!visit.photo_visible && !m.profileEnabled} icon={visit.photo_visible ? 'eye-off-outline' : 'eye-outline'} label={visit.photo_visible ? 'Profilimi gizle' : 'Profilimi göster'} onPress={() => { void m.setVisible(!visit.photo_visible); }} />
     </> : null}
-    <FeedbackButton secondary busy={m.busy} icon="crosshairs-gps" label="Buradayım · Katılımı yenile" onPress={() => { void m.join(visit.business_id, visit.photo_visible); }} />
-    <FeedbackButton secondary busy={m.busy} icon="logout" label="Mekândan ayrıl" onPress={() => { void m.leave(); }} />
+    <FeedbackButton compact secondary busy={m.busy} icon="crosshairs-gps" label="Konumu doğrula" onPress={() => { void m.join(visit.business_id, visit.photo_visible); }} />
+    <FeedbackButton compact secondary busy={m.busy} icon="logout" label="Mekândan ayrıl" onPress={() => { void m.leave(); }} />
     <FeedbackError message={m.error} />
-    {m.notice ? <Text style={s.text} accessibilityLiveRegion="polite">{m.notice}</Text> : null}
+    
   </View>;
 });

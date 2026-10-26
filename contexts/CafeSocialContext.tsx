@@ -3,10 +3,10 @@ import { AppState } from 'react-native';
 import { useAuth } from '@/hooks/useAuth';
 import { useCafePresence } from '@/hooks/useCafePresence';
 import { cafePollMilliseconds } from '@/services/cafePresenceService';
-import { CafeSocialData, CafeSocialRequest, decideCafeInstagram, fetchCafeSocialState, fetchOwnInstagram, openCafeInstagram, requestCafeInstagram, saveCafeInstagram } from '@/services/cafeSocialService';
+import { CafeSocialData, CafeSocialRequest, decideCafeInstagram, fetchCafeSocialState, fetchOwnInstagram, isInstagramHandleValid, openCafeInstagram, requestCafeInstagram, revokeCafeInstagram, saveCafeInstagram } from '@/services/cafeSocialService';
 export interface CafeSocialState {
  incoming: CafeSocialRequest[]; outgoing: CafeSocialRequest[]; sentRecipientCount: number; handle: string; ready: boolean; busy: boolean; error: string; notice: string; revision: number;
- saveHandle: (value: string) => Promise<boolean>; request: (targetId: string) => Promise<boolean>; decide: (requestId: string, accept: boolean) => Promise<boolean>; open: (requestId: string) => Promise<boolean>;
+ revoke: (requestId: string) => Promise<boolean>; saveHandle: (value: string) => Promise<boolean>; request: (targetId: string) => Promise<boolean>; decide: (requestId: string, accept: boolean) => Promise<boolean>; open: (requestId: string) => Promise<boolean>;
 }
 export const CafeSocialContext = createContext<CafeSocialState | undefined>(undefined);
 const empty: CafeSocialData = { incoming: [], outgoing: [], sent_recipient_count: 0 };
@@ -51,10 +51,17 @@ export function CafeSocialProvider({ children }: { children: ReactNode }) {
   finally { if (version === epoch.current) { lock.current = false; setBusy(false); } }
  }, [uid]);
  const saveHandle = useCallback((value: string) => run(async () => { const version = epoch.current; const next = await saveCafeInstagram(value); if (version === epoch.current) { setHandle(next); setReady(true); } }, 'Instagram kullanıcı adınız özel olarak kaydedildi.'), [run]);
- const request = useCallback((targetId: string) => run(async () => { await requestCafeInstagram(targetId); }, 'Instagram görme isteğiniz gönderildi.'), [run]);
- const decide = useCallback((id: string, accept: boolean) => run(async () => { await decideCafeInstagram(id, accept); }, accept ? 'İzin verildi. Instagram yalnızca aynı mekânda aktif katılım varken açılabilir.' : 'İzin kaldırıldı. Bu kişi isminizi ve fotoğrafınızı 1 hafta göremez; mekânda yalnızca Kullanıcı olarak görünürsünüz.'), [run]);
+ const request = useCallback((targetId: string) => run(async () => {
+  if (!ready || !isInstagramHandleValid(handle)) throw new Error('Önce Instagram kullanıcı adınızı ekleyin.');
+  await requestCafeInstagram(targetId);
+ }, 'İstek gönderildi.'), [run, ready, handle]);
+ const decide = useCallback((id: string, accept: boolean) => run(async () => {
+  if (accept && (!ready || !isInstagramHandleValid(handle))) throw new Error('Önce Instagram kullanıcı adınızı ekleyin.');
+  await decideCafeInstagram(id, accept);
+ }, accept ? 'Karşılıklı Instagram erişimi açıldı.' : 'İzin kaldırıldı · 1 hafta gizli.'), [run, ready, handle]);
+ const revoke = useCallback((id: string) => run(() => revokeCafeInstagram(id), 'Karşılıklı izin kaldırıldı.'), [run]);
  const open = useCallback((id: string) => run(() => openCafeInstagram(id), ''), [run]);
  const current = owner === uid && !!uid;
- const value = useMemo<CafeSocialState>(() => ({ incoming: current ? data.incoming : [], outgoing: current ? data.outgoing : [], sentRecipientCount: current ? Number(data.sent_recipient_count ?? 0) : 0, handle: current ? handle : '', ready: current && ready, busy, error, notice, revision, saveHandle, request, decide, open }), [current,data,handle,ready,busy,error,notice,revision,saveHandle,request,decide,open]);
+ const value = useMemo<CafeSocialState>(() => ({ incoming: current ? data.incoming : [], outgoing: current ? data.outgoing : [], sentRecipientCount: current ? Number(data.sent_recipient_count ?? 0) : 0, handle: current ? handle : '', ready: current && ready, busy, error, notice, revision, saveHandle, request, decide, open, revoke }), [current,data,handle,ready,busy,error,notice,revision,saveHandle,request,decide,open,revoke]);
  return <CafeSocialContext.Provider value={value}>{children}</CafeSocialContext.Provider>;
 }

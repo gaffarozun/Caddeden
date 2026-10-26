@@ -49,8 +49,8 @@ export const mustardColors: ThemeColors = {
 };
 
 // Static exports are fallback tokens only. Rendered UI must consume useTheme.
-export const colors = mustardColors;
-export const businessProfileColors = mustardColors;
+export const colors = lightColors;
+export const businessProfileColors = lightColors;
 export const spacing = { xs: 4, sm: 8, md: 12, lg: 16, xl: 24, xxl: 32, xxxl: 48 };
 export const radius = { sm: 8, md: 12, lg: 16, xl: 22, xxl: 28, pill: 999 };
 export const fontSize = { xs: 12, sm: 14, md: 16, lg: 18, xl: 22, xxl: 28, xxxl: 34 };

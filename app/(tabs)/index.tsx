@@ -11,12 +11,13 @@ import { FeedbackButton, FeedbackChips, FeedbackError } from '@/components/featu
 import { MenuSearchCard } from '@/components/feature/MenuSearchCard';
 import { DiscoveryResultRow } from '@/services/discoveryResultsService';
 import { CampaignBanner } from '@/components/feature/CampaignBanner';
+import { NotificationBell } from '@/components/feature/NotificationBell';
 import { fontSize, fontWeight, radius, spacing, ThemeColors } from '@/constants/theme';
 
 export default function DiscoverScreen() {
   const { colors } = useTheme();
   const { query, setQuery, main, sub, setSub, onlyOpen, setOnlyOpen, ratingSort, setRatingSort,
-    businesses, results, menuSearch, searching, counts, activeMain, handleMain, refreshing, error, refresh } = useDiscoveryFeed();
+    businesses, results, menuSearch, searching, counts, activeMain, handleMain, locating, locationError, refreshing, error, refresh } = useDiscoveryFeed();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const renderResult = useCallback(({ item: row }: { item: DiscoveryResultRow }) => {
     switch (row.kind) {
@@ -49,6 +50,7 @@ export default function DiscoverScreen() {
         <View style={styles.brandBlock}>
           <Text style={styles.brand}>Caddeden</Text>
         </View>
+        <NotificationBell />
       </View>
 
       <View style={styles.searchWrap}>
@@ -69,6 +71,8 @@ export default function DiscoverScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary} />}
         ListHeaderComponent={
           <View>
+            {locating ? <View style={styles.resultTitleRow}><ActivityIndicator color={colors.primary} /><Text style={styles.searchContext}>Konum alınıyor…</Text></View> : null}
+            {locationError ? <View style={styles.feedError}><FeedbackError message={locationError} /><FeedbackButton label="Konumu yeniden dene" secondary busy={locating} onPress={() => setRatingSort('nearest')} /></View> : null}
             {error ? <View style={styles.feedError}><FeedbackError message={error} /><FeedbackButton label="Yeniden dene" secondary busy={refreshing} onPress={refresh} /></View> : null}
             {!searching ? <View style={styles.bleed}>
               <CampaignBanner main={main} />
@@ -104,7 +108,7 @@ export default function DiscoverScreen() {
             </View>
             {!searching ? <View style={styles.ratingSort}>
               <FeedbackChips label="İşletme sıralaması" hideLabel compact items={discoveryRatingSorts} selected={ratingSort} onSelect={value => setRatingSort(value as DiscoveryRatingSort)} />
-              {ratingSort !== 'recommended' ? <Text style={styles.count}>Puanı olmayan işletmeler ve demo içerikler sonda gösterilir.</Text> : null}
+              {ratingSort === 'highest' ? <Text style={styles.count}>Puanı olmayan işletmeler ve demo içerikler sonda gösterilir.</Text> : null}
             </View> : null}
           </View>
         }

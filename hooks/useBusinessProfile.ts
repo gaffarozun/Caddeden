@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Linking, Share } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useAlert } from '@/template';
@@ -19,6 +19,8 @@ export function useBusinessProfile(id: string) {
   const [refreshing, setRefreshing] = useState(false); const [tab, setTab] = useState('about');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const generation = useRef(0);
+  const [clock,setClock]=useState(new Date());
+  useEffect(()=>{const timer=setInterval(()=>setClock(new Date()),30000);return()=>clearInterval(timer);},[]);
   useFocusEffect(useCallback(() => {
     let active = true; generation.current += 1; setLoading(true); setError(''); setData(null);
     loadBusinessProfile(id).then(value => { if (active) setData(value); }).catch(reason => { if (active) setError(reason instanceof Error ? reason.message : 'Profil yüklenemedi.'); }).finally(() => { if (active) setLoading(false); });
@@ -43,7 +45,8 @@ export function useBusinessProfile(id: string) {
   const sub = business ? getSubCategory(business.category) : undefined;
   const capabilities = getBusinessCapabilities(business);
   const orderingEnabled = capabilities.orders;
-  const canOrder = orderingEnabled && customer && !data?.isDemo;
+  const status = business ? getOpenStatus(business,clock) : null;
+  const canOrder = orderingEnabled && customer && !data?.isDemo && status?.open === true;
   const canReserve = capabilities.bookings && customer;
   const openLink = useCallback((url: string) => { void Linking.openURL(url).catch(() => showAlert('Bağlantı açılamadı', 'Bu bağlantıyı cihazınızda açamadık.')); }, [showAlert]);
   const call = useCallback(() => {
@@ -64,7 +67,7 @@ export function useBusinessProfile(id: string) {
     bookingType: capabilities.bookingType,
   } }), [id, router, orderingEnabled, capabilities.historyScope, capabilities.bookingType]);
   return { id, data, business, loading, error, refreshing, refresh, tab, setTab, photoUri, setPhotoUri,
-    status: business ? getOpenStatus(business) : null, sub, isOwner, canManage, customer, canOrder, orderingEnabled, canReserve,
+    status, sub, isOwner, canManage, customer, canOrder, orderingEnabled, canReserve,
     historyLabel: capabilities.historyLabel,
     saved: savedBusinessIds.includes(id), toggleSave: () => toggleSaveBusiness(id), call, maps, share, history, router, authUser };
 }

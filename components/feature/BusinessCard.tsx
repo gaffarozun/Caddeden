@@ -21,7 +21,7 @@ export const BusinessCard = memo(function BusinessCard({ business }: BusinessCar
   const category = getSubCategory(business.category);
   const status = getOpenStatus(business);
   const isDemo = !/^[0-9a-f-]{36}$/i.test(business.id);
-  const distance = business.distanceKm > 0 ? business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)} m` : `${business.distanceKm.toFixed(1)} km` : '';
+  const distance = business.distanceKm >= 0 && Number.isFinite(business.distanceKm) && !isDemo && business.lat != null && business.lng != null && (business.distanceKm > 0 || business.distanceMeasured) ? business.distanceKm < 1 ? `${Math.round(business.distanceKm * 1000)} m` : `${business.distanceKm.toFixed(1)} km` : '';
   return <Pressable accessibilityRole="button" accessibilityLabel={`${business.name}, ${status.open ? 'açık' : 'kapalı'}`} onPress={() => router.push(`/business/${business.id}`)} style={({ pressed }) => [styles.card, pressed ? styles.pressed : null]}>
     <View style={styles.imageWrap}>
       {business.cover ? <Image source={{ uri: business.cover }} style={styles.image} contentFit="cover" transition={200} /> : <MaterialCommunityIcons name="storefront-outline" size={32} color={colors.primary} />}
